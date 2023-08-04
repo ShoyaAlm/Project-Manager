@@ -24,6 +24,19 @@ func helloHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
+var projects = []*model.Project{
+	{
+		ID:    1,
+		Name:  "sample project 1",
+		Tasks: []*model.Task{},
+	},
+	{
+		ID:    2,
+		Name:  "sample project 2",
+		Tasks: []*model.Task{},
+	},
+}
+
 func projectsHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
@@ -38,19 +51,6 @@ func projectsHandler(w http.ResponseWriter, r *http.Request) {
 	// Write the JSON data to the response
 	w.Write(jsonData)
 
-}
-
-var projects = []*model.Project{
-	{
-		ID:    1,
-		Name:  "sample project 1",
-		Tasks: []*model.Task{},
-	},
-	{
-		ID:    2,
-		Name:  "sample project 2",
-		Tasks: []*model.Task{},
-	},
 }
 
 func main() {

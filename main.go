@@ -37,7 +37,7 @@ var projects = []*model.Project{
 	},
 }
 
-func projectsHandler(w http.ResponseWriter, r *http.Request) {
+func getAllProjects(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
@@ -53,6 +53,24 @@ func projectsHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func createProject(w http.ResponseWriter, r *http.Request) {
+
+	var newProject model.Project
+
+	err := json.NewDecoder(r.Body).Decode(&newProject)
+	if err != nil {
+		http.Error(w, "Failed to decode JSON data", http.StatusBadRequest)
+		return
+	}
+
+	newProject.ID = len(projects) + 1
+	projects = append(projects, &newProject)
+
+	w.WriteHeader(http.StatusCreated)
+	fmt.Fprintf(w, "Project created successfully")
+
+}
+
 func main() {
 
 	fileServer := http.FileServer(http.Dir("./static"))
@@ -60,7 +78,9 @@ func main() {
 	http.HandleFunc("/hello", helloHandler)
 
 	fmt.Printf("Server running at port 8080...\n")
-	http.HandleFunc("/api/projects", projectsHandler)
+	http.HandleFunc("/api/projects", getAllProjects)
+	http.HandleFunc("/api/projects/create-project", createProject)
+
 	// fmt.Printf("new project : %v", newProject)
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		log.Fatal(err)

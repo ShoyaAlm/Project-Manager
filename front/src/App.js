@@ -1,116 +1,276 @@
 import projects from './projects.js'
 import './index.css'
 
-import React, { useEffect } from 'react'
+import React, { useEffect, useContext } from 'react'
 import {useState} from 'react'
+
+
 import { BrowserRouter as Router, Route, Switch} from 'react-router-dom'
 import {Link, useParams} from 'react-router-dom'
 
-const Home = () => {
-    return (
-        <>
-            <h1>Home Page</h1>
-        </>
-    )
-}
 
-const AllProjects = () => {
-    const [prs, setPrs] = useState(projects)
-    return (
-        <div>
-            <h1>Projects</h1>
-            {prs.map((pr) => {
-                return (
-                    <div key={pr.id}>
-                        <h2>Name: {pr.name}</h2>
-                        <h2>Level: {pr.level}</h2>
-                        <Link to={`/project/:${pr.id}`}>Learn more</Link>
-                    </div>
-                )
-            })}
-        </div>
-    )
-}
-
-const Project = () => {
-    
-    const [projectName, setProjectName] = useState('adsla')
-    const [projectLevel, setProjectLevel] = useState('')
-    const {id} = useParams();
-    console.log(id);
-    useEffect(() => {
-        const newProject = projects.find((project) => project.id == id)
-        console.log('lol : ',newProject);
-        // setProjectName(newProject.name)
-        // setProjectLevel(newProject.level)
-    },[]);
-
-    return (
-        <div>
-            <h1>{projectName}</h1>
-            <h2>{projectLevel}</h2>
-            <Link to="/">Back to Homepage</Link>
-        </div>
-    )
-}
-
-
-const About = () => {
-    return (
-        <>
-            <h1>About Page</h1>
-        </>
-
-    )
-}
-
-
-const Navbar = () => {
-    return (
-        <nav>
-            <ul>
-                <li>
-                    <Link to="/">Home</Link>
-                </li>
-                <li>
-                    <Link to="/about">About</Link>
-                </li>
-            </ul>
-        </nav>
-    )
-}
-
-const Error = () => {
-    return (
-        <>
-            <h1>Error Page</h1>
-        </>
-    )
-}
+import { AllProjects } from './showcaseprs.js'
+import { HandleSigninLogin } from './signup-login.js'
+import { Project } from './Project.js'
 
 const App = () => {
 
     return (
         <div>
-    <Router>
-    <Navbar/>
-            <Switch>
-                <Route exact path='/'> <AllProjects/> </Route>
-                
-                <Route path='/project/:id' children={<Project />}> <Project/> </Route>
-                
-                <Route exact path='/about'> <About/> </Route>
-                
-                <Route path='*'> <Error/> </Route>
-            </Switch>
-    </Router>
-    </div>)
+
+            <Router>
+
+           <Link to="/"><h1 style={{textAlign:'center'}}>Project Manager</h1></Link> <br />
+            <Link to="/signup"><h3 style={{textAlign: 'right'}}>Signin/Login</h3></Link> <hr /> <br />
+            
+                <Switch>
+                    <Route exact path='/'> <AllProjects/> </Route>
+                    
+                    <Route exact path='/signup'> <HandleSigninLogin/> </Route>
+                    
+                    <Route path='/projects/:id' > <Project/> </Route>
+                    
+                </Switch>
+
+        
+
+            </Router>
+
+
+        </div>
+    )
+
 
 }
+
+// const Error = () => {
+//     return (
+//         <>
+//             <h1>Error Page</h1>
+//         </>
+//     )
+// }
+
+
+// const AllProjects = () => {
+//     const [prs, setPrs] = useState(projects)
+//     return (
+//         <div>
+//             <h1>Projects</h1>
+//             {prs.map((pr) => {
+//                 return (
+//                     <div key={pr.id}>
+//                         <h2>Name: {pr.name}</h2>
+//                         <h2>Level: {pr.level}</h2>
+//                         <Link to={`/project/:${pr.id}`}>Learn more</Link>
+//                     </div>
+//                 )
+//             })}
+//         </div>
+//     )
+// }
+
+// const Project = () => {
+    
+//     const [projectName, setProjectName] = useState('adsla')
+//     const [projectLevel, setProjectLevel] = useState('')
+//     const {id} = useParams();
+//     console.log(id);
+//     const newProject = projects.find((project) => project.id === parseInt(id))
+//     console.log('lol : ',newProject);
+//     // useEffect(() => {
+//     //     setProjectName(newProject.name)
+//     //     setProjectLevel(newProject.level)
+//     // },[]);
+
+//     return (
+//         <div>
+//             <h1>{projectName}</h1>
+//             <h2>{projectLevel}</h2>
+//             <Link to="/">Back to Homepage</Link>
+//         </div>
+//     )
+// }
+
+
+// const About = () => {
+//     return (
+//         <>
+//             <h1>About Page</h1>
+//         </>
+
+//     )
+// }
+
+
+// const Navbar = () => {
+//     return (
+//         <nav>
+//             <ul>
+//                 <li>
+//                     <Link to="/">Home</Link>
+//                 </li>
+//                 <li>
+//                     <Link to="/about">About</Link>
+//                 </li>
+//             </ul>
+//         </nav>
+//     )
+// }
+
+
+// const App = () => {
+
+//     return (
+//         <div>
+//     <Router>
+//     <Navbar/>
+//             <Switch>
+//                 <Route exact path='/'> <AllProjects/> </Route>
+                
+//                 <Route path='/project/:id' > <Project/> </Route>
+                
+//                 <Route exact path='/about'> <About/> </Route>
+                
+//                 <Route path='*'> <Error/> </Route>
+//             </Switch>
+//     </Router>
+//     </div>)
+
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 export default App
 
 
+
+
+
+
+
+
+// ########## Routing ###########
+// ############################################
+// ############################################
+// ############################################
+
+
+// import { BrowserRouter as Router, Route, Switch} from 'react-router-dom'
+// import {Link, useParams} from 'react-router-dom'
+
+// const Home = () => {
+//     return (
+//         <>
+//             <h1>Home Page</h1>
+//         </>
+//     )
+// }
+
+// const AllProjects = () => {
+//     const [prs, setPrs] = useState(projects)
+//     return (
+//         <div>
+//             <h1>Projects</h1>
+//             {prs.map((pr) => {
+//                 return (
+//                     <div key={pr.id}>
+//                         <h2>Name: {pr.name}</h2>
+//                         <h2>Level: {pr.level}</h2>
+//                         <Link to={`/project/:${pr.id}`}>Learn more</Link>
+//                     </div>
+//                 )
+//             })}
+//         </div>
+//     )
+// }
+
+// const Project = () => {
+    
+//     const [projectName, setProjectName] = useState('adsla')
+//     const [projectLevel, setProjectLevel] = useState('')
+//     const {id} = useParams();
+//     console.log(id);
+//     const newProject = projects.find((project) => project.id === parseInt(id))
+//     console.log('lol : ',newProject);
+//     // useEffect(() => {
+//     //     setProjectName(newProject.name)
+//     //     setProjectLevel(newProject.level)
+//     // },[]);
+
+//     return (
+//         <div>
+//             <h1>{projectName}</h1>
+//             <h2>{projectLevel}</h2>
+//             <Link to="/">Back to Homepage</Link>
+//         </div>
+//     )
+// }
+
+
+// const About = () => {
+//     return (
+//         <>
+//             <h1>About Page</h1>
+//         </>
+
+//     )
+// }
+
+
+// const Navbar = () => {
+//     return (
+//         <nav>
+//             <ul>
+//                 <li>
+//                     <Link to="/">Home</Link>
+//                 </li>
+//                 <li>
+//                     <Link to="/about">About</Link>
+//                 </li>
+//             </ul>
+//         </nav>
+//     )
+// }
+
+// const Error = () => {
+//     return (
+//         <>
+//             <h1>Error Page</h1>
+//         </>
+//     )
+// }
+
+// const App = () => {
+
+//     return (
+//         <div>
+//     <Router>
+//     <Navbar/>
+//             <Switch>
+//                 <Route exact path='/'> <AllProjects/> </Route>
+                
+//                 <Route path='/project/:id' > <Project/> </Route>
+                
+//                 <Route exact path='/about'> <About/> </Route>
+                
+//                 <Route path='*'> <Error/> </Route>
+//             </Switch>
+//     </Router>
+//     </div>)
+
+// }
 
 
 
@@ -153,7 +313,7 @@ export default App
     
 //     return (
 //         <div>
-//             <h1>{loading ? 'loading...' : 'data'}</h1>
+//             <h1>{loading ? 'loading...' : 'projects'}</h1>
 //         </div>
 //     )
 
@@ -169,53 +329,6 @@ export default App
 // essentially the usecase of this one is when you try to pass a function down to another
 // component that is 2 lvl's or more deeper than where the function actually currently is.
 
-// const ProjectContext = React.createContext()
-// // has 2 components : provider - consumer
-
-
-// const App = () => {
-
-//     const [prs, setPrs] = useState(projects)
-//     const removeProject = (id) => {  // i want to pass this func into the SinglePerson, and for that i
-//         setPrs((prs) => {            // create a context using createContext
-//             return prs.filter((pr) => pr.id !== id)
-//         });
-//     };
-
-//     return (
-//         <ProjectContext.Provider value={{removeProject, prs}}> // and in here, i'll pass it as a provider
-//             <h3>prop drilling</h3>
-//             <List prs={prs} />
-//         </ProjectContext.Provider>
-//     )
-
-// }
-
-// const List = ({prs}) => {
-//     const mainData = useContext(ProjectContext) // not necessary
-//     return (
-//         <>
-//             {mainData.prs.map((pr) => {
-//                 return (
-//                     <SingleProject key={pr.id} 
-//                     {...pr}/>
-//                 )
-//             })}
-//         </>
-//     )
-// }
-
-
-// const SingleProject = ({id, name}) => {
-//     const {removeProject} = useContext(ProjectContext) // I'll be receiving it here
-//     console.log(removeProject);
-//     return (
-//         <div>
-//             <h4>{name}</h4>
-//             <button onClick={() => removeProject(id)}>remove</button>
-//         </div>
-//     )
-// }
 
 
 

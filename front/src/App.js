@@ -1,17 +1,17 @@
-import projects from './projects.js'
+// import projects from './projects.js'
 import './index.css'
 
 import React, { useEffect, useContext } from 'react'
-import {useState} from 'react'
+// import {useState} from 'react'
 
 
 import { BrowserRouter as Router, Route, Switch} from 'react-router-dom'
 import {Link, useParams} from 'react-router-dom'
 
 
-import { AllProjects } from './showcaseprs.js'
+import { AllLists } from './Board'
 import { HandleSigninLogin } from './signup-login.js'
-import { Project } from './Project.js'
+import { List } from './List'
 
 const App = () => {
 
@@ -20,16 +20,19 @@ const App = () => {
 
             <Router>
 
-           <Link to="/"><h1 style={{textAlign:'center'}}>Project Manager</h1></Link> <br />
+           <Link to="/"><h1 style={{textAlign:'center'}}>Welcome to Board</h1></Link> <br />
             <Link to="/signup"><h3 style={{textAlign: 'right'}}>Signin/Login</h3></Link> <hr /> <br />
             
                 <Switch>
-                    <Route exact path='/'> <AllProjects/> </Route>
+                    <Route exact path='/'> <AllLists/> </Route>
                     
                     <Route exact path='/signup'> <HandleSigninLogin/> </Route>
                     
-                    <Route path='/projects/:id' > <Project/> </Route>
+                    <Route path='/lists/:id' > <List/> </Route>
                     
+                    {/* <Route path='/projects/:projectId/task/:taskId'> <EditTask/> </Route> */}
+                    
+
                 </Switch>
 
         
@@ -42,6 +45,26 @@ const App = () => {
 
 
 }
+
+
+
+// ############ TEMPLATE ###########
+// #################################
+// #################################
+// #################################
+
+// we have a board, and in that board, we have some lists.
+// those lists have names(like todo, doing & done)
+// those lists consist of some actions(or cards)
+// each card has members, category, startdate, due date, checklists
+// each of those checklists have a name, and a list of actual todo's
+//projects -> lists, tasks -> cards 
+
+// showcase lists in the main page
+
+
+
+
 
 // const Error = () => {
 //     return (
@@ -138,17 +161,6 @@ const App = () => {
 //     </div>)
 
 // }
-
-
-
-
-
-
-
-
-
-
-
 
 
 

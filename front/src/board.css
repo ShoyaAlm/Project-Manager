@@ -1,0 +1,82 @@
+.list-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: left;
+    text-align: center;
+}
+
+.list {
+    background-color: #f9f9f9;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 20px;
+    width: auto;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.list-link {
+    text-decoration: none;
+    color: #333;
+    display: block;
+    margin-top: 10px;
+}
+
+.remove-button {
+    margin-top: 10px;
+    background-color: #ff6666;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    text-align: center;
+}
+.remove-button:hover{
+    background-color: black;
+}
+
+/* Inside the same CSS file or a separate one */
+
+.showcase-checklists {
+    margin-top: 20px;
+}
+
+.checklist-title {
+    font-size: 18px;
+    margin: 10px 0;
+    text-align: center;
+}
+
+.checklist-item {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+}
+
+.checklist-item input[type="checkbox"] {
+    margin-right: 10px;
+}
+
+/* Center the entire ShowCards component */
+.showcards-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+
+.card-item {
+    margin: 10px;
+    padding: 10px;
+    width: 200px;
+    height: auto;
+    border: 2px solid #ccc;
+    border-radius: 20px;
+    text-align: left;
+    text-decoration: none;
+}
+
+.card-item a:hover{
+    color: #ff6666;
+}

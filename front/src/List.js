@@ -3,7 +3,7 @@ import lists from './lists.js'
 import {useState, useEffect} from 'react'
 import {Link, useParams} from 'react-router-dom'
 import {Router, Route} from 'react-router-dom'
-
+import './list.css'
 
 export const List = () => {
     
@@ -11,7 +11,7 @@ export const List = () => {
     const [listLevel, setListLevel] = useState(1)
     const {id} = useParams();
 
-    const newList = lists.find((lst) => lst.id === parseInt(id))
+    const newList = lists.find((list) => list.id === parseInt(id))
     useEffect(() => {
         if(newList){
             setListName(newList.name)
@@ -35,55 +35,51 @@ const ShowCards = ({list}) => {
 
     return (
         <>
-            <h1 style={{textAlign:'center'}}>Cards</h1>
-            <hr style={{marginLeft:'600px', marginRight:'600px'}}/> <br />
-                <>
-                    {list.cards.map((card) => {
-                        return (
-                            <div key={card.id} style={{display:'inline-block', width:'500px',
-                             height:'200px', marginTop:'80px'}}>  
-                                <h2>card id : {card.id}</h2>
-                                <h2>name: {card.name}</h2>
-                                <h3>status: {card.status}</h3> <br />
-                                        
-                                <Link to={`/lists/${list.id}/card/${card.id}`}> edit
-                                </Link>
-                                        
-                                </div>
-                                )
-                            })}
-                </>
-        </>
-    )
-}
-
-
-const CreateList = () => {
-    const [name, setName] = useState('')
-    const [card, setcard] = useState([])
-    const [level, setLevel] = useState()
-
-
-    const handleSubmit = (e) => {
-        if(name && card && level) {
-            const createdList = {id: new Date().getTime().toString(), name, card, level}
-        }
-    }
-
-
-    return (
-        <div style={{textAlign:'center'}}>
-
-            <form >
-                
-                <label htmlFor="name">Name: <input type="text"/></label>
-
-                <label htmlFor="card">card: <input type="text"/></label>
-
-                <label htmlFor="level">Level: <input type="text"/></label>
-
-            </form>
-
+        <h1 style={{ textAlign: 'center' }}>Cards</h1>
+        <hr style={{ marginLeft: 'auto', marginRight: 'auto', width: '50%' }} /> <br />
+        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center' }}>
+            {list.cards.map((card) => (
+                <div key={card.id} className="card">
+                    <h2>Card {card.id}</h2>
+                    <h3>Name: {card.name}</h3>
+                    <Link to={`/lists/${list.id}/cards/${card.id}`} className="edit-link">
+                        Edit
+                    </Link>
+                </div>
+            ))}
         </div>
+    </>
+    
     )
 }
+
+
+// const CreateList = () => {
+//     const [name, setName] = useState('')
+//     const [card, setcard] = useState([])
+//     const [level, setLevel] = useState()
+
+
+//     const handleSubmit = (e) => {
+//         if(name && card && level) {
+//             const createdList = {id: new Date().getTime().toString(), name, card, level}
+//         }
+//     }
+
+
+//     return (
+//         <div style={{textAlign:'center'}}>
+
+//             <form >
+                
+//                 <label htmlFor="name">Name: <input type="text"/></label>
+
+//                 <label htmlFor="card">card: <input type="text"/></label>
+
+//                 <label htmlFor="level">Level: <input type="text"/></label>
+
+//             </form>
+
+//         </div>
+//     )
+// }

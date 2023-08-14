@@ -1,0 +1,187 @@
+/* .card-container {
+    display: flex;
+    justify-content: space-between;
+    margin: 40px;
+} */
+
+/* .card-details { */
+    /*width: calc(40% - 20px); /* Adjust the width based on your preference */
+    /* Rest of your styles for card-details */
+    /* display: inline-grid; */
+    /* padding: 20px;
+    border: 1px solid #ccc;T
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+} */
+
+.card-container {
+    /* left: 100px; */
+    right: 100px;
+    display: flex;
+    justify-content: space-between;
+    margin: 30px;
+    position: relative; /* Add this line for relative positioning */
+}
+
+.add-to-card {
+    width: 200px;
+    margin: auto;
+    padding: 4px;
+    border: 1px solid #ccc;
+    /* align-items: center; */
+    border-radius: 8px;
+    text-align: center;
+    margin-right: auto;
+    position: absolute; /* Position absolutely */
+    top: 20px; /* Position from the top */
+    right: 10px; /* Position from the right */
+    left: auto;
+}
+
+
+.add-to-card .members, .labels, .atc-checklist, .dates, .attachment{
+    /* width: calc(30% - 3px); */
+    width: 150px;
+    margin: 4px;
+    padding: 4px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    text-align: center;
+    justify-content: right;
+    position: relative;
+}
+
+
+.card-details {
+    width: calc(60% - 20px); /* Adjust the width based on your preference */
+    /* Rest of your styles for card-details */
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    /* Add these lines for proper alignment */
+    box-sizing: border-box;
+    flex-grow: 1;
+    margin-left: 20px; /* Add margin for spacing between card-details and add-to-card */
+}
+
+
+
+
+.card-title {
+    font-size: 24px;
+    margin: 0;
+}
+
+.list-name {
+    font-size: 14px;
+    color: #777;
+}
+
+.card-members {
+    margin-top: 30px;
+}
+
+.section-title {
+    margin-top: 40px;
+    font-size: 18px;
+}
+.description-input {
+    margin-right: auto;
+}
+
+/* .card-description {
+    margin: 10px 0;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: white;
+} */
+.card-description {
+    width: 40%;
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-top: 10px;
+}
+
+.card-description-active {
+    width: 50%;
+    padding: 10px;
+    border: 1px solid #007bff; /* Blue border color */
+    border-radius: 4px;
+}
+
+.description-buttons {
+    margin-top: 10px;
+    display: flex;
+    justify-content: left;
+    margin-left: 180px;
+}
+
+.description-buttons button {
+    margin: 10px 5px;
+    padding: 5px 10px;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+
+
+
+
+.showcase-checklists {
+    margin-top: 40px;
+    margin-right: 60%;
+}
+
+.checklist-title {
+    font-size: 16px;
+    margin: 10px 0;
+}
+
+.checklist-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+ .checklist-item input[type="checkbox"] {
+    margin-right: 10px;
+} 
+
+ .checklist-item label {
+    font-size: 16px;
+} 
+ 
+.checklist-item input[type="checkbox"]:checked + label {
+    text-decoration: line-through;
+    color: #999; 
+}
+
+
+.checklist {
+    margin: 20px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+}
+
+.remove-checklist-button {
+    margin: 10px 5px;
+    padding: 5px 10px;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+    border-radius: 4px;
+    margin-top: 10px;
+    display: flex;
+    justify-content: left;
+    margin-left: 42%;
+}

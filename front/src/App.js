@@ -12,6 +12,7 @@ import {Link, useParams} from 'react-router-dom'
 import { AllLists } from './Board'
 import { HandleSigninLogin } from './signup-login.js'
 import { List } from './List'
+import { Card } from './Card'
 
 const App = () => {
 
@@ -20,18 +21,18 @@ const App = () => {
 
             <Router>
 
-           <Link to="/"><h1 style={{textAlign:'center'}}>Welcome to Board</h1></Link> <br />
-            <Link to="/signup"><h3 style={{textAlign: 'right'}}>Signin/Login</h3></Link> <hr /> <br />
+           <Link to="/" style={{textDecoration:'none', fontFamily:'times new roman', color:'black'}}><h1 style={{textAlign:'center'}}>Welcome to Board</h1></Link> <br />
+            <Link to="/signup"><h3 style={{textAlign: 'right', 
+            textDecoration:'none', fontFamily:'sans-serif', color:'black'}}>Signup/Login</h3></Link> <hr /> <br />
             
                 <Switch>
                     <Route exact path='/'> <AllLists/> </Route>
+
+                    <Route path='/list/:id'> <List/> </Route>
                     
-                    <Route exact path='/signup'> <HandleSigninLogin/> </Route>
+                    <Route path='/lists/:listId/cards/:cardId'> <Card/> </Route>
                     
-                    <Route path='/lists/:id' > <List/> </Route>
-                    
-                    {/* <Route path='/projects/:projectId/task/:taskId'> <EditTask/> </Route> */}
-                    
+                    <Route path='/signup'> <HandleSigninLogin/> </Route>
 
                 </Switch>
 

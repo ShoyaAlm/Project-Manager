@@ -1,48 +1,65 @@
-import {useState} from 'react'
+import {useEffect, useState} from 'react'
 
+
+import './signup.css'
 export const HandleSigninLogin = () => {
 
-    const [firstName, setFirstName] = useState('')
+    const [name, setName] = useState('')
     const [email, setEmail] = useState('')
-    const [age, setAge] = useState('')
-    const [users, setusers] = useState([])
+    const [password, setPassword] = useState('')
+    const [users, setUsers] = useState([])
     
     
     const handleSubmit = (e) => {
         e.preventDefault()
-        if (firstName && email && age) {
-            const person = {id: new Date().getTime().toString(), firstName, email, age}
-            setusers((users) => {
-                return [...users, person]
-            })
-            console.log('person: ',person);
+
+        if (name && email && password) {
+            const person = {id: new Date().getTime().toString(), name, email, password}
+            setUsers(person)
+            console.log('users: ',users);
+        } else {
+            console.log('enter value for all inputs!');
         }
         console.log('users: ',users);
     }
     
     return (
         <>
-            <div>
-                <form onSubmit={handleSubmit}>
-    
-                    <label htmlFor="firstName">Name: </label>
-                    <input type="text" name='firstName' 
-                    value={firstName} onChange={(e) => setFirstName(e.target.value)}/> <br/>
-    
-                    <label htmlFor="email">Email: </label>
-                    <input type="email" name='email' 
-                    value={email} onChange={(e) => setEmail(e.target.value)}/> <br/>
-    
-                    <label htmlFor="age">Age: </label>
-                    <input type="age" name='age' 
-                    value={age} onChange={(e) => setAge(e.target.value)}/> <br/>
-    
-                <button type="submit">Submit</button>
-                </form>
-    
-    
+
+        <div class="signupFrm">
+            <div class="wrapper">
+            <form action="" class="form" onSubmit={(e) => handleSubmit(e)}>
+            <h1 class="title">Sign up</h1>
+
+            <div class="inputContainer">
+                <input type="text" class="input" placeholder="a" 
+                onChange={(e) => setEmail(e.target.value)}/>
+                <label for="" class="label">Email </label>
             </div>
+
+            <div class="inputContainer">
+                <input type="text" class="input" placeholder="a" 
+                onChange={(e) => setName(e.target.value)}/>
+                <label for="" class="label">Name </label>
+            </div>
+
+            <div class="inputContainer">
+                <input type="text" class="input" placeholder="a" 
+                onChange={(e) => setPassword(e.target.value)}/>
+                <label for="" class="label">Password </label>
+            </div>
+
+
+            <input type="submit" class="submitBtn" value="Sign up"/>
+            </form>
+            </div>
+        </div>
+
+
+        
         </>
     )
 
 }
+
+

@@ -7,11 +7,12 @@ const lists = [
                 name:'planning',
                 members:['alex', 'josh', 'lucas', 'peter'],
                 dates:['24th august', '21th september'],
-                checklist:[
+                description:'just some description',
+                checklists:[
                     {
                         id: 1,
                         name: 'checklist 1',
-                        item:[
+                        items:[
                             {
                                 id: 1,
                                 name:'item 1',
@@ -30,7 +31,7 @@ const lists = [
                     {
                         id: 2,
                         name: 'checklist 2',
-                        item:[
+                        items:[
                             {
                                 id: 1,
                                 name:'item 1',
@@ -52,11 +53,12 @@ const lists = [
                 name:'meeting',
                 members:['alex', 'josh', 'lucas', 'peter'],
                 dates:['24th august', '21th september'],
-                checklist:[
+                description:'another description',
+                checklists:[
                     {
                         id: 1,
                         name: 'checklist 1',
-                        item:[
+                        items:[
                             {
                                 id: 1,
                                 name:'item 1',
@@ -75,7 +77,7 @@ const lists = [
                     {
                         id: 2,
                         name: 'checklist 2',
-                        item:[
+                        items:[
                             {
                                 id: 1,
                                 name:'item 1',
@@ -96,18 +98,19 @@ const lists = [
         ]
     },
     {
-        id: 1,
+        id: 2,
         name: 'to do',
         cards:[
             {   id: 1,
-                name:'planning',
+                name:'working',
                 members:['alex', 'josh', 'lucas', 'peter'],
                 dates:['24th august', '21th september'],
-                checklist:[
+                description:'just some description',
+                checklists:[
                     {
                         id: 1,
                         name: 'checklist 1',
-                        item:[
+                        items:[
                             {
                                 id: 1,
                                 name:'item 1',
@@ -126,7 +129,7 @@ const lists = [
                     {
                         id: 2,
                         name: 'checklist 2',
-                        item:[
+                        items:[
                             {
                                 id: 1,
                                 name:'item 1',
@@ -145,14 +148,15 @@ const lists = [
 
             {
                 id: 2,
-                name:'meeting',
+                name:'resting',
                 members:['alex', 'josh', 'lucas', 'peter'],
                 dates:['24th august', '21th september'],
-                checklist:[
+                description:'another description',
+                checklists:[
                     {
                         id: 1,
                         name: 'checklist 1',
-                        item:[
+                        items:[
                             {
                                 id: 1,
                                 name:'item 1',
@@ -171,7 +175,7 @@ const lists = [
                     {
                         id: 2,
                         name: 'checklist 2',
-                        item:[
+                        items:[
                             {
                                 id: 1,
                                 name:'item 1',
@@ -190,7 +194,203 @@ const lists = [
             },
             
         ]
-    }
+    },
+    {
+        id: 3,
+        name: 'done',
+        cards:[
+            {   id: 1,
+                name:'calculation',
+                members:['alex', 'josh', 'lucas', 'peter'],
+                dates:['24th august', '21th september'],
+                description:'just some description',
+                checklists:[
+                    {
+                        id: 1,
+                        name: 'checklist 1',
+                        items:[
+                            {
+                                id: 1,
+                                name:'item 1',
+                                dueDate:'24th september',
+                                assignedTo:['josh', 'peter']
+                            },
+                            {
+                                id: 2,
+                                name:'item 2',
+                                dueDate:'30th september',
+                                assignedTo:['alex', 'lucas']
+                            },
+
+                        ]
+                    },
+                    {
+                        id: 2,
+                        name: 'checklist 2',
+                        items:[
+                            {
+                                id: 1,
+                                name:'item 1',
+                                dueDate:'24th september',
+                                assignedTo:['josh', 'peter']
+                            },
+                            {
+                                id: 2,
+                                name:'item 2',
+                                dueDate:'30th september',
+                                assignedTo:['alex', 'lucas']
+                            },
+                        ]
+                    }
+                ]
+            },
+
+            {   id: 2,
+                name:'checks',
+                members:['alex', 'josh', 'lucas', 'peter'],
+                dates:['24th august', '21th september'],
+                description:'another description',
+                checklists:[
+                    {
+                        id: 1,
+                        name: 'checklist 1',
+                        items:[
+                            {
+                                id: 1,
+                                name:'item 1',
+                                dueDate:'24th september',
+                                assignedTo:['josh', 'peter']
+                            },
+                            {
+                                id: 2,
+                                name:'item 2',
+                                dueDate:'30th september',
+                                assignedTo:['alex', 'lucas']
+                            },
+
+                        ]
+                    },
+                    {
+                        id: 2,
+                        name: 'checklist 2',
+                        items:[
+                            {
+                                id: 1,
+                                name:'item 1',
+                                dueDate:'24th september',
+                                assignedTo:['josh', 'peter']
+                            },
+                            {
+                                id: 2,
+                                name:'item 2',
+                                dueDate:'30th september',
+                                assignedTo:['alex', 'lucas']
+                            },
+                        ]
+                    }
+                ]
+            },
+            
+        ]
+    },
+    {
+        id: 4,
+        name: 'plan',
+        cards:[
+            {   id: 1,
+                name:'meeting',
+                members:['alex', 'josh', 'lucas', 'peter'],
+                dates:['24th august', '21th september'],
+                description:'just some description',
+                checklists:[
+                    {
+                        id: 1,
+                        name: 'checklist 1',
+                        items:[
+                            {
+                                id: 1,
+                                name:'item 1',
+                                dueDate:'24th september',
+                                assignedTo:['josh', 'peter']
+                            },
+                            {
+                                id: 2,
+                                name:'item 2',
+                                dueDate:'30th september',
+                                assignedTo:['alex', 'lucas']
+                            },
+
+                        ]
+                    },
+                    {
+                        id: 2,
+                        name: 'checklist 2',
+                        items:[
+                            {
+                                id: 1,
+                                name:'item 1',
+                                dueDate:'24th september',
+                                assignedTo:['josh', 'peter']
+                            },
+                            {
+                                id: 2,
+                                name:'item 2',
+                                dueDate:'30th september',
+                                assignedTo:['alex', 'lucas']
+                            },
+                        ]
+                    }
+                ]
+            },
+
+            {   id: 2,
+                name:'verdicts',
+                members:['alex', 'josh', 'lucas', 'peter'],
+                dates:['24th august', '21th september'],
+                description:'another description',
+                checklists:[
+                    {
+                        id: 1,
+                        name: 'checklist 1',
+                        items:[
+                            {
+                                id: 1,
+                                name:'item 1',
+                                dueDate:'24th september',
+                                assignedTo:['josh', 'peter']
+                            },
+                            {
+                                id: 2,
+                                name:'item 2',
+                                dueDate:'30th september',
+                                assignedTo:['alex', 'lucas']
+                            },
+
+                        ]
+                    },
+                    {
+                        id: 2,
+                        name: 'checklist 2',
+                        items:[
+                            {
+                                id: 1,
+                                name:'item 1',
+                                dueDate:'24th september',
+                                assignedTo:['josh', 'peter']
+                            },
+                            {
+                                id: 2,
+                                name:'item 2',
+                                dueDate:'30th september',
+                                assignedTo:['alex', 'lucas']
+                            },
+                        ]
+                    }
+                ]
+            },
+            
+        ]
+    },
 ]
 
 export default lists

@@ -80,3 +80,63 @@
 .card-item a:hover{
     color: #ff6666;
 }
+
+
+.add-item-buttons {
+    margin-top: 10px;
+    display: flex;
+    justify-content: left;
+    margin-left: 22%;
+}
+
+.add-item-buttons button {
+    margin: 10px 5px;
+    padding: 5px 10px;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+
+/* .add-list{
+    margin: '10px';
+    padding: '10px';
+    width: '200px'; 
+    height: '60px'; 
+    border: '2px solid #ccc';
+    border-radius: '20px'
+} */
+
+.add-list-container {
+    position: relative;
+}
+
+.add-list {
+    margin: 10px;
+    padding: 10px;
+    width: 200px;
+    height: 60px;
+    border: 2px solid #ccc;
+    border-radius: 20px;
+}
+
+.add-list-buttons {
+    position: absolute;
+    top: 20%;
+    left: 50px;
+    right: auto;
+    display: flex;
+    justify-content: center;
+    margin-top: 5px;
+}
+
+.add-list-buttons button {
+    padding: 5px 10px;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+    border-radius: 4px;
+}

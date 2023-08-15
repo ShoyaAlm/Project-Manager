@@ -25,21 +25,53 @@ export const Card = () => {
     // Define state to store the temporary edited description
     const [editedDescription, setEditedDescription] = useState(cardDescription);
 
-    // Function to save the edited description
-    const saveDescription = (e) => {
-        e.preventDefault()
-        console.log('save');
-        setIsEditingDescription(false);
-        // setEditedDescription(cardDescription);
-    };
-    
-    // Function to cancel editing and revert to original description
-    const cancelDescription = () => {
-        console.log('cancel');
-        setEditedDescription(cardDescription);
-        setIsEditingDescription(false);
-    };
 
+    const [isAddingItem, setIsAddingItem] = useState(false)
+    const [newItemName, setNewItemName] = useState('')
+
+
+
+    const AddItem = (checklist) => {
+        
+
+        const handleSaveItem = () => {
+            if(newItemName.trim() !== ''){
+                const updatedChecklist = {
+                    ...checklist,
+                    items: [
+                        ...checklist.items,
+                        {
+                            id: Date.now(),
+                            name:newItemName,
+                            dueDate:'24th september',
+                            assignedTo:['josh', 'peter']
+                        }
+                    ]
+                }
+        
+                const updatedCardChecklists = [...cardChecklists]
+        
+                updatedCardChecklists[checklist.id] = updatedChecklist;
+        
+                setCardChecklists(updatedCardChecklists);
+    
+                setNewItemName('');
+            }
+
+        };
+        
+        return (
+            <div>
+                <input
+                    type="text"
+                    value={newItemName}
+                    onChange={(e) => setNewItemName(e.target.value)}
+                    placeholder="Enter item name"
+                />
+                <button onClick={() => handleSaveItem()}>Save</button>
+            </div>
+        );
+    }
 
     const removeChecklist = (id) => {
         setCardChecklists((cardChecklists) => {
@@ -61,6 +93,7 @@ export const Card = () => {
                         textDecoration:'none',
                         color:'blue'
                     }}>{newList.name}</Link></h3>
+                    
                     <div className='card-members'>
                         <h3>Members</h3>
                         <h4>
@@ -82,7 +115,8 @@ export const Card = () => {
                         />
                         {isEditingDescription && (
                             <div className="description-buttons">
-                                <button type="submit" onSubmit={() => {
+                                <button type="submit" onClick={() => {
+                                    setCardDescription(editedDescription)
                                     setIsEditingDescription(false);
                                 }}>Save</button>
                                 <button type="submit" onClick={() => {
@@ -109,6 +143,22 @@ export const Card = () => {
 
                                     
                                 ))}
+
+                                {isAddingItem === checklist.id && <AddItem checklist={checklist}/> }
+
+
+
+                                <button type='button' className='add-item-button' onClick={() => setIsAddingItem(checklist.id)}>Add an item</button>
+                                
+
+
+
+
+
+
+
+
+                                <br />
                                 <button type='submit' className='remove-checklist-button' onClick={() => removeChecklist(checklist.id)}>remove</button>
                             </div>
                         ))}
@@ -116,9 +166,39 @@ export const Card = () => {
                 
 
                     <div className='add-to-card'>
-                        <h5 className='members'>Members</h5> <h5 className='labels'>Labels</h5>
-                        <h5 className='atc-checklist'>Checklist</h5> <h5 className='dates'>Dates</h5>
-                        <h5 className='attachment'>Attachment</h5> 
+                        
+                        <div className='dropdown'>
+                        <button className='dropbtn'>Members</button>
+                            <div className='dropdown-content'>
+                                {cardMembers.map((member) => {
+                                    return <a href="#">{member}</a>
+                                })}
+                            </div>
+                        </div>
+
+                        <div className='dropdown'>
+                        <button className='dropbtn'>Checklist</button>
+                            <div className='dropdown-content'>
+                                {cardChecklists.map((checklist) => {
+                                    return <a href="#">{checklist.name}</a>
+                                })}
+                            </div>
+                        </div>
+
+                        <div className='dropdown'>
+                        <button className='dropbtn'>Lables</button>
+                            <div className='dropdown-content'>
+                            </div>
+                        </div>
+
+                        <div className='dropdown'>
+                        <button className='dropbtn'>Dates</button>
+                            <div className='dropdown-content'>
+                                <a href="#">starting: {newCard.dates[0]}</a>
+                                <a href="#">ending: {newCard.dates[1]}</a>
+                            </div>
+                        </div>
+ 
                     </div>
 
 
@@ -134,103 +214,4 @@ export const Card = () => {
 );
     
 }    
-
-
-
-
-
-    // const reducer = (state, action) => {
-    
-    //     console.log(state);
-    //     if (action.type === 'edit_card'){
-    //         const newcard = [...state.card, action.payload]
-    //         return {
-    //             ...state,
-    //             card: newcard,
-    //             isModalOpen: true,
-    //             modalContent: 'card added'
-    //         }
-    //     }
-    //     if(action.type === 'no_value'){
-    //         return {
-    //             ...state,
-    //             isModalOpen: true,
-    //             modalContent: 'please enter value'
-    //         }
-    //     }    
-    
-    //     throw new Error('No matching action type')
-    // };
-    
-    
-    // const defaultState = {
-    //     card: [],
-    //     name: '',
-    //     description:'',
-    //     isModalOpen: true,
-    //     modalContent: 'Edit Card'
-    // };
-    
-    
-    
-    // const Modal = ({modalContent, closeModal}) => {
-    //     useEffect(() => {
-    //         setTimeout(() => {
-    //             closeModal();
-    //         }, 3000);
-    //     });
-    //     return (
-    //         <div>
-    //             <p>{modalContent}</p>
-    //         </div>
-    //         )
-    // }
-    
-    
-    
-    
-    // const index = () => {
-        
-    //     const [name, setName] = useState('')
-    //     const [description, setDescription] = useState('')
-    //     const [state, dispatch] = useReducer(reducer, defaultState)
-    
-    //     const handleSubmit = (e) => {
-    //         e.preventDefault();
-    //         if (name && description) {
-    //             const newCard = { id: new Date().getTime().toString(), name, description}
-    //             dispatch({type: 'edit_card', payload: newCard })
-    //             setName(name)
-    //             setDescription(description)
-    //         } else {
-    //             dispatch({type: 'no_value'})
-    //         }
-    //     };
-    
-    //     return (
-    //         <>
-    //         {state.isModalOpen && (
-    //             <Modal closeModal={closeModal} modalContent={state.modalContent} />
-    //           )}
-    //           <form onSubmit={handleSubmit} className='form'>
-    //             <div>
-    //               <input
-    //                 type='text'
-    //                 value={name}
-    //                 onChange={(e) => setName(e.target.value)}
-    //               />
-    //             </div>
-    //             <button type='submit'>add</button>
-    //           </form>
-    //             {state.users.map((person) => {
-    //                 return (
-    //                     <div key={person.id} className="card">
-    //                         <h4>{person.name}</h4>
-    //                     </div>
-    //                 )
-    //             })}
-    //         </>
-    //     )
-    
-    // }
 

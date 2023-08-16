@@ -34,55 +34,62 @@ const List = () => {
     
     
     const [isAddingList, setIsAddingList] = useState(false)
-    const [newList, setNewList] = useState({})
-    const [newListName, setNewListName] = useState('')
-
+    
     const handleSaveCard = (lst) => {
         if (newCardName.trim() !== '') {
             const updatedList = lst.cards.push({ id: Date.now(), name:newCardName, 
-            members:[], dates:[Date.now(), Date.now()],
+                members:[], dates:[Date.now(), Date.now()],
             description:'',checklists:[]})
             console.log('updated List', updatedList)
             setNewCardName('')
             }
     };
 
-
-    const addNewList = () => {
-        if (newListName.trim() !== ''){
-            setNewList({id: Date.now(), name: newListName, cards:[{id: Date.now(),
-                name:'planning',
-                members:['alex', 'josh', 'lucas', 'peter'],
-                dates:['24th august', '21th september'],
-                description:'default description',
-                checklists:[{
+    const [newList, setNewList] = useState({})
+    const [newListName, setNewListName] = useState('')
+    
+    
+    const addNewList = () => {  // new code
+    if (newListName.trim() !== '') {
+    const newListToAdd = {
+    id: Date.now(),
+    name: newListName,
+    cards: [
+        {
+            id: Date.now(),
+            name: 'new card',
+            members: ['alex', 'josh', 'lucas', 'peter'],
+            dates: ['24th august', '21st september'],
+            description: 'default description',
+            checklists: [
+                {
                     id: 1,
                     name: 'checklist 1',
-                    items:[
+                    items: [
                         {
                             id: 1,
-                            name:'item 1',
-                            dueDate:'24th september',
-                            assignedTo:['josh', 'peter']
+                            name: 'item 1',
+                            dueDate: '24th september',
+                            assignedTo: ['josh', 'peter'],
                         },
                         {
                             id: 2,
-                            name:'item 2',
-                            dueDate:'30th september',
-                            assignedTo:['alex', 'lucas']
+                            name: 'item 2',
+                            dueDate: '30th september',
+                            assignedTo: ['alex', 'lucas'],
                         },
-                    ]   
+                            ],
+                        },
+                    ],
+                },
+            ],
+        };
 
-                }]
-            }]
-        })
-
-        setLsts(prevLsts => [...prevLsts, newList])
-        setNewListName('')
-        setIsAddingList(false)
+        setLsts(prevLsts => [...prevLsts, newListToAdd]);
+        setNewListName('');
+        setIsAddingList(false);
         }
-            
-    }
+};
 
 
     return (
@@ -106,18 +113,18 @@ const List = () => {
                     
                     {isAddingCard === lst.id && (
                             <div className="add-item-buttons">
-                                <button type="submit" onClick={() => handleSaveCard(lst)}>Save</button>
+                                <button type="submit" onClick={() => handleSaveCard(lst)}>ذخیره</button>
                                 <button type='submit' onClick={() => {
                                     setNewCardName('')
                                     setIsAddingCard(false)
-                                }}>Cancel</button>
+                                }}>کنسل</button>
                             </div>
                         )}
                     
 
                     <br />
                     <button onClick={() => removeList(lst.id)} className="remove-button">
-                        Remove
+                        پاک کردن
                     </button>
                 </div>
             ))}
@@ -136,11 +143,11 @@ const List = () => {
                 />
                 {isAddingList === true && (
                     <div className="add-list-buttons">
-                        <button type="submit" onClick={() => addNewList()}>Save</button>
+                        <button type="submit" onClick={() => addNewList()}>ذخیره</button>
                         <button type="submit" onClick={() => {
                             setNewListName('');
                             setIsAddingList(false);
-                        }}>Cancel</button>
+                        }}>کنسل</button>
                     </div>
                 )}
             </div>

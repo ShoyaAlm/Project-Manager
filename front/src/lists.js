@@ -1,394 +1,394 @@
 const lists = [
     {
         id: 1,
-        name: 'doing',
+        name: 'درحال انجام',
         cards:[
             {   id: 1,
-                name:'planning',
-                members:['alex', 'josh', 'lucas', 'peter'],
-                dates:['24th august', '21th september'],
-                description:'just some description',
+                name:'برنامه ریزی',
+                members:['پرهام', 'شایان', 'محمد', 'اشکان'],
+                dates:['30 مرداد', '30 شهریور'],
+                description:'یک سری توضیحات',
                 checklists:[
                     {
                         id: 1,
-                        name: 'checklist 1',
+                        name: 'چکلیست 1',
                         items:[
                             {
                                 id: 1,
-                                name:'item 1',
-                                dueDate:'24th september',
-                                assignedTo:['josh', 'peter']
+                                name:'آیتم 1',
+                                dueDate:'20 شهریور',
+                                assignedTo:['محمد', 'اشکان']
                             },
                             {
                                 id: 2,
-                                name:'item 2',
-                                dueDate:'30th september',
-                                assignedTo:['alex', 'lucas']
+                                name:'آیتم 2',
+                                dueDate:'25 شهریور',
+                                assignedTo:['پرهام', 'شایان']
                             },
 
                         ]
                     },
                     {
                         id: 2,
-                        name: 'checklist 2',
+                        name: 'چکلیست 2',
                         items:[
                             {
                                 id: 1,
-                                name:'item 1',
-                                dueDate:'24th september',
-                                assignedTo:['josh', 'peter']
+                                name:'آیتم 1',
+                                dueDate:'20 شهریور',
+                                assignedTo:['محمد', 'اشکان']
                             },
                             {
                                 id: 2,
-                                name:'item 2',
-                                dueDate:'30th september',
-                                assignedTo:['alex', 'lucas']
+                                name:'آیتم 2',
+                                dueDate:'25 شهریور',
+                                assignedTo:['پرهام', 'شایان']
                             },
+
                         ]
                     }
                 ]
             },
-
             {   id: 2,
-                name:'meeting',
-                members:['alex', 'josh', 'lucas', 'peter'],
-                dates:['24th august', '21th september'],
-                description:'another description',
+                name:'برنامه ریزی',
+                members:['پرهام', 'شایان', 'محمد', 'اشکان'],
+                dates:['30 مرداد', '30 شهریور'],
+                description:'یک سری توضیحات',
                 checklists:[
                     {
                         id: 1,
-                        name: 'checklist 1',
+                        name: 'چکلیست 1',
                         items:[
                             {
                                 id: 1,
-                                name:'item 1',
-                                dueDate:'24th september',
-                                assignedTo:['josh', 'peter']
+                                name:'آیتم 1',
+                                dueDate:'20 شهریور',
+                                assignedTo:['محمد', 'اشکان']
                             },
                             {
                                 id: 2,
-                                name:'item 2',
-                                dueDate:'30th september',
-                                assignedTo:['alex', 'lucas']
+                                name:'آیتم 2',
+                                dueDate:'25 شهریور',
+                                assignedTo:['پرهام', 'شایان']
                             },
 
                         ]
                     },
                     {
                         id: 2,
-                        name: 'checklist 2',
+                        name: 'چکلیست 2',
                         items:[
                             {
                                 id: 1,
-                                name:'item 1',
-                                dueDate:'24th september',
-                                assignedTo:['josh', 'peter']
+                                name:'آیتم 1',
+                                dueDate:'20 شهریور',
+                                assignedTo:['محمد', 'اشکان']
                             },
                             {
                                 id: 2,
-                                name:'item 2',
-                                dueDate:'30th september',
-                                assignedTo:['alex', 'lucas']
+                                name:'آیتم 2',
+                                dueDate:'25 شهریور',
+                                assignedTo:['پرهام', 'شایان']
                             },
+
                         ]
                     }
                 ]
             },
-            
         ]
     },
     {
         id: 2,
-        name: 'to do',
+        name: 'برای انجام',
         cards:[
             {   id: 1,
-                name:'working',
-                members:['alex', 'josh', 'lucas', 'peter'],
-                dates:['24th august', '21th september'],
-                description:'just some description',
+                name:'برنامه ریزی',
+                members:['پرهام', 'شایان', 'محمد', 'اشکان'],
+                dates:['30 مرداد', '30 شهریور'],
+                description:'یک سری توضیحات',
                 checklists:[
                     {
                         id: 1,
-                        name: 'checklist 1',
+                        name: 'چکلیست 1',
                         items:[
                             {
                                 id: 1,
-                                name:'item 1',
-                                dueDate:'24th september',
-                                assignedTo:['josh', 'peter']
+                                name:'آیتم 1',
+                                dueDate:'20 شهریور',
+                                assignedTo:['محمد', 'اشکان']
                             },
                             {
                                 id: 2,
-                                name:'item 2',
-                                dueDate:'30th september',
-                                assignedTo:['alex', 'lucas']
+                                name:'آیتم 2',
+                                dueDate:'25 شهریور',
+                                assignedTo:['پرهام', 'شایان']
                             },
 
                         ]
                     },
                     {
                         id: 2,
-                        name: 'checklist 2',
+                        name: 'چکلیست 2',
                         items:[
                             {
                                 id: 1,
-                                name:'item 1',
-                                dueDate:'24th september',
-                                assignedTo:['josh', 'peter']
+                                name:'آیتم 1',
+                                dueDate:'20 شهریور',
+                                assignedTo:['محمد', 'اشکان']
                             },
-                            {   id: 2,
-                                name:'item 2',
-                                dueDate:'30th september',
-                                assignedTo:['alex', 'lucas']
+                            {
+                                id: 2,
+                                name:'آیتم 2',
+                                dueDate:'25 شهریور',
+                                assignedTo:['پرهام', 'شایان']
                             },
+
                         ]
                     }
                 ]
             },
-
-            {
-                id: 2,
-                name:'resting',
-                members:['alex', 'josh', 'lucas', 'peter'],
-                dates:['24th august', '21th september'],
-                description:'another description',
+            {   id: 2,
+                name:'برنامه ریزی',
+                members:['پرهام', 'شایان', 'محمد', 'اشکان'],
+                dates:['30 مرداد', '30 شهریور'],
+                description:'یک سری توضیحات',
                 checklists:[
                     {
                         id: 1,
-                        name: 'checklist 1',
+                        name: 'چکلیست 1',
                         items:[
                             {
                                 id: 1,
-                                name:'item 1',
-                                dueDate:'24th september',
-                                assignedTo:['josh', 'peter']
+                                name:'آیتم 1',
+                                dueDate:'20 شهریور',
+                                assignedTo:['محمد', 'اشکان']
                             },
                             {
                                 id: 2,
-                                name:'item 2',
-                                dueDate:'30th september',
-                                assignedTo:['alex', 'lucas']
+                                name:'آیتم 2',
+                                dueDate:'25 شهریور',
+                                assignedTo:['پرهام', 'شایان']
                             },
 
                         ]
                     },
                     {
                         id: 2,
-                        name: 'checklist 2',
+                        name: 'چکلیست 2',
                         items:[
                             {
                                 id: 1,
-                                name:'item 1',
-                                dueDate:'24th september',
-                                assignedTo:['josh', 'peter']
+                                name:'آیتم 1',
+                                dueDate:'20 شهریور',
+                                assignedTo:['محمد', 'اشکان']
                             },
                             {
                                 id: 2,
-                                name:'item 2',
-                                dueDate:'30th september',
-                                assignedTo:['alex', 'lucas']
+                                name:'آیتم 2',
+                                dueDate:'25 شهریور',
+                                assignedTo:['پرهام', 'شایان']
                             },
+
                         ]
                     }
                 ]
             },
-            
         ]
     },
     {
         id: 3,
-        name: 'done',
+        name: 'انجام شده',
         cards:[
             {   id: 1,
-                name:'calculation',
-                members:['alex', 'josh', 'lucas', 'peter'],
-                dates:['24th august', '21th september'],
-                description:'just some description',
+                name:'برنامه ریزی',
+                members:['پرهام', 'شایان', 'محمد', 'اشکان'],
+                dates:['30 مرداد', '30 شهریور'],
+                description:'یک سری توضیحات',
                 checklists:[
                     {
                         id: 1,
-                        name: 'checklist 1',
+                        name: 'چکلیست 1',
                         items:[
                             {
                                 id: 1,
-                                name:'item 1',
-                                dueDate:'24th september',
-                                assignedTo:['josh', 'peter']
+                                name:'آیتم 1',
+                                dueDate:'20 شهریور',
+                                assignedTo:['محمد', 'اشکان']
                             },
                             {
                                 id: 2,
-                                name:'item 2',
-                                dueDate:'30th september',
-                                assignedTo:['alex', 'lucas']
+                                name:'آیتم 2',
+                                dueDate:'25 شهریور',
+                                assignedTo:['پرهام', 'شایان']
                             },
 
                         ]
                     },
                     {
                         id: 2,
-                        name: 'checklist 2',
+                        name: 'چکلیست 2',
                         items:[
                             {
                                 id: 1,
-                                name:'item 1',
-                                dueDate:'24th september',
-                                assignedTo:['josh', 'peter']
+                                name:'آیتم 1',
+                                dueDate:'20 شهریور',
+                                assignedTo:['محمد', 'اشکان']
                             },
                             {
                                 id: 2,
-                                name:'item 2',
-                                dueDate:'30th september',
-                                assignedTo:['alex', 'lucas']
+                                name:'آیتم 2',
+                                dueDate:'25 شهریور',
+                                assignedTo:['پرهام', 'شایان']
                             },
+
                         ]
                     }
                 ]
             },
-
             {   id: 2,
-                name:'checks',
-                members:['alex', 'josh', 'lucas', 'peter'],
-                dates:['24th august', '21th september'],
-                description:'another description',
+                name:'برنامه ریزی',
+                members:['پرهام', 'شایان', 'محمد', 'اشکان'],
+                dates:['30 مرداد', '30 شهریور'],
+                description:'یک سری توضیحات',
                 checklists:[
                     {
                         id: 1,
-                        name: 'checklist 1',
+                        name: 'چکلیست 1',
                         items:[
                             {
                                 id: 1,
-                                name:'item 1',
-                                dueDate:'24th september',
-                                assignedTo:['josh', 'peter']
+                                name:'آیتم 1',
+                                dueDate:'20 شهریور',
+                                assignedTo:['محمد', 'اشکان']
                             },
                             {
                                 id: 2,
-                                name:'item 2',
-                                dueDate:'30th september',
-                                assignedTo:['alex', 'lucas']
+                                name:'آیتم 2',
+                                dueDate:'25 شهریور',
+                                assignedTo:['پرهام', 'شایان']
                             },
 
                         ]
                     },
                     {
                         id: 2,
-                        name: 'checklist 2',
+                        name: 'چکلیست 2',
                         items:[
                             {
                                 id: 1,
-                                name:'item 1',
-                                dueDate:'24th september',
-                                assignedTo:['josh', 'peter']
+                                name:'آیتم 1',
+                                dueDate:'20 شهریور',
+                                assignedTo:['محمد', 'اشکان']
                             },
                             {
                                 id: 2,
-                                name:'item 2',
-                                dueDate:'30th september',
-                                assignedTo:['alex', 'lucas']
+                                name:'آیتم 2',
+                                dueDate:'25 شهریور',
+                                assignedTo:['پرهام', 'شایان']
                             },
+
                         ]
                     }
                 ]
             },
-            
         ]
     },
     {
         id: 4,
-        name: 'plan',
+        name: 'برنامه اصلی',
         cards:[
             {   id: 1,
-                name:'meeting',
-                members:['alex', 'josh', 'lucas', 'peter'],
-                dates:['24th august', '21th september'],
-                description:'just some description',
+                name:'برنامه ریزی',
+                members:['پرهام', 'شایان', 'محمد', 'اشکان'],
+                dates:['30 مرداد', '30 شهریور'],
+                description:'یک سری توضیحات',
                 checklists:[
                     {
                         id: 1,
-                        name: 'checklist 1',
+                        name: 'چکلیست 1',
                         items:[
                             {
                                 id: 1,
-                                name:'item 1',
-                                dueDate:'24th september',
-                                assignedTo:['josh', 'peter']
+                                name:'آیتم 1',
+                                dueDate:'', 
+                                assignedTo:['محمد', 'اشکان']
                             },
                             {
                                 id: 2,
-                                name:'item 2',
-                                dueDate:'30th september',
-                                assignedTo:['alex', 'lucas']
+                                name:'آیتم 2',
+                                dueDate:'شهریور 20',
+                                assignedTo:['پرهام', 'شایان']
                             },
 
                         ]
                     },
                     {
                         id: 2,
-                        name: 'checklist 2',
+                        name: 'چکلیست 2',
                         items:[
                             {
                                 id: 1,
-                                name:'item 1',
-                                dueDate:'24th september',
-                                assignedTo:['josh', 'peter']
+                                name:'آیتم 1',
+                                dueDate:'20 شهریور',
+                                assignedTo:['محمد', 'اشکان']
                             },
                             {
                                 id: 2,
-                                name:'item 2',
-                                dueDate:'30th september',
-                                assignedTo:['alex', 'lucas']
+                                name:'آیتم 2',
+                                dueDate:'25 شهریور',
+                                assignedTo:['پرهام', 'شایان']
                             },
+
                         ]
                     }
                 ]
             },
-
             {   id: 2,
-                name:'verdicts',
-                members:['alex', 'josh', 'lucas', 'peter'],
-                dates:['24th august', '21th september'],
-                description:'another description',
+                name:'برنامه ریزی',
+                members:['پرهام', 'شایان', 'محمد', 'اشکان'],
+                dates:['30 مرداد', '30 شهریور'],
+                description:'یک سری توضیحات',
                 checklists:[
                     {
                         id: 1,
-                        name: 'checklist 1',
+                        name: 'چکلیست 1',
                         items:[
                             {
                                 id: 1,
-                                name:'item 1',
-                                dueDate:'24th september',
-                                assignedTo:['josh', 'peter']
+                                name:'آیتم 1',
+                                dueDate:'20 شهریور',
+                                assignedTo:['محمد', 'اشکان']
                             },
                             {
                                 id: 2,
-                                name:'item 2',
-                                dueDate:'30th september',
-                                assignedTo:['alex', 'lucas']
+                                name:'آیتم 2',
+                                dueDate:'25 شهریور',
+                                assignedTo:['پرهام', 'شایان']
                             },
 
                         ]
                     },
                     {
                         id: 2,
-                        name: 'checklist 2',
+                        name: 'چکلیست 2',
                         items:[
                             {
                                 id: 1,
-                                name:'item 1',
-                                dueDate:'24th september',
-                                assignedTo:['josh', 'peter']
+                                name:'آیتم 1',
+                                dueDate:'20 شهریور',
+                                assignedTo:['محمد', 'اشکان']
                             },
                             {
                                 id: 2,
-                                name:'item 2',
-                                dueDate:'30th september',
-                                assignedTo:['alex', 'lucas']
+                                name:'آیتم 2',
+                                dueDate:'25 شهریور',
+                                assignedTo:['پرهام', 'شایان']
                             },
+
                         ]
                     }
                 ]
             },
-            
         ]
     },
 ]

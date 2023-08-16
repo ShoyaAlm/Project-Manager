@@ -27,51 +27,47 @@ export const Card = () => {
 
 
     const [isAddingItem, setIsAddingItem] = useState(false)
-    const [newItemName, setNewItemName] = useState('')
 
-
-
-    const AddItem = (checklist) => {
-        
-
+    const AddItem = ({ checklist }) => {
+        const [newItemName, setNewItemName] = useState('');
+    
         const handleSaveItem = () => {
-            if(newItemName.trim() !== ''){
+            if (newItemName.trim() !== '') {
                 const updatedChecklist = {
                     ...checklist,
                     items: [
                         ...checklist.items,
                         {
                             id: Date.now(),
-                            name:newItemName,
-                            dueDate:'24th september',
-                            assignedTo:['josh', 'peter']
-                        }
-                    ]
-                }
-        
-                const updatedCardChecklists = [...cardChecklists]
-        
-                updatedCardChecklists[checklist.id] = updatedChecklist;
-        
-                setCardChecklists(updatedCardChecklists);
+                            name: newItemName,
+                            dueDate: '',
+                            assignedTo: ['susan', 'jake'],
+                        },
+                    ],
+                };
     
+                const updatedCardChecklists = cardChecklists.map(c =>
+                    c.id === checklist.id ? updatedChecklist : c
+                );
+    
+                setCardChecklists(updatedCardChecklists);
                 setNewItemName('');
             }
-
         };
-        
+    
         return (
             <div>
+                <button onClick={handleSaveItem} style={{width:'auto', height:'auto'}}>ذخیره</button>
                 <input
                     type="text"
                     value={newItemName}
                     onChange={(e) => setNewItemName(e.target.value)}
                     placeholder="Enter item name"
-                />
-                <button onClick={() => handleSaveItem()}>Save</button>
+                    style={{width:'200px', height: '40px'}}/>
             </div>
         );
-    }
+    };
+    
 
     const removeChecklist = (id) => {
         setCardChecklists((cardChecklists) => {
@@ -86,23 +82,26 @@ export const Card = () => {
             <div className='card-container'>
                 
                 <div className='card-details' style={{ textAlign: 'left', width: '800px', 
-                    height: '800px', marginLeft: '320px' }}>   
-                    <h2 className='card-title'>{cardName}</h2>
+                    height: '800px', marginLeft: '320px' }}>
+                    <h2 className='card-title'><img src={require('./icons/list.png')} alt="" style={{width:'50px', height:'50px', marginBottom:'-10px', marginLeft:'-20px'}}/>   
+                    {cardName}</h2>
                     
-                    <h3 className='list-name'>in list @<Link to={`/list/${newList.id}`} style={{
+                    <h3 className='list-name'>در لیست <Link to={`/list/${newList.id}`} style={{
                         textDecoration:'none',
                         color:'blue'
                     }}>{newList.name}</Link></h3>
                     
                     <div className='card-members'>
-                        <h3>Members</h3>
+                        <h3><img src={require('./icons/members.png')} alt="" style={{width:'20px', height:'20px', marginBottom:'-5px', marginLeft:'-38px', marginRight:'18px'}}/>
+                        اعضا</h3>
                         <h4>
                             {cardMembers.map((member, index) => (
                                 <span key={index} style={{ marginRight: '5px' }}>{member} </span>
                             ))}
                         </h4>
                     </div>
-                    <h2 className='section-title'>Description</h2>
+                    <h2 className='section-title'><img src={require('./icons/desc.png')} alt="" style={{width:'20px', height:'20px', marginBottom:'-5px', marginLeft:'-38px', marginRight:'18px'}}/>
+                    توضیحات</h2>
                     <div className="description-input">
                         <input
                             type="text"
@@ -132,43 +131,42 @@ export const Card = () => {
                     <div className='showcase-checklists'>
                         {cardChecklists.map((checklist, index) => (
                             <div className='checklist' key={index}>
-                                <h2 className='checklist-title'>{checklist.name}</h2>
+                                <h2 className='checklist-title'><img src={require('./icons/checklist.png')} alt="" style={{width:'25px', height:'25px', marginBottom:'-5px', marginLeft:'-30px', marginRight:'10px'}}/>
+                                {checklist.name}</h2>
                                 {checklist.items.map((item, itemIndex) => (
                                     
                                         <div class="checklist-item" key={itemIndex}>
-                                            <input type="checkbox" id="item"/>
                                             <label for="item">{item.name}</label>
+                                            <input type="checkbox" id="item"/>
                                         </div>
-
-
-                                    
+   
                                 ))}
+
 
                                 {isAddingItem === checklist.id && <AddItem checklist={checklist}/> }
 
 
-
-                                <button type='button' className='add-item-button' onClick={() => setIsAddingItem(checklist.id)}>Add an item</button>
+                                <button type='button' className='add-item-button' onClick={() => {
+                                    if(isAddingItem === ''){
+                                        setIsAddingItem(checklist.id)
+                                    } else {
+                                        setIsAddingItem('')
+                                    } 
+                                    
+                                }}>اضافه کردن آیتم</button>
                                 
 
-
-
-
-
-
-
-
                                 <br />
-                                <button type='submit' className='remove-checklist-button' onClick={() => removeChecklist(checklist.id)}>remove</button>
+                                <button type='submit' className='remove-checklist-button' onClick={() => removeChecklist(checklist.id)}>پاک کردن</button>
                             </div>
                         ))}
                     </div>
                 
 
-                    <div className='add-to-card'>
+                    <div className='add-to-card' style={{width:'200px', height:'auto'}}>
                         
                         <div className='dropdown'>
-                        <button className='dropbtn'>Members</button>
+                        <button className='dropbtn'>اعضا</button>
                             <div className='dropdown-content'>
                                 {cardMembers.map((member) => {
                                     return <a href="#">{member}</a>
@@ -177,7 +175,7 @@ export const Card = () => {
                         </div>
 
                         <div className='dropdown'>
-                        <button className='dropbtn'>Checklist</button>
+                        <button className='dropbtn'>چکلیست</button>
                             <div className='dropdown-content'>
                                 {cardChecklists.map((checklist) => {
                                     return <a href="#">{checklist.name}</a>
@@ -186,16 +184,16 @@ export const Card = () => {
                         </div>
 
                         <div className='dropdown'>
-                        <button className='dropbtn'>Lables</button>
+                        <button className='dropbtn'>برچسب</button>
                             <div className='dropdown-content'>
                             </div>
                         </div>
 
                         <div className='dropdown'>
-                        <button className='dropbtn'>Dates</button>
+                        <button className='dropbtn'>تاریخ</button>
                             <div className='dropdown-content'>
-                                <a href="#">starting: {newCard.dates[0]}</a>
-                                <a href="#">ending: {newCard.dates[1]}</a>
+                                <a href="#">{newCard.dates[0]} : شروع</a>
+                                <a href="#">{newCard.dates[1]} : پایان</a>
                             </div>
                         </div>
  

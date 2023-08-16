@@ -36,7 +36,6 @@
     background-color: black;
 }
 
-/* Inside the same CSS file or a separate one */
 
 .showcase-checklists {
     margin-top: 20px;
@@ -73,7 +72,7 @@
     height: auto;
     border: 2px solid #ccc;
     border-radius: 20px;
-    text-align: left;
+    text-align: right;
     text-decoration: none;
 }
 
@@ -83,7 +82,7 @@
 
 
 .add-item-buttons {
-    margin-top: 10px;
+    margin-top: 30px;
     display: flex;
     justify-content: left;
     margin-left: 22%;
@@ -111,6 +110,12 @@
 
 .add-list-container {
     position: relative;
+    margin-top: 30px;
+}
+
+.add-list-container button{
+    margin-top: auto;
+    position:static;
 }
 
 .add-list {

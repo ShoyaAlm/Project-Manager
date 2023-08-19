@@ -45,7 +45,7 @@ const List = () => {
             }
     };
 
-    const [newList, setNewList] = useState({})
+    // const [newList, setNewList] = useState({})
     const [newListName, setNewListName] = useState('')
     
     
@@ -57,7 +57,7 @@ const List = () => {
     cards: [
         {
             id: Date.now(),
-            name: 'new card',
+            name: '',
             members: ['alex', 'josh', 'lucas', 'peter'],
             dates: ['24th august', '21st september'],
             description: 'default description',
@@ -113,11 +113,11 @@ const List = () => {
                     
                     {isAddingCard === lst.id && (
                             <div className="add-item-buttons">
-                                <button type="submit" onClick={() => handleSaveCard(lst)}>ذخیره</button>
                                 <button type='submit' onClick={() => {
                                     setNewCardName('')
                                     setIsAddingCard(false)
-                                }}>کنسل</button>
+                                }}>لغو</button>
+                                <button type="submit" onClick={() => handleSaveCard(lst)}>ذخیره</button>
                             </div>
                         )}
                     
@@ -143,11 +143,11 @@ const List = () => {
                 />
                 {isAddingList === true && (
                     <div className="add-list-buttons">
-                        <button type="submit" onClick={() => addNewList()}>ذخیره</button>
                         <button type="submit" onClick={() => {
                             setNewListName('');
                             setIsAddingList(false);
-                        }}>کنسل</button>
+                        }}>لغو</button>
+                        <button type="submit" onClick={() => addNewList()}>ذخیره</button>
                     </div>
                 )}
             </div>
@@ -174,12 +174,11 @@ const ShowCards = ({ list }) => {
                     style={{textDecoration:'none', color:'black'}}>
                     <h4 style={{fontFamily:'sans-serif'}}>{card.name}</h4>
                     </a> 
-                    <div className="icons-container" style={{display:'inline-block'}}>
+                    <div className="icons-container" style={{display:'inline-flex' , direction: 'rtl'}}>
                         
-                    <h6><img src={require('./icons/members.png')} alt="members" style={{width:'16px', height:'25x'}} />{card.members && card.members.length}</h6>
-
-                        <img src={require('./icons/desc.png')} alt="desc" style={{width:'16px', height:'25x'}} />
-                        <h6><img src={require('./icons/tasks.png')} alt="tasks" style={{width:'16px', height:'25x'}} />1/2</h6>                
+                        <h6><img src={require('./icons/members.png')} alt="members" style={{width:'15px', height:'24x'}} />{card.members && card.members.length}</h6>
+                        <img src={require('./icons/desc.png')} alt="desc" style={{width:'15px', height:'24x', marginRight:'20px', marginLeft:'20px'}} />
+                        <h6><img src={require('./icons/tasks.png')} alt="tasks" style={{width:'15px', height:'24x'}} />1/2</h6>                
 
                     </div>
                     <br />

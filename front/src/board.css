@@ -1,8 +1,9 @@
 .list-container {
     display: flex;
     flex-wrap: wrap;
-    justify-content: left;
+    justify-content: right;
     text-align: center;
+    direction: rtl;
 }
 
 .list {
@@ -13,6 +14,7 @@
     margin: 20px;
     width: auto;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    
 }
 
 .list-link {
@@ -85,10 +87,28 @@
     margin-top: 30px;
     display: flex;
     justify-content: left;
-    margin-left: 22%;
+    margin-left: 26%;
 }
 
 .add-item-buttons button {
+    margin: 10px 5px;
+    padding: 5px 10px;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+
+.add-list-buttons {
+    margin-top: 30px;
+    display: flex;
+    justify-content: center;
+    margin-right: 2%;
+}
+
+.add-list-buttons button {
     margin: 10px 5px;
     padding: 5px 10px;
     border: none;
@@ -115,7 +135,7 @@
 
 .add-list-container button{
     margin-top: auto;
-    position:static;
+    /* position:static; */
 }
 
 .add-list {
@@ -127,21 +147,3 @@
     border-radius: 20px;
 }
 
-.add-list-buttons {
-    position: absolute;
-    top: 20%;
-    left: 50px;
-    right: auto;
-    display: flex;
-    justify-content: center;
-    margin-top: 5px;
-}
-
-.add-list-buttons button {
-    padding: 5px 10px;
-    border: none;
-    background-color: #007bff;
-    color: white;
-    cursor: pointer;
-    border-radius: 4px;
-}

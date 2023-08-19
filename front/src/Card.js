@@ -82,27 +82,31 @@ export const Card = () => {
             <div className='card-container'>
                 
                 <div className='card-details' style={{ textAlign: 'left', width: '800px', 
-                    height: '800px', marginLeft: '320px' }}>
-                    <h2 className='card-title'><img src={require('./icons/list.png')} alt="" style={{width:'50px', height:'50px', marginBottom:'-10px', marginLeft:'-20px'}}/>   
+                    height: 'auto', marginLeft: '320px' }}>
+                    <h2 className='card-title' style={{textAlign:'right'}}><img src={require('./icons/list.png')} alt="" style={{width:'50px', height:'50px', marginRight:'-20%' , marginBottom:'-30px' , position:'relative'}}/>
                     {cardName}</h2>
                     
-                    <h3 className='list-name'>در لیست <Link to={`/list/${newList.id}`} style={{
+                    <h3 className='list-name' style={{textAlign:'right', marginRight:'40px', marginTop:'10px'}}>در لیست <Link to={`/list/${newList.id}`} style={{
                         textDecoration:'none',
                         color:'blue'
                     }}>{newList.name}</Link></h3>
-                    
-                    <div className='card-members'>
-                        <h3><img src={require('./icons/members.png')} alt="" style={{width:'20px', height:'20px', marginBottom:'-5px', marginLeft:'-38px', marginRight:'18px'}}/>
-                        اعضا</h3>
-                        <h4>
+
+
+
+                    <div className='card-members' style={{marginRight:'30px'}}>
+                        <img src={require('./icons/members.png')} alt="" style={{width:'24px', height:'24px', marginLeft:'780px', marginBottom:'-36px', position:'relative'}}/>
+                        <h3 style={{textAlign:'right', marginRight:'6px'}}>اعضا</h3>
+                        <h4 style={{textAlign:'right'}}>
                             {cardMembers.map((member, index) => (
-                                <span key={index} style={{ marginRight: '5px' }}>{member} </span>
+                                <span key={index} style={{ marginRight: '8px', textAlign:'right' }}>{member} </span>
                             ))}
                         </h4>
                     </div>
-                    <h2 className='section-title'><img src={require('./icons/desc.png')} alt="" style={{width:'20px', height:'20px', marginBottom:'-5px', marginLeft:'-38px', marginRight:'18px'}}/>
-                    توضیحات</h2>
-                    <div className="description-input">
+
+
+                    <div className="description-input" style={{marginRight:'30px'}}>
+                    <img src={require('./icons/desc.png')} alt="" style={{width:'20px', height:'20px', marginRight:'-35px', marginTop:'30px', marginBottom:'-10%'}}/>
+                    <h2 className='section-title' style={{textAlign:'right'}}>توضیحات</h2>
                         <input
                             type="text"
                             className={isEditingDescription ? 'card-description-active' : 'card-description'}
@@ -117,18 +121,22 @@ export const Card = () => {
                                 <button type="submit" onClick={() => {
                                     setCardDescription(editedDescription)
                                     setIsEditingDescription(false);
-                                }}>Save</button>
+                                }}>ذخیره</button>
                                 <button type="submit" onClick={() => {
                                     console.log('cancel');
                                     setEditedDescription(cardDescription);
                                     setIsEditingDescription(false)
-                                    }}>Cancel</button>
+                                    }}>لغو</button>
                             </div>
                         )}
                     </div>
                             
-                    
-                    <div className='showcase-checklists'>
+
+
+
+
+
+                    <div className='showcase-checklists' style={{marginRight:'auto'}}>
                         {cardChecklists.map((checklist, index) => (
                             <div className='checklist' key={index}>
                                 <h2 className='checklist-title'><img src={require('./icons/checklist.png')} alt="" style={{width:'25px', height:'25px', marginBottom:'-5px', marginLeft:'-30px', marginRight:'10px'}}/>
@@ -162,6 +170,12 @@ export const Card = () => {
                         ))}
                     </div>
                 
+
+
+
+
+
+
 
                     <div className='add-to-card' style={{width:'200px', height:'auto'}}>
                         

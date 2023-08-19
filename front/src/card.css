@@ -6,22 +6,22 @@
     margin: 30px;
     width: 1200px;
     position: relative; /* Add this line for relative positioning */
-    height: auto;
+    height: 1000px;
 }
 
 .add-to-card {
     width: 200px;
     margin: auto;
     padding: 4px;
-    border: 1px solid #ccc;
+    border: 5px solid sandybrown;
     /* align-items: center; */
     border-radius: 8px;
     text-align: center;
     margin-right: auto;
     position: absolute; /* Position absolutely */
     top: 20px; /* Position from the top */
-    right: 10px; /* Position from the right */
-    /* left: auto; */
+
+    /* left: 10%; */
 }
 
 
@@ -33,7 +33,7 @@
     border: 1px solid #ccc;
     border-radius: 8px;
     text-align: left;
-    justify-content: right;
+    justify-content: left;
     position: relative;
 }
 
@@ -50,7 +50,8 @@
     box-sizing: border-box;
     flex-grow: 1;
     margin-left: 20px; /* Add margin for spacing between card-details and add-to-card */
-    
+    margin-right: auto;
+    height: auto;
 }
 
 
@@ -59,6 +60,8 @@
 .card-title {
     font-size: 24px;
     margin: 0;
+    margin-right: 40px;
+    margin-top: 10px;
 }
 
 .list-name {
@@ -80,15 +83,17 @@
 .description-input {
     margin-right: auto;
     margin-left: 32px;
+    text-align: right;
+
 }
 
-/* .card-description {
-    margin: 10px 0;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    background-color: white;
-} */
+.description-input input{
+    /* margin-right: auto;
+    margin-left: 32px; */
+    text-align: right;
+
+}
+
 .card-description {
     width: 40%;
     padding: 5px;
@@ -107,7 +112,7 @@
 .description-buttons {
     margin-top: 10px;
     display: flex;
-    justify-content: left;
+    justify-content: right;
     margin-left: auto;
 }
 
@@ -127,7 +132,7 @@
 
 .showcase-checklists {
     margin-top: 40px;
-    margin-right: 60%;
+    margin-left: 60%;
 }
 
 
@@ -200,14 +205,14 @@
     color: white;
     cursor: pointer;
     border-radius: 4px;
-    margin-top: 10px;
+    margin-top: 20%;
     display: flex;
     justify-content: left;
     margin-left: 42%;
 }
 
 .dropbtn {
-    background-color: #04AA6D;
+    background-color:darkslategrey;
     color: white;
     padding: 10px;
     margin-top: 10px;

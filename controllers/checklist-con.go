@@ -7,9 +7,12 @@ import (
 	"fmt"
 	"net/http"
 
+	// "project-manager/model"
 	"strconv"
 
+	// "github.com/codegangsta/gin"
 	"github.com/gorilla/mux"
+	// "project-manager/model"
 )
 
 var checklists = []*model.Checklist{

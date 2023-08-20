@@ -1,6 +1,6 @@
 .card-container {
-    /* left: 100px; */
-    right: auto;
+    left: auto;
+    right: 50%;
     display: flex;
     justify-content: space-between;
     margin: 30px;
@@ -10,6 +10,7 @@
 }
 
 .add-to-card {
+    background: linear-gradient(to bottom, #8FE5B5, #CCE0D5);
     width: 200px;
     margin: auto;
     padding: 4px;
@@ -39,6 +40,7 @@
 
 
 .card-details {
+    background: linear-gradient(to bottom, #B4BEE9, #8B9BDF);
     width: calc(60% - 20px); /* Adjust the width based on your preference */
     /* Rest of your styles for card-details */
     padding: 20px;
@@ -170,6 +172,7 @@
 
 
 .checklist {
+    background: linear-gradient(to bottom, #DCB2CF,#E891CF);
     margin: 20px;
     padding: 10px;
     border: 1px solid #ccc;

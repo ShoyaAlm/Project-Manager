@@ -3,9 +3,10 @@ import {Link, useParams} from 'react-router-dom'
 import lists from './lists'
 // import { useReducer } from 'react';
 import './card.css'
-export const Card = () => {
+export const Card = ({card, list}) => {
 
-    const {cardId, listId} = useParams()
+    const cardId = card.id
+    const listId = list.id
 
     const newList = lists.find((project) => project.id === parseInt(listId))
     

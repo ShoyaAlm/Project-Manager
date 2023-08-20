@@ -3,7 +3,10 @@ import lists from './lists'
 import React, {useContext } from 'react'
 import {useState} from 'react'
 
-// import {desc} from 'icons/desc.png'
+import { BrowserRouter as Router, Route, Switch, Link, useHistory } from 'react-router-dom';
+import Modal from 'react-modal'
+
+import { Card } from './Card';
 
 import './board.css'
 const ListContext = React.createContext()
@@ -57,7 +60,7 @@ const List = () => {
     cards: [
         {
             id: Date.now(),
-            name: '',
+            name: 'کارد جدید',
             members: ['alex', 'josh', 'lucas', 'peter'],
             dates: ['24th august', '21st september'],
             description: 'default description',
@@ -165,15 +168,47 @@ const List = () => {
 const ShowCards = ({ list }) => {
 
 
+    const history = useHistory();
+    const [selectedCard, setSelectedCard] = useState(null);
+    const [modalIsOpen, setModalIsOpen] = useState(false);
+
+
+    const openModal = (card) => {
+      setSelectedCard(card);
+      setModalIsOpen(true);
+
+
+
+      return (
+
+            <div>
+                {console.log('hello')}
+            </div>
+      )
+
+
+
+
+    };
+  
+    const closeModal = () => {
+      setSelectedCard(null);
+      setModalIsOpen(false);
+      history.push('/'); // Redirect to the main page when closing modal
+    };
+
+
     return (
         <div className="showcards-container">
             <hr />
             {list.cards.map((card) => (
                 <div key={card.id} className="card-item">
-                    <a href={`/lists/${list.id}/cards/${card.id}` } 
-                    style={{textDecoration:'none', color:'black'}}>
-                    <h4 style={{fontFamily:'sans-serif'}}>{card.name}</h4>
-                    </a> 
+                <div
+                        style={{ textDecoration: 'none', color: 'black', cursor: 'pointer' }}
+                        onClick={() => openModal(card)}>
+                        <h4 style={{ fontFamily: 'sans-serif' }}>{card.name}</h4>
+                </div>
+                     
                     <div className="icons-container" style={{display:'inline-flex' , direction: 'rtl'}}>
                         
                         <h6><img src={require('./icons/members.png')} alt="members" style={{width:'15px', height:'24x'}} />{card.members && card.members.length}</h6>
@@ -182,10 +217,24 @@ const ShowCards = ({ list }) => {
 
                     </div>
                     <br />
+            <Modal isOpen={modalIsOpen} onRequestClose={closeModal} className="modal">
+                {selectedCard && (
+                <div className="modal-content">
+                
+                    {/* Display modal content with selectedCard data */}
+                    <Card card={card} list={list}></Card>
+                    {/* Rest of the modal content */}
+                    <button onClick={closeModal}>Close Modal</button>
+                </div>
+                )}
+            </Modal>
                 </div>
 
             ))}
 
+
         </div>
     );
 };
+
+Modal.setAppElement("#root")

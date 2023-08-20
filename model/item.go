@@ -5,4 +5,5 @@ type Item struct {
 	Name       string    `json:"name"`
 	DueDate    string    `json:"duedate"`
 	AssignedTo []*Member `json:"assignedto"`
+	Done       bool      `json:"done"`
 }

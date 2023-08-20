@@ -21,9 +21,9 @@ const App = () => {
 
             <Router>
 
-           <Link to="/" style={{textDecoration:'none', fontFamily:'times new roman', color:'black'}}><h1 style={{textAlign:'center'}}>خوش آمدید</h1></Link> <br />
-            <Link to="/signup"><h3 style={{textAlign: 'right', 
-            textDecoration:'none', fontFamily:'sans-serif', color:'black'}}>ورود/ثبت نام</h3></Link> <hr /> <br />
+           <Link to="/" style={{textDecoration:'none', fontFamily:'bardiya', color:'black'}}><h1 style={{textAlign:'center'}}>خوش آمدید</h1></Link> <br />
+            <Link to="/signup" style={{textDecoration:'none'}}><h3 style={{textAlign: 'right', 
+             fontFamily:'sans-serif', color:'black'}}>ورود/ثبت نام</h3></Link> <hr /> <br />
             
                 <Switch>
                     <Route exact path='/'> <AllLists/> </Route>

@@ -7,7 +7,9 @@ import (
 	"project-manager/model"
 	"strconv"
 
+	// "github.com/codegangsta/gin"
 	"github.com/gorilla/mux"
+	// "project-manager/model"
 )
 
 var lists = []*model.List{
@@ -85,6 +87,9 @@ func CreateList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	newList.ID = len(lists) + 1
+	if newList.Cards == nil {
+		newList.Cards = []*model.Card{}
+	}
 	lists = append(lists, &newList)
 
 	w.WriteHeader(http.StatusCreated)
@@ -110,6 +115,8 @@ func UpdateList(w http.ResponseWriter, r *http.Request) {
 	found := false
 	for i, list := range lists {
 		if list.ID == listID {
+			updatedList.ID = list.ID
+			updatedList.Cards = list.Cards
 			lists[i] = &updatedList
 			found = true
 			break

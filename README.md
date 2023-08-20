@@ -1,2 +1,2 @@
 # Project-Manager
-A simple project manager for now
+This Project Manager is supposed to be a Trello clone

@@ -19,6 +19,10 @@ func main() {
 
 	routes.SetListRoutes(r)
 	routes.SetCardRoutes(r)
+	routes.SetChecklistRoutes(r)
+	routes.SetItemRoutes(r)
+
+	http.Handle("/", r)
 
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		log.Fatal(err)

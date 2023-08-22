@@ -8,7 +8,11 @@ require (
 	github.com/codegangsta/gin v0.0.0-20230218063734-2c98d96c9244 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
+	github.com/lib/pq v1.10.9 // indirect
 	github.com/mattn/go-shellwords v1.0.12 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/urfave/cli v1.22.14 // indirect
+	// go.mongodb.org/mongo-driver v1.12.1 // indirect
+	// go.mongodb.org/mongo-driver/mongo v1.10.0
+	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4 // indirect
 )

@@ -3,7 +3,9 @@ package controllers
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
+
 	"net/http"
 	"project-manager/model"
 	"strconv"
@@ -12,39 +14,26 @@ import (
 	_ "github.com/lib/pq"
 )
 
-// var lists = []*model.List{
-// 	{
-// 		ID:    1,
-// 		Name:  "sample project 1",
-// 		Cards: []*model.Card{},
-// 	},
-// 	{
-// 		ID:    2,
-// 		Name:  "sample project 2",
-// 		Cards: []*model.Card{},
-// 	},
-// }
-
 var db *sql.DB
 
 func init() {
 	var err error
-	db, err = sql.Open("postgres", "postgres://postgres:2220819@localhost:5432/project_manager?sslmode=disable")
+	db, err = sql.Open("postgres", "host=localhost user=postgres password=2220819 dbname=project_manager sslmode=disable")
+	// db, err = sql.Open("postgres", "host=localhost user=postgres password=2220819 dbname=projectmanager sslmode=disable")
+	fmt.Printf("Connecting to the server...")
 	if err != nil {
+		fmt.Printf("error : %s", err)
 		log.Fatal(err)
 	}
 }
-
 func GetAllLists(w http.ResponseWriter, r *http.Request) {
-
 	w.Header().Set("Content-Type", "application/json")
 
 	rows, err := db.Query("SELECT id, name FROM lists")
 	if err != nil {
-		http.Error(w, "Failed to fetch lists from database", http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Failed to fetch lists from database, %s", err), http.StatusInternalServerError)
 		return
 	}
-
 	defer rows.Close()
 
 	var lists []*model.List
@@ -65,23 +54,21 @@ func GetAllLists(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Write(jsonData)
-
-	// w.Header().Set("Content-Type", "application/json")
-
-	// // Marshal the projects slice into JSON
-	// jsonData, err := json.Marshal(lists)
-	// if err != nil {
-	// 	http.Error(w, "Failed to marshal lists data", http.StatusInternalServerError)
-	// 	return
-	// }
-
-	// // Write the JSON data to the response
-	// w.Write(jsonData)
-
 }
 
-func GetAList(w http.ResponseWriter, r *http.Request) {
+// w.Header().Set("Content-Type", "application/json")
 
+// // Marshal the projects slice into JSON
+// jsonData, err := json.Marshal(lists)
+// if err != nil {
+// 	http.Error(w, "Failed to marshal lists data", http.StatusInternalServerError)
+// 	return
+// }
+
+// // Write the JSON data to the response
+// w.Write(jsonData)
+
+func GetAList(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	listID, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -96,7 +83,7 @@ func GetAList(w http.ResponseWriter, r *http.Request) {
 		if err == sql.ErrNoRows {
 			http.Error(w, "List not found", http.StatusNotFound)
 		} else {
-			http.Error(w, "Failed to fetch list data", http.StatusInternalServerError)
+			http.Error(w, fmt.Sprintf("Failed to fetch list data, %s", err), http.StatusInternalServerError)
 		}
 		return
 	}
@@ -109,6 +96,7 @@ func GetAList(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonData)
+
 	// Parse the list ID from the request URL
 	// vars := mux.Vars(r)
 	// listID, err := strconv.Atoi(vars["id"])
@@ -143,6 +131,19 @@ func GetAList(w http.ResponseWriter, r *http.Request) {
 	// w.Write(jsonData)
 
 }
+
+// var lists = []*model.List{
+// 	{
+// 		ID:    1,
+// 		Name:  "sample project 1",
+// 		Cards: []*model.Card{},
+// 	},
+// 	{
+// 		ID:    2,
+// 		Name:  "sample project 2",
+// 		Cards: []*model.Card{},
+// 	},
+// }
 
 // func CreateList(w http.ResponseWriter, r *http.Request) {
 

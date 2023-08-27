@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"net/http"
 
@@ -20,6 +21,21 @@ func main() {
 	routes.SetListRoutes(r)
 
 	http.Handle("/", r)
+
+	maxRetries := 10
+	retryInterval := time.Second * 5
+	for retries := 0; retries < maxRetries; retries++ {
+		err := http.ListenAndServe(":8080", nil)
+		if err != nil {
+			log.Printf("Failed to start server: %s\n", err)
+			log.Printf("Retrying in %s...\n", retryInterval)
+			time.Sleep(retryInterval)
+		} else {
+			break
+		}
+	}
+
+	log.Fatal("Max retries reached, unable to start the server.")
 
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		log.Fatal(err)

@@ -98,7 +98,7 @@ const lists = [
         ]
     },
     {
-        id: 1,
+        id: 2,
         name: 'انجام شده',
         cards:[
             {   id: 1,
@@ -196,7 +196,7 @@ const lists = [
         ]
     },
     {
-        id: 1,
+        id: 3,
         name: 'به پایان رسیده',
         cards:[
             {   id: 1,
@@ -294,7 +294,7 @@ const lists = [
         ]
     },
     {
-        id: 1,
+        id: 4,
         name: 'پروژه ها',
         cards:[
             {   id: 1,

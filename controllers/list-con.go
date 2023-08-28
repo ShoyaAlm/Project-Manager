@@ -244,7 +244,7 @@ func GetAList(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if memberName != "" {
-			card.Members = append(card.Members, &model.Member{Name: memberName})
+			card.Members = append(card.Members, &model.Member{ID: memberID, Name: memberName})
 		}
 
 		if checklistID != 0 {
@@ -292,186 +292,99 @@ func findChecklist(checklists []*model.Checklist, id int) (*model.Checklist, boo
 	return nil, false
 }
 
-// func GetAList(w http.ResponseWriter, r *http.Request) {
-
-// 	vars := mux.Vars(r)
-// 	listID, err := strconv.Atoi(vars["id"])
-// 	if err != nil {
-// 		http.Error(w, "Invalid list ID", http.StatusBadRequest)
-// 		return
-// 	}
-
-// 	// Fetch list details
-// 	listRow := db.QueryRow("SELECT id, name FROM lists WHERE id = $1", listID)
-// 	list := &model.List{}
-// 	err = listRow.Scan(&list.ID, &list.Name)
-// 	if err != nil {
-// 		if err == sql.ErrNoRows {
-// 			http.Error(w, "List not found", http.StatusNotFound)
-// 		} else {
-// 			http.Error(w, fmt.Sprintf("Failed to fetch list data, %s", err), http.StatusInternalServerError)
-// 		}
-// 		return
-// 	}
-
-// 	// Fetch related cards and their members
-// 	rows, err := db.Query(`
-//         SELECT
-//             c.id, c.name, c.description,
-//             m.name AS member_name, c.dates
-//         FROM cards c
-//         LEFT JOIN members m ON c.id = m.card_id
-//         WHERE c.list_id = $1`, listID)
-// 	if err != nil {
-// 		http.Error(w, fmt.Sprintf("Failed to fetch cards for list, %s", err), http.StatusInternalServerError)
-// 		return
-// 	}
-// 	defer rows.Close()
-
-// 	var cards []*model.Card
-// 	cardMap := make(map[int]*model.Card)
-
-// 	for rows.Next() {
-// 		var cardID int
-// 		var cardName, cardDescription, memberName string
-// 		var cardDate pq.StringArray
-// 		err := rows.Scan(&cardID, &cardName, &cardDescription, &memberName, &cardDate)
-// 		if err != nil {
-// 			http.Error(w, fmt.Sprintf("Error scanning card rows, %s", err), http.StatusInternalServerError)
-// 			return
-// 		}
-
-// 		card, ok := cardMap[cardID]
-// 		if !ok {
-// 			card = &model.Card{
-// 				ID:          cardID,
-// 				Name:        cardName,
-// 				Description: cardDescription,
-// 				Members:     []*model.Member{},
-// 				Dates:       cardDate,
-// 			}
-// 			cardMap[cardID] = card
-// 			cards = append(cards, card)
-// 		}
-
-// 		if memberName != "" {
-// 			card.Members = append(card.Members, &model.Member{Name: memberName})
-// 		}
-// 	}
-
-// 	// Assign related cards to the list
-// 	list.Cards = cards
-
-// 	jsonData, err := json.Marshal(list)
-// 	if err != nil {
-// 		http.Error(w, "Failed to marshal list data", http.StatusInternalServerError)
-// 		return
-// 	}
-
-// 	w.Header().Set("Content-Type", "application/json")
-// 	w.Write(jsonData)
-
-// }
-
 func CreateList(w http.ResponseWriter, r *http.Request) {
-
-	w.Header().Set("Content-Type", "application/json")
-
 	var newList model.List
 	err := json.NewDecoder(r.Body).Decode(&newList)
 	if err != nil {
-		http.Error(w, "Invalid JSON input", http.StatusBadRequest)
+		http.Error(w, "Failed to decode request body", http.StatusBadRequest)
 		return
 	}
 
-	result, err := db.Exec("INSERT INTO lists (name) VALUES ($1) RETURNING id", newList.Name)
+	highestID, err := getHighestListID()
 	if err != nil {
-		http.Error(w, "Failed to insert new list", http.StatusInternalServerError)
+		http.Error(w, "Failed to fetch highest list ID", http.StatusInternalServerError)
 		return
 	}
 
-	var newID int
-	err = db.QueryRow("SELECT LASTVAL()").Scan(&newID)
+	// Assign a new ID by incrementing the highest existing ID
+	newList.ID = highestID + 1
+
+	if newList.Name == "" {
+		http.Error(w, "List name cannot be empty", http.StatusBadRequest)
+		return
+	}
+
+	newList.Cards = []*model.Card{}
+
+	err = InsertList(newList) // Implement InsertList function
 	if err != nil {
-		http.Error(w, "Failed to get new list ID", http.StatusInternalServerError)
+		http.Error(w, "Failed to insert list into the database", http.StatusInternalServerError)
 		return
 	}
 
-	fmt.Printf("Result : %s", result)
-	response := map[string]interface{}{
-		"message": "List created successfully",
-		"id":      newID,
-	}
-
-	jsonResponse, err := json.Marshal(response)
+	jsonData, err := json.Marshal(newList)
 	if err != nil {
-		http.Error(w, "Failed to marshal response data", http.StatusInternalServerError)
+		http.Error(w, "Failed to marshal list data", http.StatusInternalServerError)
 		return
 	}
 
-	w.Write(jsonResponse)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	w.Write(jsonData)
+}
+
+func getHighestListID() (int, error) {
+	// Query your database to find the highest existing list ID
+	// Example pseudo-code:
+	var highestID int
+	err := db.QueryRow("SELECT MAX(id) FROM lists").Scan(&highestID)
+	if err != nil {
+		return 0, err
+	}
+	return highestID, nil
+	// Replace with actual database query result
+}
+
+func InsertList(newList model.List) error {
+	_, err := db.Exec("INSERT INTO lists (id, name) VALUES ($1, $2)", newList.ID, newList.Name)
+	if err != nil {
+		return err
+	}
+	return nil
 
 }
 
-// func UpdateList(w http.ResponseWriter, r *http.Request) {
+func DeleteAList(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	listID, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		http.Error(w, "Invalid list ID", http.StatusBadRequest)
+		return
+	}
 
-// 	vars := mux.Vars(r)
-// 	listID, err := strconv.Atoi(vars["id"])
-// 	if err != nil {
-// 		http.Error(w, "Invalid list ID", http.StatusBadRequest)
-// 		return
-// 	}
+	// Delete the list and its related information from the database
+	err = deleteListAndRelatedInfo(listID)
+	if err != nil {
+		http.Error(w, "Failed to delete list", http.StatusInternalServerError)
+		return
+	}
 
-// 	var updatedList model.List
-// 	err = json.NewDecoder(r.Body).Decode(&updatedList)
-// 	if err != nil {
-// 		http.Error(w, "Failed to decode JSON data", http.StatusBadRequest)
-// 	}
+	w.WriteHeader(http.StatusNoContent)
+}
 
-// 	found := false
-// 	for i, list := range lists {
-// 		if list.ID == listID {
-// 			updatedList.ID = list.ID
-// 			updatedList.Cards = list.Cards
-// 			lists[i] = &updatedList
-// 			found = true
-// 			break
-// 		}
-// 	}
+func deleteListAndRelatedInfo(listID int) error {
 
-// 	if !found {
-// 		http.Error(w, "List not found", http.StatusNotFound)
-// 		return
-// 	}
+	// Delete the list and its related information
+	_, err := db.Exec("DELETE FROM lists WHERE id = $1", listID)
+	if err != nil {
+		return err
+	}
 
-// 	w.WriteHeader(http.StatusOK)
-// 	fmt.Fprintf(w, "List updated successfully")
-// }
+	// Commit the transaction
+	// err = db.Commit()
+	// if err != nil {
+	//     return err
+	// }
 
-// func DeleteList(w http.ResponseWriter, r *http.Request) {
-// 	// Parse the list ID from the request URL or request body
-// 	vars := mux.Vars(r)
-// 	listID, err := strconv.Atoi(vars["id"])
-// 	if err != nil {
-// 		http.Error(w, "Invalid list ID", http.StatusBadRequest)
-// 		return
-// 	}
-
-// 	// Find and remove the list with the given ID from your 'lists' slice
-// 	found := false
-// 	for i, list := range lists {
-// 		if list.ID == listID {
-// 			lists = append(lists[:i], lists[i+1:]...)
-// 			found = true
-// 			break
-// 		}
-// 	}
-
-// 	if !found {
-// 		http.Error(w, "List not found", http.StatusNotFound)
-// 		return
-// 	}
-
-// 	w.WriteHeader(http.StatusOK)
-// 	fmt.Fprintf(w, "List deleted successfully")
-// }
+	return nil
+}

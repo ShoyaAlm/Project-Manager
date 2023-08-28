@@ -16,109 +16,6 @@ import (
 
 func GetAllCards(w http.ResponseWriter, r *http.Request) {
 
-	// w.Header().Set("Content-Type", "application/json")
-	// 	w.Write(listID)
-	// // Fetch list details
-	// listRow := db.QueryRow("SELECT id, name FROM lists WHERE id = $1", listID)
-	// list := &model.List{}
-	// err = listRow.Scan(&list.ID, &list.Name)
-	// if err != nil {
-	// 	if err == sql.ErrNoRows {
-	// 		http.Error(w, "List not found", http.StatusNotFound)
-	// 	} else {
-	// 		http.Error(w, fmt.Sprintf("Failed to fetch list data, %s", err), http.StatusInternalServerError)
-	// 	}
-	// 	return
-	// }
-
-	// // Fetch related cards, their members, checklists, and items
-	// rows, err := db.Query(`
-	//     SELECT
-	//         c.id AS card_id, c.name AS card_name, c.description AS card_description, c.dates as card_dates,
-	//         m.name AS member_name,
-	//         cl.id AS checklist_id, cl.name AS checklist_name,
-	//         i.id AS item_id, i.name AS item_name, i.due_date AS item_due_date, i.assigned_to AS item_assigned_to
-	//     FROM cards c
-	//     LEFT JOIN members m ON c.id = m.card_id
-	//     LEFT JOIN checklists cl ON c.id = cl.card_id
-	//     LEFT JOIN items i ON cl.id = i.checklist_id
-	//     WHERE c.list_id = $1`, listID)
-	// if err != nil {
-	// 	http.Error(w, fmt.Sprintf("Failed to fetch cards for list, %s", err), http.StatusInternalServerError)
-	// 	return
-	// }
-	// defer rows.Close()
-
-	// var cards []*model.Card
-	// cardMap := make(map[int]*model.Card)
-
-	// for rows.Next() {
-	// 	var (
-	// 		cardID, checklistID, itemID           int
-	// 		cardName, cardDescription, memberName string
-	// 		checklistName, itemName               string
-	// 		itemDueDate                           string
-	// 		itemAssignedTo, cardDates             pq.StringArray
-	// 	)
-	// 	err := rows.Scan(&cardID, &cardName, &cardDescription, &cardDates, &memberName, &checklistID, &checklistName, &itemID, &itemName, &itemDueDate, &itemAssignedTo)
-	// 	if err != nil {
-	// 		http.Error(w, fmt.Sprintf("Error scanning rows, %s", err), http.StatusInternalServerError)
-	// 		return
-	// 	}
-
-	// 	card, ok := cardMap[cardID]
-	// 	if !ok {
-	// 		card = &model.Card{
-	// 			ID:          cardID,
-	// 			Name:        cardName,
-	// 			Description: cardDescription,
-	// 			Dates:       cardDates,
-	// 			Members:     []*model.Member{},
-	// 			Checklists:  []*model.Checklist{},
-	// 		}
-	// 		cardMap[cardID] = card
-	// 		cards = append(cards, card)
-	// 	}
-
-	// 	if memberName != "" {
-	// 		card.Members = append(card.Members, &model.Member{Name: memberName})
-	// 	}
-
-	// 	if checklistID != 0 {
-	// 		checklist, ok := findChecklist(card.Checklists, checklistID)
-	// 		if !ok {
-	// 			checklist = &model.Checklist{
-	// 				ID:    checklistID,
-	// 				Name:  checklistName,
-	// 				Items: []*model.Item{},
-	// 			}
-	// 			card.Checklists = append(card.Checklists, checklist)
-	// 		}
-
-	// 		if itemID != 0 {
-	// 			item := &model.Item{
-	// 				ID:         itemID,
-	// 				Name:       itemName,
-	// 				DueDate:    itemDueDate,
-	// 				AssignedTo: itemAssignedTo,
-	// 			}
-	// 			checklist.Items = append(checklist.Items, item)
-	// 		}
-	// 	}
-	// }
-
-	// // Assign related cards to the list
-	// list.Cards = cards
-
-	// jsonData, err := json.Marshal(list)
-	// if err != nil {
-	// 	http.Error(w, "Failed to marshal list data", http.StatusInternalServerError)
-	// 	return
-	// }
-
-	// w.Header().Set("Content-Type", "application/json")
-	// w.Write(jsonData)
-
 }
 
 func GetACard(w http.ResponseWriter, r *http.Request) {
@@ -157,7 +54,7 @@ func GetACard(w http.ResponseWriter, r *http.Request) {
 	card.Dates = []string(cardDates)
 
 	memberRows, err := db.Query(`
-	SELECT m.name AS member_name
+	SELECT m.id AS member_id, m.name AS member_name
 	FROM members m
 	WHERE m.card_id = $1`, cardID)
 
@@ -169,13 +66,16 @@ func GetACard(w http.ResponseWriter, r *http.Request) {
 	defer memberRows.Close()
 
 	for memberRows.Next() {
-		var memberName string
-		err := memberRows.Scan(&memberName)
+		var (
+			memberID   int
+			memberName string
+		)
+		err := memberRows.Scan(&memberID, &memberName)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Error scanning member rows, %s", err), http.StatusInternalServerError)
 			return
 		}
-		card.Members = append(card.Members, &model.Member{Name: memberName})
+		card.Members = append(card.Members, &model.Member{ID: memberID, Name: memberName})
 	}
 
 	checklistRows, err := db.Query(`
@@ -204,9 +104,11 @@ func GetACard(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		// appending checklists to a card
 		card.Checklists = append(card.Checklists, &model.Checklist{
 			ID: checklistID, Name: checklistName})
 
+		// appending items to that specific checklist
 		checklistIndex := -1
 		for idx, checklist := range checklists {
 			if checklist.ID == checklistID {

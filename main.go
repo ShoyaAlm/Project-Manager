@@ -19,7 +19,7 @@ func main() {
 	fmt.Printf("Server running at port 8080...\n")
 
 	routes.SetListRoutes(r)
-
+	routes.SetCardRoutes(r)
 	http.Handle("/", r)
 
 	maxRetries := 10

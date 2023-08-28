@@ -1,9 +1,9 @@
 package model
 
 type Item struct {
-	ID         int       `json:"id"`
-	Name       string    `json:"name"`
-	DueDate    string    `json:"duedate"`
-	AssignedTo []*Member `json:"assignedto"`
+	ID         int      `json:"id"`
+	Name       string   `json:"name"`
+	DueDate    string   `json:"duedate"`
+	AssignedTo []string `json:"assignedto"`
 	// Done       bool      `json:"done"`
 }

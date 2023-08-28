@@ -196,7 +196,7 @@ func GetAList(w http.ResponseWriter, r *http.Request) {
 	rows, err := db.Query(`
         SELECT
             c.id AS card_id, c.name AS card_name, c.description AS card_description, c.dates as card_dates,
-            m.name AS member_name,
+           	m.id AS member_id, m.name AS member_name,
             cl.id AS checklist_id, cl.name AS checklist_name,
             i.id AS item_id, i.name AS item_name, i.due_date AS item_due_date, i.assigned_to AS item_assigned_to
         FROM cards c
@@ -215,13 +215,13 @@ func GetAList(w http.ResponseWriter, r *http.Request) {
 
 	for rows.Next() {
 		var (
-			cardID, checklistID, itemID           int
+			cardID, checklistID, memberID, itemID int
 			cardName, cardDescription, memberName string
 			checklistName, itemName               string
 			itemDueDate                           string
 			itemAssignedTo, cardDates             pq.StringArray
 		)
-		err := rows.Scan(&cardID, &cardName, &cardDescription, &cardDates, &memberName, &checklistID, &checklistName, &itemID, &itemName, &itemDueDate, &itemAssignedTo)
+		err := rows.Scan(&cardID, &cardName, &cardDescription, &cardDates, &memberID, &memberName, &checklistID, &checklistName, &itemID, &itemName, &itemDueDate, &itemAssignedTo)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Error scanning rows, %s", err), http.StatusInternalServerError)
 			return

@@ -179,8 +179,10 @@ func GetACard(w http.ResponseWriter, r *http.Request) {
 	}
 
 	checklistRows, err := db.Query(`
-	SELECT c.name AS checklist_name
+	SELECT c.id AS checklist_id, c.name AS checklist_name,
+	i.id AS item_id, i.name AS item_name, i.due_date AS item_duedate, i.assigned_to AS item_assignedto 
 	FROM checklists c
+	LEFT JOIN items i ON c.id = i.id
 	WHERE c.card_id = $1`, cardID)
 
 	if err != nil {
@@ -191,13 +193,36 @@ func GetACard(w http.ResponseWriter, r *http.Request) {
 	defer checklistRows.Close()
 
 	for checklistRows.Next() {
-		var checklistName string
-		err := checklistRows.Scan(&checklistName)
+		var (
+			checklistName, itemName, itemDueDate string
+			checklistID, itemID                  int
+			itemAssignedTo                       pq.StringArray
+		)
+		err := checklistRows.Scan(&checklistID, &checklistName, &itemID, &itemName, &itemDueDate, &itemAssignedTo)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Error scanning checklist rows, %s", err), http.StatusInternalServerError)
 			return
 		}
-		card.Checklists = append(card.Checklists, &model.Checklist{Name: checklistName})
+
+		card.Checklists = append(card.Checklists, &model.Checklist{
+			ID: checklistID, Name: checklistName})
+
+		checklistIndex := -1
+		for idx, checklist := range checklists {
+			if checklist.ID == checklistID {
+				checklistIndex = idx
+			}
+		}
+
+		if checklistIndex != -1 {
+			newItem := &model.Item{
+				ID:         itemID,
+				Name:       itemName,
+				DueDate:    itemDueDate,
+				AssignedTo: []string(itemAssignedTo),
+			}
+			card.Checklists[checklistIndex].Items = append(card.Checklists[checklistIndex].Items, newItem)
+		}
 	}
 
 	jsonData, err := json.Marshal(card)

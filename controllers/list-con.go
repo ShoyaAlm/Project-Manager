@@ -26,11 +26,13 @@ func init() {
 }
 
 func GetAllLists(w http.ResponseWriter, r *http.Request) {
+
 	rows, err := db.Query("SELECT id, name FROM lists")
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to fetch lists, %s", err), http.StatusInternalServerError)
 		return
 	}
+
 	defer rows.Close()
 
 	var lists []*model.List
@@ -40,6 +42,7 @@ func GetAllLists(w http.ResponseWriter, r *http.Request) {
 			listID   int
 			listName string
 		)
+
 		err := rows.Scan(&listID, &listName)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Error scanning rows, %s", err), http.StatusInternalServerError)
@@ -47,113 +50,94 @@ func GetAllLists(w http.ResponseWriter, r *http.Request) {
 		}
 
 		list := &model.List{
-			ID:    listID,
-			Name:  listName,
-			Cards: []*model.Card{},
+			ID:   listID,
+			Name: listName,
 		}
 
-		cardRows, err := db.Query(`
+		lists = append(lists, list)
+	}
 
-				SELECT
-					c.id AS card_id, c.name AS card_name, c.description AS card_descriptionc, c.dates as card_dates,
-					m.name AS member_name,
-					cl.id AS checklist_id, cl.name AS checklist_name,
-					i.id AS item_id, i.name AS item_name, i.due_date AS item_due_date, i.assigned_to AS item_assigned_to
-				FROM cards c
-				LEFT JOIN members m ON c.id = m.card_id
-				LEFT JOIN checklists cl ON c.id = cl.card_id
-				LEFT JOIN items i ON cl.id = i.checklist_id
-				WHERE c.list_id = $1`, listID)
-
+	for _, list := range lists {
+		rows, err := db.Query(`SELECT c.id AS card_id, c.name AS card_name, c.description AS cardDescription, c.dates AS card_dates,
+								m.id AS member_id, m.name AS member_name,
+								cl.id AS checklist_id, cl.name AS checklist_name,
+								i.id AS item_id, i.name AS item_name, i.due_date AS item_due_date, i.assigned_to AS item_assigned_to
+								FROM cards c
+								LEFT JOIN members m ON m.card_id = c.id
+								LEFT JOIN checklists cl ON cl.card_id = c.id
+								LEFT JOIN items i ON cl.id = i.checklist_id
+								WHERE list_id = $1`, list.ID)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Failed to fetch cards for list, %s", err), http.StatusInternalServerError)
 			return
 		}
-		defer cardRows.Close()
+		defer rows.Close()
 
 		var cards []*model.Card
-		cardMap := make(map[int]*model.Card)
 
-		for cardRows.Next() {
+		for rows.Next() {
 			var (
-				cardID, checklistID, itemID                        int
-				cardName, cardDescription, checklistName, itemName string
-				memberNameNullable                                 sql.NullString
-				itemDueDateNullable                                sql.NullString
-				itemAssignedToArray                                pq.StringArray
-				cardDates                                          pq.StringArray
+				cardID                                                                           int
+				cardName, cardDescription                                                        string
+				cardDates, itemAssignedTo                                                        pq.StringArray
+				memberIDNullable, checklistIDNullable, itemIDNullable                            sql.NullInt64
+				memberNameNullable, checklistNameNullable, itemNameNullable, itemDueDateNullable sql.NullString
 			)
-			err := cardRows.Scan(&cardID, &cardName, &cardDescription, &cardDates, &memberNameNullable, &checklistID, &checklistName, &itemID, &itemName, &itemDueDateNullable, &itemAssignedToArray)
+
+			err := rows.Scan(&cardID, &cardName, &cardDescription, &cardDates,
+				&memberIDNullable, &memberNameNullable,
+				&checklistIDNullable, &checklistNameNullable,
+				&itemIDNullable, &itemNameNullable, &itemDueDateNullable, &itemAssignedTo)
 			if err != nil {
 				http.Error(w, fmt.Sprintf("Error scanning rows, %s", err), http.StatusInternalServerError)
 				return
 			}
 
-			var memberName *string
-			if memberNameNullable.Valid {
-				temp := memberNameNullable.String
-				memberName = &temp
+			card := &model.Card{
+				ID:          cardID,
+				Name:        cardName,
+				Description: cardDescription,
+				Dates:       cardDates,
+				Members:     []*model.Member{},
+				Checklists:  []*model.Checklist{},
 			}
 
-			var itemDueDate *string
-			if itemDueDateNullable.Valid {
-				temp := itemDueDateNullable.String
-				itemDueDate = &temp
+			if memberIDNullable.Valid && memberNameNullable.Valid {
+				card.Members = append(card.Members, &model.Member{ID: int(memberIDNullable.Int64), Name: memberNameNullable.String})
 			}
 
-			itemAssignedTo := []string(itemAssignedToArray)
-
-			card, ok := cardMap[cardID]
-			if !ok {
-				card = &model.Card{
-					ID:          cardID,
-					Name:        cardName,
-					Description: cardDescription,
-					Dates:       cardDates,
-					Members:     []*model.Member{},
-					Checklists:  []*model.Checklist{},
-				}
-				cardMap[cardID] = card
-				cards = append(cards, card)
-			}
-
-			if memberName != nil {
-				card.Members = append(card.Members, &model.Member{Name: *memberName})
-			}
-
-			if checklistID != 0 {
-				checklist, ok := findChecklist(card.Checklists, checklistID)
+			if checklistIDNullable.Valid && checklistNameNullable.Valid {
+				checklist, ok := findChecklist(card.Checklists, int(checklistIDNullable.Int64))
 				if !ok {
 					checklist = &model.Checklist{
-						ID:    checklistID,
-						Name:  checklistName,
+						ID:    int(checklistIDNullable.Int64),
+						Name:  checklistNameNullable.String,
 						Items: []*model.Item{},
 					}
+
+					if itemIDNullable.Valid {
+						item := &model.Item{
+							ID:         int(itemIDNullable.Int64),
+							Name:       itemNameNullable.String,
+							DueDate:    itemDueDateNullable.String,
+							AssignedTo: itemAssignedTo,
+						}
+						checklist.Items = append(checklist.Items, item)
+					}
+
 					card.Checklists = append(card.Checklists, checklist)
 				}
-
-				if itemID != 0 {
-					item := &model.Item{
-						ID:         itemID,
-						Name:       itemName,
-						DueDate:    *itemDueDate,
-						AssignedTo: itemAssignedTo,
-					}
-					checklist.Items = append(checklist.Items, item)
-				}
-
 			}
+
+			cards = append(cards, card)
 		}
 
 		list.Cards = cards
-
-		lists = append(lists, list)
-
 	}
 
 	jsonData, err := json.Marshal(lists)
 	if err != nil {
-		http.Error(w, "Failed to marshal lists data", http.StatusInternalServerError)
+		http.Error(w, "Failed to marshal list data", http.StatusInternalServerError)
 		return
 	}
 

@@ -162,8 +162,6 @@ func GetAList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Printf("List id : %v \n", listID)
-
 	// Fetch list details
 	listRow := db.QueryRow("SELECT id, name FROM lists WHERE id = $1", listID)
 	list := &model.List{}
@@ -202,8 +200,7 @@ func GetAList(w http.ResponseWriter, r *http.Request) {
 		var (
 			cardID, checklistID, memberID, itemID int
 			cardName, cardDescription, memberName string
-			checklistName, itemName               string
-			itemDueDate                           string
+			checklistName, itemName, itemDueDate  string
 			itemAssignedTo, cardDates             pq.StringArray
 		)
 		err := rows.Scan(&cardID, &cardName, &cardDescription, &cardDates, &memberID, &memberName, &checklistID, &checklistName, &itemID, &itemName, &itemDueDate, &itemAssignedTo)
@@ -211,8 +208,6 @@ func GetAList(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, fmt.Sprintf("Error scanning rows, %s", err), http.StatusInternalServerError)
 			return
 		}
-
-		fmt.Printf("card id : %v \n", cardID)
 
 		card, ok := cardMap[cardID]
 		if !ok {
@@ -325,27 +320,6 @@ func CreateList(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func getHighestListID() (int, error) {
-	// Query your database to find the highest existing list ID
-	// Example pseudo-code:
-	var highestID int
-	err := db.QueryRow("SELECT MAX(id) FROM lists").Scan(&highestID)
-	if err != nil {
-		return 0, err
-	}
-	return highestID, nil
-	// Replace with actual database query result
-}
-
-func InsertList(newList model.List) error {
-	_, err := db.Exec("INSERT INTO lists (id, name) VALUES ($1, $2)", newList.ID, newList.Name)
-	if err != nil {
-		return err
-	}
-	return nil
-
-}
-
 func DeleteAList(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	listID, err := strconv.Atoi(vars["id"])
@@ -368,41 +342,38 @@ func DeleteAList(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusAccepted)
 }
 
-// var newList model.List
-// 	err := json.NewDecoder(r.Body).Decode(&newList)
-// 	if err != nil {
-// 		http.Error(w, "Failed to decode request body", http.StatusBadRequest)
-// 		return
-// 	}
+func UpdateAList(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	listID, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		http.Error(w, "Invalid list ID", http.StatusBadRequest)
+		return
+	}
 
-// 	highestID, err := getHighestListID()
-// 	if err != nil {
-// 		http.Error(w, "Failed to fetch highest list ID", http.StatusInternalServerError)
-// 		return
-// 	}
+	// Read the request body
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
+		return
+	}
 
-// 	// Assign a new ID by incrementing the highest existing ID
-// 	newList.ID = highestID + 1
+	// Parse the JSON request body
+	var requestData struct {
+		Name string `json:"name"`
+	}
 
-// 	if newList.Name == "" {
-// 		http.Error(w, "List name cannot be empty", http.StatusBadRequest)
-// 		return
-// 	}
+	err = json.Unmarshal(body, &requestData)
+	if err != nil {
+		http.Error(w, "Failed to parse JSON data", http.StatusBadRequest)
+		return
+	}
 
-// 	newList.Cards = []*model.Card{}
+	// Update the list's name in the database
+	_, err = db.Exec("UPDATE lists SET name = $1 WHERE id = $2", requestData.Name, listID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to update list, %s", err), http.StatusInternalServerError)
+		return
+	}
 
-// 	err = InsertList(newList) // Implement InsertList function
-// 	if err != nil {
-// 		http.Error(w, "Failed to insert list into the database", http.StatusInternalServerError)
-// 		return
-// 	}
-
-// 	jsonData, err := json.Marshal(newList)
-// 	if err != nil {
-// 		http.Error(w, "Failed to marshal list data", http.StatusInternalServerError)
-// 		return
-// 	}
-
-// 	w.Header().Set("Content-Type", "application/json")
-// 	w.WriteHeader(http.StatusCreated)
-// 	w.Write(jsonData)
+	w.WriteHeader(http.StatusCreated)
+}

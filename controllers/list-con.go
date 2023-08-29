@@ -298,11 +298,7 @@ func CreateList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	responseData := struct {
-		ID    int           `json:"id"`
-		Name  string        `json:"name"`
-		Cards []*model.Card `json:"cards"`
-	}{
+	responseData := &model.List{
 		ID:    newListID,
 		Name:  requestData.Name,
 		Cards: []*model.Card{}, // Initialize an empty cards attribute

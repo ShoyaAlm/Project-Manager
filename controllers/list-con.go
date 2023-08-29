@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"project-manager/model"
@@ -277,44 +278,51 @@ func findChecklist(checklists []*model.Checklist, id int) (*model.Checklist, boo
 }
 
 func CreateList(w http.ResponseWriter, r *http.Request) {
-	var newList model.List
-	err := json.NewDecoder(r.Body).Decode(&newList)
+
+	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, "Failed to decode request body", http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf("Failed to read request body, %s", err), http.StatusInternalServerError)
 		return
 	}
 
-	highestID, err := getHighestListID()
+	var requestData struct {
+		Name string `json:"name"`
+	}
+
+	err = json.Unmarshal(body, &requestData)
 	if err != nil {
-		http.Error(w, "Failed to fetch highest list ID", http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Failed to parse JSON data, %s", err), http.StatusBadRequest)
 		return
 	}
 
-	// Assign a new ID by incrementing the highest existing ID
-	newList.ID = highestID + 1
+	var newListID int
+	err = db.QueryRow("INSERT INTO lists (name) VALUES ($1) RETURNING id", requestData.Name).Scan(&newListID)
 
-	if newList.Name == "" {
-		http.Error(w, "List name cannot be empty", http.StatusBadRequest)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to create list, %s", err), http.StatusInternalServerError)
 		return
 	}
 
-	newList.Cards = []*model.Card{}
-
-	err = InsertList(newList) // Implement InsertList function
-	if err != nil {
-		http.Error(w, "Failed to insert list into the database", http.StatusInternalServerError)
-		return
+	responseData := struct {
+		ID    int           `json:"id"`
+		Name  string        `json:"name"`
+		Cards []*model.Card `json:"cards"`
+	}{
+		ID:    newListID,
+		Name:  requestData.Name,
+		Cards: []*model.Card{}, // Initialize an empty cards attribute
 	}
 
-	jsonData, err := json.Marshal(newList)
+	jsonData, err := json.Marshal(responseData)
 	if err != nil {
-		http.Error(w, "Failed to marshal list data", http.StatusInternalServerError)
+		http.Error(w, "Failed to marshal response data", http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	w.Write(jsonData)
+
 }
 
 func getHighestListID() (int, error) {
@@ -346,29 +354,55 @@ func DeleteAList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Delete the list and its related information from the database
-	err = deleteListAndRelatedInfo(listID)
+	// Delete the list and related data
+	_, err = db.Exec("DELETE FROM lists WHERE id = $1", listID)
 	if err != nil {
-		http.Error(w, "Failed to delete list", http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Failed to delete list, %s", err), http.StatusInternalServerError)
 		return
 	}
 
-	w.WriteHeader(http.StatusNoContent)
+	// You may also want to delete related cards, members, checklists, and items
+	// Here, I'm assuming you have foreign key constraints that automatically handle this
+	// If not, you should handle the deletion of related data accordingly.
+
+	w.WriteHeader(http.StatusAccepted)
 }
 
-func deleteListAndRelatedInfo(listID int) error {
+// var newList model.List
+// 	err := json.NewDecoder(r.Body).Decode(&newList)
+// 	if err != nil {
+// 		http.Error(w, "Failed to decode request body", http.StatusBadRequest)
+// 		return
+// 	}
 
-	// Delete the list and its related information
-	_, err := db.Exec("DELETE FROM lists WHERE id = $1", listID)
-	if err != nil {
-		return err
-	}
+// 	highestID, err := getHighestListID()
+// 	if err != nil {
+// 		http.Error(w, "Failed to fetch highest list ID", http.StatusInternalServerError)
+// 		return
+// 	}
 
-	// Commit the transaction
-	// err = db.Commit()
-	// if err != nil {
-	//     return err
-	// }
+// 	// Assign a new ID by incrementing the highest existing ID
+// 	newList.ID = highestID + 1
 
-	return nil
-}
+// 	if newList.Name == "" {
+// 		http.Error(w, "List name cannot be empty", http.StatusBadRequest)
+// 		return
+// 	}
+
+// 	newList.Cards = []*model.Card{}
+
+// 	err = InsertList(newList) // Implement InsertList function
+// 	if err != nil {
+// 		http.Error(w, "Failed to insert list into the database", http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	jsonData, err := json.Marshal(newList)
+// 	if err != nil {
+// 		http.Error(w, "Failed to marshal list data", http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	w.Header().Set("Content-Type", "application/json")
+// 	w.WriteHeader(http.StatusCreated)
+// 	w.Write(jsonData)

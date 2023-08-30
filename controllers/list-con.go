@@ -59,38 +59,28 @@ func GetAllLists(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, list := range lists {
-		rows, err := db.Query(`SELECT c.id AS card_id, c.name AS card_name, c.description AS cardDescription, c.dates AS card_dates,
-								m.id AS member_id, m.name AS member_name,
-								cl.id AS checklist_id, cl.name AS checklist_name,
-								i.id AS item_id, i.name AS item_name, i.due_date AS item_due_date, i.assigned_to AS item_assigned_to
-								FROM cards c
-								LEFT JOIN members m ON m.card_id = c.id
-								LEFT JOIN checklists cl ON cl.card_id = c.id
-								LEFT JOIN items i ON cl.id = i.checklist_id
-								WHERE list_id = $1`, list.ID)
+
+		cardRows, err := db.Query(`SELECT c.id AS card_id, c.name AS card_name, c.description AS cardDescription, c.dates AS card_dates
+									FROM cards c
+							   WHERE c.list_id = $1`, list.ID)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Failed to fetch cards for list, %s", err), http.StatusInternalServerError)
 			return
 		}
-		defer rows.Close()
+		defer cardRows.Close()
 
 		var cards []*model.Card
 
-		for rows.Next() {
-			var (
-				cardID                                                                           int
-				cardName, cardDescription                                                        string
-				cardDates, itemAssignedTo                                                        pq.StringArray
-				memberIDNullable, checklistIDNullable, itemIDNullable                            sql.NullInt64
-				memberNameNullable, checklistNameNullable, itemNameNullable, itemDueDateNullable sql.NullString
-			)
+		for cardRows.Next() {
 
-			err := rows.Scan(&cardID, &cardName, &cardDescription, &cardDates,
-				&memberIDNullable, &memberNameNullable,
-				&checklistIDNullable, &checklistNameNullable,
-				&itemIDNullable, &itemNameNullable, &itemDueDateNullable, &itemAssignedTo)
+			var (
+				cardID                    int
+				cardName, cardDescription string
+				cardDates                 pq.StringArray
+			)
+			err := cardRows.Scan(&cardID, &cardName, &cardDescription, &cardDates)
 			if err != nil {
-				http.Error(w, fmt.Sprintf("Error scanning rows, %s", err), http.StatusInternalServerError)
+				http.Error(w, fmt.Sprintf("Error scanning cardRows, %s", err), http.StatusInternalServerError)
 				return
 			}
 
@@ -103,32 +93,127 @@ func GetAllLists(w http.ResponseWriter, r *http.Request) {
 				Checklists:  []*model.Checklist{},
 			}
 
-			if memberIDNullable.Valid && memberNameNullable.Valid {
-				card.Members = append(card.Members, &model.Member{ID: int(memberIDNullable.Int64), Name: memberNameNullable.String})
+			// Start checking for checklists inside every card
+			checklistRows, err := db.Query(`SELECT cl.id AS checklist_id, cl.name AS checklist_name
+								FROM checklists cl
+							   WHERE cl.card_id = $1`, cardID)
+
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Failed to fetch checklists for card, %s", err), http.StatusInternalServerError)
+				return
+
 			}
 
-			if checklistIDNullable.Valid && checklistNameNullable.Valid {
-				checklist, ok := findChecklist(card.Checklists, int(checklistIDNullable.Int64))
-				if !ok {
-					checklist = &model.Checklist{
-						ID:    int(checklistIDNullable.Int64),
-						Name:  checklistNameNullable.String,
-						Items: []*model.Item{},
-					}
+			defer checklistRows.Close()
 
-					if itemIDNullable.Valid {
-						item := &model.Item{
-							ID:         int(itemIDNullable.Int64),
-							Name:       itemNameNullable.String,
-							DueDate:    itemDueDateNullable.String,
-							AssignedTo: itemAssignedTo,
-						}
-						checklist.Items = append(checklist.Items, item)
-					}
+			var checklists []*model.Checklist
 
-					card.Checklists = append(card.Checklists, checklist)
+			for checklistRows.Next() {
+
+				var (
+					checklistID   int
+					checklistName string
+				)
+				err := checklistRows.Scan(&checklistID, &checklistName)
+
+				if err != nil {
+					http.Error(w, fmt.Sprintf("Error scanning checklistRows, %s", err), http.StatusInternalServerError)
+					return
 				}
+
+				checklist := &model.Checklist{
+					ID:    checklistID,
+					Name:  checklistName,
+					Items: []*model.Item{},
+				}
+
+				// Start looking for items inside every checklist of every card
+				itemRows, err := db.Query(`SELECT i.id AS item_id, i.name AS item_name, i.due_date AS item_due_date, i.assigned_to AS item_assigned_to
+					FROM items i
+					WHERE i.checklist_id = $1`, checklistID)
+
+				if err != nil {
+					http.Error(w, fmt.Sprintf("Failed to fetch items for checklists inside cards, %s", err), http.StatusInternalServerError)
+					return
+
+				}
+
+				defer itemRows.Close()
+
+				var items []*model.Item
+
+				for itemRows.Next() {
+					var (
+						itemID                int
+						itemName, itemDueDate string
+						itemAssignedTo        pq.StringArray
+					)
+
+					err := itemRows.Scan(&itemID, &itemName, &itemDueDate, &itemAssignedTo)
+
+					if err != nil {
+						http.Error(w, fmt.Sprintf("Error scanning itemRows, %s", err), http.StatusInternalServerError)
+						return
+					}
+
+					item := &model.Item{
+						ID:         itemID,
+						Name:       itemName,
+						DueDate:    itemDueDate,
+						AssignedTo: itemAssignedTo,
+					}
+
+					items = append(items, item)
+
+				}
+
+				checklist.Items = items
+
+				checklists = append(checklists, checklist)
+
 			}
+
+			card.Checklists = checklists
+
+			// Start looking for members inside every card
+			memberRows, err := db.Query(`SELECT m.id AS member_id, m.name AS member_name
+							FROM members m
+						WHERE m.card_id = $1`, cardID)
+
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Failed to fetch members for card, %s", err), http.StatusInternalServerError)
+				return
+
+			}
+
+			defer memberRows.Close()
+
+			var members []*model.Member
+
+			for memberRows.Next() {
+
+				var (
+					memberID   int
+					memberName string
+				)
+
+				err := memberRows.Scan(&memberID, &memberName)
+
+				if err != nil {
+					http.Error(w, fmt.Sprintf("Error scanning memberRows, %s", err), http.StatusInternalServerError)
+					return
+				}
+
+				member := &model.Member{
+					ID:   memberID,
+					Name: memberName,
+				}
+
+				members = append(members, member)
+
+			}
+
+			card.Members = members
 
 			cards = append(cards, card)
 		}
@@ -179,7 +264,7 @@ func GetAList(w http.ResponseWriter, r *http.Request) {
 	rows, err := db.Query(`
         SELECT
             c.id AS card_id, c.name AS card_name, c.description AS card_description, c.dates as card_dates,
-           	m.id AS member_id, m.name AS member_name,
+            m.id AS member_id, m.name AS member_name,
             cl.id AS checklist_id, cl.name AS checklist_name,
             i.id AS item_id, i.name AS item_name, i.due_date AS item_due_date, i.assigned_to AS item_assigned_to
         FROM cards c
@@ -193,7 +278,6 @@ func GetAList(w http.ResponseWriter, r *http.Request) {
 	}
 	defer rows.Close()
 
-	var cards []*model.Card
 	cardMap := make(map[int]*model.Card)
 
 	for rows.Next() {
@@ -220,7 +304,6 @@ func GetAList(w http.ResponseWriter, r *http.Request) {
 				Checklists:  []*model.Checklist{},
 			}
 			cardMap[cardID] = card
-			cards = append(cards, card)
 		}
 
 		if memberName != "" {
@@ -251,6 +334,10 @@ func GetAList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Assign related cards to the list
+	var cards []*model.Card
+	for _, card := range cardMap {
+		cards = append(cards, card)
+	}
 	list.Cards = cards
 
 	jsonData, err := json.Marshal(list)
@@ -281,7 +368,8 @@ func CreateList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var requestData struct {
-		Name string `json:"name"`
+		Name  string        `json:"name"`
+		Cards []*model.Card `json:"cards"`
 	}
 
 	err = json.Unmarshal(body, &requestData)
@@ -298,10 +386,37 @@ func CreateList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	emptyItem := &model.Item{
+		ID:         0,
+		Name:       "default item",
+		DueDate:    "september 20th",
+		AssignedTo: []string{"person1", "person2"},
+	}
+
+	emptyChecklist := &model.Checklist{
+		ID:    0,
+		Name:  "default checklist",
+		Items: []*model.Item{emptyItem},
+	}
+
+	emptyMember := &model.Member{
+		ID:   0,
+		Name: "member 1",
+	}
+
+	emptyCard := &model.Card{
+		ID:          0,
+		Name:        "default card",
+		Description: "default",
+		Dates:       []string{"october 1st", "november 1st"},
+		Checklists:  []*model.Checklist{emptyChecklist},
+		Members:     []*model.Member{emptyMember},
+	}
+
 	responseData := &model.List{
 		ID:    newListID,
 		Name:  requestData.Name,
-		Cards: []*model.Card{}, // Initialize an empty cards attribute
+		Cards: []*model.Card{emptyCard}, // Initialize an empty cards attribute
 	}
 
 	jsonData, err := json.Marshal(responseData)
@@ -330,10 +445,6 @@ func DeleteAList(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Failed to delete list, %s", err), http.StatusInternalServerError)
 		return
 	}
-
-	// You may also want to delete related cards, members, checklists, and items
-	// Here, I'm assuming you have foreign key constraints that automatically handle this
-	// If not, you should handle the deletion of related data accordingly.
 
 	w.WriteHeader(http.StatusAccepted)
 }

@@ -56,12 +56,12 @@ func GetAllCards(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 
 		var (
-			cardID                                                                           int
-			itemAssignedTo, cardDates                                                        pq.StringArray
-			memberIDNullable, checklistIDNullable, itemIDNullable                            sql.NullInt64
-			memberNameNullable, checklistNameNullable, itemNameNullable, itemDueDateNullable sql.NullString
+			cardID                                           int
+			itemAssignedTo, cardDates                        pq.StringArray
+			memberID, checklistID, itemID                    sql.NullInt64
+			memberName, checklistName, itemName, itemDueDate sql.NullString
 		)
-		err = rows.Scan(&cardID, &cardDates, &memberIDNullable, &memberNameNullable, &checklistIDNullable, &checklistNameNullable, &itemIDNullable, &itemNameNullable, &itemDueDateNullable, &itemAssignedTo)
+		err = rows.Scan(&cardID, &cardDates, &memberID, &memberName, &checklistID, &checklistName, &itemID, &itemName, &itemDueDate, &itemAssignedTo)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				http.Error(w, fmt.Sprintf("Card not found, %s", err), http.StatusNotFound)
@@ -71,23 +71,23 @@ func GetAllCards(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if memberNameNullable.Valid && memberIDNullable.Valid {
-			card.Members = append(card.Members, &model.Member{ID: int(memberIDNullable.Int64), Name: memberNameNullable.String})
+		if memberName.Valid && memberID.Valid {
+			card.Members = append(card.Members, &model.Member{ID: int(memberID.Int64), Name: memberName.String})
 		}
-		if checklistIDNullable.Valid && checklistNameNullable.Valid {
-			checklist, ok := findChecklist(card.Checklists, int(checklistIDNullable.Int64))
+		if checklistID.Valid && checklistName.Valid {
+			checklist, ok := findChecklist(card.Checklists, int(checklistID.Int64))
 			if !ok {
 				checklist = &model.Checklist{
-					ID:    int(checklistIDNullable.Int64),
-					Name:  checklistNameNullable.String,
+					ID:    int(checklistID.Int64),
+					Name:  checklistName.String,
 					Items: []*model.Item{},
 				}
 
-				if itemIDNullable.Valid {
+				if itemID.Valid {
 					item := &model.Item{
-						ID:         int(itemIDNullable.Int64),
-						Name:       itemNameNullable.String,
-						DueDate:    itemDueDateNullable.String,
+						ID:         int(itemID.Int64),
+						Name:       itemName.String,
+						DueDate:    itemDueDate.String,
 						AssignedTo: itemAssignedTo,
 					}
 					checklist.Items = append(checklist.Items, item)
@@ -145,9 +145,9 @@ func GetACard(w http.ResponseWriter, r *http.Request) {
             cl.id AS checklist_id, cl.name AS checklist_name,
             i.id AS item_id, i.name AS item_name, i.due_date AS item_due_date, i.assigned_to AS item_assigned_to
         FROM cards c
-        LEFT JOIN members m ON c.id = m.card_id
-        LEFT JOIN checklists cl ON c.id = cl.card_id
-        LEFT JOIN items i ON cl.id = i.checklist_id`)
+        LEFT JOIN members m ON $1 = m.card_id
+        LEFT JOIN checklists cl ON $1 = cl.card_id
+        LEFT JOIN items i ON cl.id = i.checklist_id`, cardID)
 
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to fetch card, %s", err), http.StatusInternalServerError)
@@ -158,11 +158,11 @@ func GetACard(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 
 		var (
-			itemAssignedTo, cardDates                                                        pq.StringArray
-			memberIDNullable, checklistIDNullable, itemIDNullable                            sql.NullInt64
-			memberNameNullable, checklistNameNullable, itemNameNullable, itemDueDateNullable sql.NullString
+			itemAssignedTo, cardDates                        pq.StringArray
+			memberID, checklistID, itemID                    int
+			memberName, checklistName, itemName, itemDueDate string
 		)
-		err = rows.Scan(&cardDates, &memberIDNullable, &memberNameNullable, &checklistIDNullable, &checklistNameNullable, &itemIDNullable, &itemNameNullable, &itemDueDateNullable, &itemAssignedTo)
+		err = rows.Scan(&cardDates, &memberID, &memberName, &checklistID, &checklistName, &itemID, &itemName, &itemDueDate, &itemAssignedTo)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				http.Error(w, fmt.Sprintf("Card not found, %s", err), http.StatusNotFound)
@@ -172,23 +172,23 @@ func GetACard(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if memberNameNullable.Valid && memberIDNullable.Valid {
-			card.Members = append(card.Members, &model.Member{ID: int(memberIDNullable.Int64), Name: memberNameNullable.String})
+		if memberName != "" {
+			card.Members = append(card.Members, &model.Member{ID: memberID, Name: memberName})
 		}
-		if checklistIDNullable.Valid && checklistNameNullable.Valid {
-			checklist, ok := findChecklist(card.Checklists, int(checklistIDNullable.Int64))
+		if checklistID != 0 {
+			checklist, ok := findChecklist(card.Checklists, checklistID)
 			if !ok {
 				checklist = &model.Checklist{
-					ID:    int(checklistIDNullable.Int64),
-					Name:  checklistNameNullable.String,
+					ID:    int(checklistID),
+					Name:  checklistName,
 					Items: []*model.Item{},
 				}
 
-				if itemIDNullable.Valid {
+				if itemID != 0 {
 					item := &model.Item{
-						ID:         int(itemIDNullable.Int64),
-						Name:       itemNameNullable.String,
-						DueDate:    itemDueDateNullable.String,
+						ID:         itemID,
+						Name:       itemName,
+						DueDate:    itemDueDate,
 						AssignedTo: itemAssignedTo,
 					}
 					checklist.Items = append(checklist.Items, item)
@@ -211,8 +211,43 @@ func GetACard(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func CreateACard(w http.ResponseWriter, r *http.Request) {
+func DeleteCard(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	_, err := strconv.Atoi(vars["id"])
+	if err != nil {
+		http.Error(w, "Invalid list ID", http.StatusBadRequest)
+		return
+	}
 
+	cardID, err := strconv.Atoi(vars["cardID"])
+	if err != nil {
+		http.Error(w, "Invalid card ID", http.StatusBadRequest)
+		return
+	}
+
+	_, err = db.Exec("DELETE FROM members WHERE card_id = $1", cardID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to delete members of card, %s", err), http.StatusInternalServerError)
+		return
+	}
+
+	_, err = db.Exec("DELETE FROM checklists WHERE card_id = $1", cardID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to delete checklists of card, %s", err), http.StatusInternalServerError)
+		return
+	}
+
+	// Delete the list and related data
+	_, err = db.Exec("DELETE FROM cards WHERE id = $1", cardID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to delete card, %s", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusAccepted)
+}
+
+func CreateCard(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	listID, err := strconv.Atoi(vars["id"])
 	if err != nil {
@@ -240,62 +275,74 @@ func CreateACard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var newCardID int
-	err = db.QueryRow("INSERT INTO cards (name, list_id) VALUES ($1, $2) RETURNING id",
-		requestData.Name, listID).Scan(&newCardID)
+	var newCardID, newChecklistID, newItemID, newMemberID int
 
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to create list, %s", err), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Failed to create card, %s", err), http.StatusInternalServerError)
 		return
 	}
 
-	responseData := &model.Card{
-		ID:          newCardID,
-		Name:        requestData.Name,
-		Description: requestData.Description, // Initialize an empty cards attribute
-		Dates:       requestData.Dates,
-		Checklists:  requestData.Checklists,
-		Members:     requestData.Members,
+	emptyItem := &model.Item{
+		ID:         newItemID,
+		Name:       "default item",
+		DueDate:    "september 20th",
+		AssignedTo: []string{"person1", "person2"},
 	}
 
-	jsonData, err := json.Marshal(responseData)
+	emptyChecklist := &model.Checklist{
+		ID:    newChecklistID,
+		Name:  "default checklist",
+		Items: []*model.Item{emptyItem},
+	}
+
+	emptyMember := &model.Member{
+		ID:   newMemberID,
+		Name: "member 1",
+	}
+
+	// Create a new card with non-null fields
+	newCard := &model.Card{
+		ID:          newCardID,
+		Name:        requestData.Name,
+		Description: "default description",
+		Dates:       []string{"october 1st", "november 1st"}, // Initialize as empty slice
+		Checklists:  []*model.Checklist{emptyChecklist},      // Initialize as empty slice
+		Members:     []*model.Member{emptyMember},
+	}
+
+	err = db.QueryRow("INSERT INTO cards (name, description, dates, list_id) VALUES ($1, $2, $3, $4) RETURNING id",
+		newCard.Name, newCard.Description, pq.Array(newCard.Dates), listID).Scan(&newCardID)
+
+	err = db.QueryRow("INSERT INTO checklists (name, card_id) VALUES ($1, $2) RETURNING id",
+		emptyChecklist.Name, newCardID).Scan(&newChecklistID)
+
+	err = db.QueryRow("INSERT INTO items (name, duedate, assignedto, checklist_id) VALUES ($1, $2, $3, $4) RETURNING id",
+		emptyItem.Name, emptyItem.DueDate, pq.Array(emptyItem.AssignedTo), newChecklistID).Scan(&newItemID)
+
+	err = db.QueryRow("INSERT INTO members (name, card_id) VALUES ($1, $2) RETURNING id",
+		emptyMember.Name, newCardID).Scan(&newMemberID)
+
+	// Fetch the associated list
+	listRow := db.QueryRow("SELECT id, name FROM lists WHERE id = $1", listID)
+	list := &model.List{}
+	err = listRow.Scan(&list.ID, &list.Name)
 	if err != nil {
-		http.Error(w, "Failed to marshal response data", http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Failed to fetch list data, %s", err), http.StatusInternalServerError)
+		return
+	}
+
+	// Append the new card to the list's cards slice
+	list.Cards = append(list.Cards, newCard)
+
+	jsonData, err := json.Marshal(list)
+	if err != nil {
+		http.Error(w, "Failed to marshal list data", http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	w.Write(jsonData)
-
-}
-
-func DeleteCard(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	_, err := strconv.Atoi(vars["id"])
-	if err != nil {
-		http.Error(w, "Invalid list ID", http.StatusBadRequest)
-		return
-	}
-
-	cardID, err := strconv.Atoi(vars["cardID"])
-	if err != nil {
-		http.Error(w, "Invalid card ID", http.StatusBadRequest)
-		return
-	}
-
-	// Delete the list and related data
-	_, err = db.Exec("DELETE FROM cards WHERE id = $1", cardID)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to delete card, %s", err), http.StatusInternalServerError)
-		return
-	}
-
-	// You may also want to delete related cards, members, checklists, and items
-	// Here, I'm assuming you have foreign key constraints that automatically handle this
-	// If not, you should handle the deletion of related data accordingly.
-
-	w.WriteHeader(http.StatusAccepted)
 }
 
 func UpdateCard(w http.ResponseWriter, r *http.Request) {

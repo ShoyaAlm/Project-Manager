@@ -1,161 +1,256 @@
 package controllers
 
-// import (
-// 	"encoding/json"
-// 	"fmt"
-// 	"net/http"
-// 	"project-manager/model"
-// 	"strconv"
+import (
+	"database/sql"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
 
-// 	"github.com/gorilla/mux"
-// )
+	"project-manager/model"
+	"strconv"
 
-// var items = []*model.Item{
-// 	{
-// 		ID:         1,
-// 		Name:       "item 1",
-// 		DueDate:    "september 20th",
-// 		AssignedTo: []*model.Member{},
-// 	},
-// 	{
-// 		ID:         2,
-// 		Name:       "item 2",
-// 		DueDate:    "october 5th",
-// 		AssignedTo: []*model.Member{},
-// 	},
-// }
+	"github.com/gorilla/mux"
+	"github.com/lib/pq"
+)
 
-// func GetAllItems(w http.ResponseWriter, r *http.Request) {
+func GetAllItems(w http.ResponseWriter, r *http.Request) {
 
-// 	w.Header().Set("Content-Type", "application/json")
+	vars := mux.Vars(r)
 
-// 	// Marshal the projects slice into JSON
-// 	jsonData, err := json.Marshal(items)
-// 	if err != nil {
-// 		http.Error(w, "Failed to marshal items data", http.StatusInternalServerError)
-// 		return
-// 	}
+	checklistID, err := strconv.Atoi(vars["checklistID"])
+	if err != nil {
+		http.Error(w, "Invalid checklist ID", http.StatusBadRequest)
+		return
+	}
 
-// 	// Write the JSON data to the response
-// 	w.Write(jsonData)
+	itemRows, err := db.Query("SELECT id, name, due_date, assigned_to FROM items WHERE checklist_id = $1", checklistID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to fetch items, %s", err), http.StatusInternalServerError)
+		return
+	}
 
-// }
+	defer itemRows.Close()
 
-// func GetAItem(w http.ResponseWriter, r *http.Request) {
-// 	// Parse the list ID from the request URL
-// 	vars := mux.Vars(r)
-// 	itemID, err := strconv.Atoi(vars["id"])
-// 	if err != nil {
-// 		http.Error(w, "Invalid list ID", http.StatusBadRequest)
-// 		return
-// 	}
+	var items []*model.Item
 
-// 	// Find the Item with the given ID in your 'items' slice
-// 	var foundItem *model.Item
-// 	for _, item := range items {
-// 		if item.ID == itemID {
-// 			foundItem = item
-// 			break
-// 		}
-// 	}
+	for itemRows.Next() {
+		var (
+			itemID                int
+			itemName, itemDueDate string
+			itemAssignedTo        pq.StringArray
+		)
 
-// 	if foundItem == nil {
-// 		http.Error(w, "Item not found", http.StatusNotFound)
-// 		return
-// 	}
+		err := itemRows.Scan(&itemID, &itemName, &itemDueDate, &itemAssignedTo)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Error scanning rows, %s", err), http.StatusInternalServerError)
+			return
+		}
 
-// 	// Marshal the found list into JSON
-// 	jsonData, err := json.Marshal(foundItem)
-// 	if err != nil {
-// 		http.Error(w, "Failed to marshal item data", http.StatusInternalServerError)
-// 		return
-// 	}
+		item := &model.Item{
+			ID:         itemID,
+			Name:       itemName,
+			DueDate:    itemDueDate,
+			AssignedTo: itemAssignedTo,
+		}
 
-// 	// Write the JSON data to the response
-// 	w.Header().Set("Content-Type", "application/json")
-// 	w.Write(jsonData)
-// }
+		items = append(items, item)
 
-// func CreateItem(w http.ResponseWriter, r *http.Request) {
+	}
 
-// 	var newItem model.Item
+	jsonData, err := json.Marshal(items)
+	if err != nil {
+		http.Error(w, "Failed to marshal cbecklists data", http.StatusInternalServerError)
+		return
+	}
 
-// 	err := json.NewDecoder(r.Body).Decode(&newItem)
-// 	if err != nil {
-// 		http.Error(w, "Failed to decode JSON data", http.StatusBadRequest)
-// 		return
-// 	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonData)
 
-// 	newItem.ID = len(lists) + 1
-// 	if newItem.AssignedTo == nil {
-// 		newItem.AssignedTo = []*model.Member{}
-// 	}
-// 	items = append(items, &newItem)
+}
 
-// 	w.WriteHeader(http.StatusCreated)
-// 	fmt.Fprintf(w, "Item created successfully")
+func GetAItem(w http.ResponseWriter, r *http.Request) {
 
-// }
+	vars := mux.Vars(r)
 
-// func UpdateItem(w http.ResponseWriter, r *http.Request) {
+	checklistID, err := strconv.Atoi(vars["checklistID"])
+	if err != nil {
+		http.Error(w, "Invalid checklist ID", http.StatusBadRequest)
+		return
+	}
 
-// 	vars := mux.Vars(r)
-// 	itemID, err := strconv.Atoi(vars["id"])
-// 	if err != nil {
-// 		http.Error(w, "Invalid item ID", http.StatusBadRequest)
-// 		return
-// 	}
+	itemID, err := strconv.Atoi(vars["itemID"])
+	if err != nil {
+		http.Error(w, "Invalid item ID", http.StatusBadRequest)
+		return
+	}
 
-// 	var updatedItem model.Item
-// 	err = json.NewDecoder(r.Body).Decode(&updatedItem)
-// 	if err != nil {
-// 		http.Error(w, "Failed to decode JSON data", http.StatusBadRequest)
-// 	}
+	// Fetch list details
+	itemRow := db.QueryRow("SELECT id, name, due_date, assigned_to FROM items WHERE id = $1 AND checklist_id = $2", itemID, checklistID)
 
-// 	found := false
-// 	for i, item := range items {
-// 		if item.ID == itemID {
-// 			updatedItem.ID = item.ID
-// 			updatedItem.AssignedTo = item.AssignedTo
-// 			items[i] = &updatedItem
-// 			found = true
-// 			break
-// 		}
-// 	}
+	var (
+		itemName, itemDueDate string
+		itemAssignedTo        pq.StringArray
+	)
 
-// 	if !found {
-// 		http.Error(w, "Item not found", http.StatusNotFound)
-// 		return
-// 	}
+	err = itemRow.Scan(&itemID, &itemName, &itemDueDate, &itemAssignedTo)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			http.Error(w, "item not found", http.StatusNotFound)
+		} else {
+			http.Error(w, fmt.Sprintf("Failed to fetch item data, %s", err), http.StatusInternalServerError)
+		}
+		return
+	}
 
-// 	w.WriteHeader(http.StatusOK)
-// 	fmt.Fprintf(w, "Item updated successfully")
-// }
+	item := &model.Item{
+		ID:         itemID,
+		Name:       itemName,
+		DueDate:    itemDueDate,
+		AssignedTo: itemAssignedTo,
+	}
 
-// func DeleteItem(w http.ResponseWriter, r *http.Request) {
-// 	// Parse the list ID from the request URL or request body
-// 	vars := mux.Vars(r)
-// 	itemID, err := strconv.Atoi(vars["id"])
-// 	if err != nil {
-// 		http.Error(w, "Invalid item ID", http.StatusBadRequest)
-// 		return
-// 	}
+	jsonData, err := json.Marshal(item)
+	if err != nil {
+		http.Error(w, "Failed to marshal checklist data", http.StatusInternalServerError)
+		return
+	}
 
-// 	// Find and remove the list with the given ID from your 'lists' slice
-// 	found := false
-// 	for i, item := range items {
-// 		if item.ID == itemID {
-// 			items = append(items[:i], items[i+1:]...)
-// 			found = true
-// 			break
-// 		}
-// 	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonData)
 
-// 	if !found {
-// 		http.Error(w, "Item not found", http.StatusNotFound)
-// 		return
-// 	}
+}
 
-// 	w.WriteHeader(http.StatusOK)
-// 	fmt.Fprintf(w, "Item deleted successfully")
-// }
+func CreateItem(w http.ResponseWriter, r *http.Request) {
+
+	vars := mux.Vars(r)
+	checklistID, err := strconv.Atoi(vars["checklistID"])
+	if err != nil {
+		http.Error(w, "Invalid card ID", http.StatusBadRequest)
+		return
+	}
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to read request body, %s", err), http.StatusInternalServerError)
+		return
+	}
+
+	var requestData struct {
+		Name       string         `json:"name"`
+		DueDate    string         `json:"duedate"`
+		AssignedTo pq.StringArray `json:"assignedto"`
+	}
+
+	err = json.Unmarshal(body, &requestData)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to parse JSON data, %s", err), http.StatusBadRequest)
+		return
+	}
+
+	var newItemID int
+
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to create checklist, %s", err), http.StatusInternalServerError)
+		return
+	}
+
+	// Create a new card with non-null fields
+	newItem := &model.Item{
+		ID:         newItemID,
+		Name:       requestData.Name,
+		DueDate:    "september 20th",
+		AssignedTo: []string{"person1", "person2"},
+	}
+
+	err = db.QueryRow("INSERT INTO items (name, duedate, assignedto, checklist_id) VALUES ($1, $2, $3, $4) RETURNING id",
+		newItem.Name, newItem.DueDate, pq.Array(newItem.AssignedTo), checklistID).Scan(&newItemID)
+
+	// Fetch the associated list
+	checklistRow := db.QueryRow("SELECT id, name FROM checklists WHERE id = $1", checklistID)
+	checklist := &model.Checklist{}
+	err = checklistRow.Scan(&checklist.ID, &checklist.Name)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to fetch checklist data, %s", err), http.StatusInternalServerError)
+		return
+	}
+
+	// Append the new card to the list's cards slice
+	checklist.Items = append(checklist.Items, newItem)
+
+	jsonData, err := json.Marshal(checklist)
+	if err != nil {
+		http.Error(w, "Failed to marshal list data", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	w.Write(jsonData)
+
+}
+
+func UpdateItem(w http.ResponseWriter, r *http.Request) {
+
+	vars := mux.Vars(r)
+	_, err := strconv.Atoi(vars["checklistID"])
+	if err != nil {
+		http.Error(w, "Invalid checklist ID", http.StatusBadRequest)
+		return
+	}
+
+	itemID, err := strconv.Atoi(vars["itemID"])
+	if err != nil {
+		http.Error(w, "Invalid item ID", http.StatusBadRequest)
+		return
+	}
+
+	// Read the request body
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
+		return
+	}
+
+	// Parse the JSON request body
+	var requestData struct {
+		Name       string `json:"name"`
+		DueDate    string `json:"duedate"`
+		AssignedTo string `json:"assignedto"`
+	}
+
+	err = json.Unmarshal(body, &requestData)
+	if err != nil {
+		http.Error(w, "Failed to parse JSON data", http.StatusBadRequest)
+		return
+	}
+
+	// Update the list's name in the database
+	_, err = db.Exec("UPDATE items SET name = $1 WHERE id = $2", requestData.Name, itemID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to update item, %s", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+
+}
+
+func DeleteItem(w http.ResponseWriter, r *http.Request) {
+
+	vars := mux.Vars(r)
+	itemID, err := strconv.Atoi(vars["itemID"])
+	if err != nil {
+		http.Error(w, "Invalid item ID", http.StatusBadRequest)
+		return
+	}
+
+	_, err = db.Exec("DELETE FROM items WHERE id = $1", itemID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to delete the item, %s", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusAccepted)
+
+}

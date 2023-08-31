@@ -322,7 +322,7 @@ func UpdateChecklist(w http.ResponseWriter, r *http.Request) {
 	// Update the list's name in the database
 	_, err = db.Exec("UPDATE checklists SET name = $1 WHERE id = $2", requestData.Name, checklistID)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to update list, %s", err), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Failed to update checklist, %s", err), http.StatusInternalServerError)
 		return
 	}
 

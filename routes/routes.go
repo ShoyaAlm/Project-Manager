@@ -37,3 +37,12 @@ func SetItemRoutes(r *mux.Router) {
 	r.HandleFunc("/api/lists/{id:[0-9]+}/cards/{cardID:[0-9]+}/checklists/{checklistID:[0-9]+}/items/{itemID:[0-9]+}", controllers.UpdateItem).Methods("PATCH")
 	r.HandleFunc("/api/lists/{id:[0-9]+}/cards/{cardID:[0-9]+}/checklists/{checklistID:[0-9]+}/items/{itemID:[0-9]+}", controllers.DeleteItem).Methods("DELETE")
 }
+
+func SetMemberRoutes(r *mux.Router) {
+	r.HandleFunc("/api/lists/{id:[0-9]+}/cards/{cardID:[0-9]+}/members", controllers.GetAllMembers).Methods("GET")
+	r.HandleFunc("/api/lists/{id:[0-9]+}/cards/{cardID:[0-9]+}/members/{memberID:[0-9]+}", controllers.GetAMember).Methods("GET")
+	r.HandleFunc("/api/lists/{id:[0-9]+}/cards/{cardID:[0-9]+}/members", controllers.CreateMember).Methods("POST")
+	r.HandleFunc("/api/lists/{id:[0-9]+}/cards/{cardID:[0-9]+}/members/{memberID:[0-9]+}", controllers.UpdateMember).Methods("PATCH")
+	r.HandleFunc("/api/lists/{id:[0-9]+}/cards/{cardID:[0-9]+}/members/{memberID:[0-9]+}", controllers.DeleteMember).Methods("DELETE")
+
+}

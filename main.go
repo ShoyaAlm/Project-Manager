@@ -21,6 +21,7 @@ func main() {
 	routes.SetCardRoutes(r)
 	routes.SetChecklistRoutes(r)
 	routes.SetItemRoutes(r)
+	routes.SetMemberRoutes(r)
 	http.Handle("/", r)
 
 	if err := http.ListenAndServe(":8080", nil); err != nil {

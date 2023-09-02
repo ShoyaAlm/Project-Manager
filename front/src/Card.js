@@ -93,7 +93,7 @@ export const Card = ({card, list}) => {
                         <h3 style={{textAlign:'right', marginRight:'6px'}}>اعضا</h3>
                         <h4 style={{textAlign:'right'}}>
                             {cardMembers.map((member, index) => (
-                                <span key={index} style={{ marginRight: '8px', textAlign:'right' }}>{member.name || 'default name'} </span>
+                                <span key={index} style={{ marginRight: '8px', textAlign:'right' }}>{member.name || 'TBA'} </span>
                             ))}
                         </h4>
                     </div>
@@ -135,11 +135,11 @@ export const Card = ({card, list}) => {
                         {cardChecklists.map((checklist, index) => (
                             <div className='checklist' key={index}>
                                 <h2 className='checklist-title'><img src={require('./icons/checklist.png')} alt="" style={{width:'25px', height:'25px', marginBottom:'-5px', marginLeft:'-30px', marginRight:'10px'}}/>
-                                {checklist.name || 'default checklist'}</h2>
+                                {checklist.name || 'TBA'}</h2>
                                 {checklist.items.map((item, itemIndex) => (
                                     
                                         <div className="checklist-item" key={itemIndex}>
-                                            <label htmlFor="item">{item.name || 'empty item'}</label>
+                                            <label htmlFor="item">{item.name || 'TBA'}</label>
                                             <input type="checkbox" id="item"/>
                                         </div>
    
@@ -184,7 +184,7 @@ export const Card = ({card, list}) => {
                             <div className='dropdown-content'>
                                 {cardChecklists.map((checklist, index) => {
                                     <div key={index}>
-                                        return <a href="#">{checklist.name || 'default'}</a>
+                                        return <a href="#">{checklist.name || 'TBA'}</a>
                                     </div>
                                 })}
                             </div>

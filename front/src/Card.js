@@ -1,17 +1,11 @@
 import {useState} from 'react'
 import {Link, useParams} from 'react-router-dom'
-import lists from './lists'
 // import { useReducer } from 'react';
 import './card.css'
 export const Card = ({card, list}) => {
 
-    const cardId = card.id
-    const listId = list.id
-
-    const newList = lists.find((project) => project.id === parseInt(listId))
-    
-    const newCard = newList.cards.find((card) => card.id === parseInt(cardId))
-    
+    const newCard = card
+    const newList = list
     
     const {name, description, members, checklists} = newCard
     const [cardName, setCardName] = useState(name)
@@ -99,7 +93,7 @@ export const Card = ({card, list}) => {
                         <h3 style={{textAlign:'right', marginRight:'6px'}}>اعضا</h3>
                         <h4 style={{textAlign:'right'}}>
                             {cardMembers.map((member, index) => (
-                                <span key={index} style={{ marginRight: '8px', textAlign:'right' }}>{member} </span>
+                                <span key={index} style={{ marginRight: '8px', textAlign:'right' }}>{member.name || 'default name'} </span>
                             ))}
                         </h4>
                     </div>
@@ -141,11 +135,11 @@ export const Card = ({card, list}) => {
                         {cardChecklists.map((checklist, index) => (
                             <div className='checklist' key={index}>
                                 <h2 className='checklist-title'><img src={require('./icons/checklist.png')} alt="" style={{width:'25px', height:'25px', marginBottom:'-5px', marginLeft:'-30px', marginRight:'10px'}}/>
-                                {checklist.name}</h2>
+                                {checklist.name || 'default checklist'}</h2>
                                 {checklist.items.map((item, itemIndex) => (
                                     
-                                        <div class="checklist-item" key={itemIndex}>
-                                            <label for="item">{item.name}</label>
+                                        <div className="checklist-item" key={itemIndex}>
+                                            <label htmlFor="item">{item.name || 'empty item'}</label>
                                             <input type="checkbox" id="item"/>
                                         </div>
    
@@ -172,19 +166,15 @@ export const Card = ({card, list}) => {
                     </div>
                 
 
-
-
-
-
-
-
                     <div className='add-to-card' style={{width:'200px', height:'auto'}}>
                         
                         <div className='dropdown'>
                         <button className='dropbtn'>اعضا</button>
                             <div className='dropdown-content'>
-                                {cardMembers.map((member) => {
-                                    return <a href="#">{member}</a>
+                                {cardMembers.map((member, index) => {
+                                    <div key={index}>
+                                        return <a href="#">{member.name || 'TBA'}</a>
+                                    </div>
                                 })}
                             </div>
                         </div>
@@ -192,8 +182,10 @@ export const Card = ({card, list}) => {
                         <div className='dropdown'>
                         <button className='dropbtn'>چکلیست</button>
                             <div className='dropdown-content'>
-                                {cardChecklists.map((checklist) => {
-                                    return <a href="#">{checklist.name}</a>
+                                {cardChecklists.map((checklist, index) => {
+                                    <div key={index}>
+                                        return <a href="#">{checklist.name || 'default'}</a>
+                                    </div>
                                 })}
                             </div>
                         </div>

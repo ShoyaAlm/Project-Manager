@@ -53,33 +53,3 @@ const ShowCards = ({list}) => {
     )
 }
 
-
-// const CreateList = () => {
-//     const [name, setName] = useState('')
-//     const [card, setcard] = useState([])
-//     const [level, setLevel] = useState()
-
-
-//     const handleSubmit = (e) => {
-//         if(name && card && level) {
-//             const createdList = {id: new Date().getTime().toString(), name, card, level}
-//         }
-//     }
-
-
-//     return (
-//         <div style={{textAlign:'center'}}>
-
-//             <form >
-                
-//                 <label htmlFor="name">Name: <input type="text"/></label>
-
-//                 <label htmlFor="card">card: <input type="text"/></label>
-
-//                 <label htmlFor="level">Level: <input type="text"/></label>
-
-//             </form>
-
-//         </div>
-//     )
-// }

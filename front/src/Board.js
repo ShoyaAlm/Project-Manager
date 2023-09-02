@@ -9,24 +9,53 @@ import Modal from 'react-modal'
 import { Card } from './Card';
 
 import './board.css'
+import { useEffect } from 'react';
 const ListContext = React.createContext()
 
 export const AllLists = () => {
-    const [lsts, setLsts] = useState(lists)
-    const removeList = (id) => {  // i want to pass this func into the SinglePerson, and for that i
-        setLsts((lsts) => {            // create a context using createContext
-            return lsts.filter((lsts) => lsts.id !== id)
+    const [lsts, setLsts] = useState([]);
+
+    useEffect(() => {
+        async function fetchData() {
+            try {
+                const response = await fetch('http://localhost:8080/api/lists', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to get lists');
+                }
+
+                const allLists = await response.json();
+                // Handle the response as needed, e.g., update your component state
+                // allLists contains the data returned from your Go backend
+                setLsts(allLists);
+            } catch (error) {
+                console.error('Error getting all lists:', error);
+                // Handle the error as needed
+            }
+        }
+
+        // Call the async fetchData function
+        fetchData();
+    }, []); // Empty dependency array to run the effect only once
+
+    const removeList = (id) => {
+        setLsts((currentLists) => {
+            return currentLists.filter((list) => list.id !== id);
         });
     };
-    
-    return (        //and in here, i'll pass it as a provider
-        <ListContext.Provider value={{removeList, lsts, setLsts}}>
+
+    return (
+        // and in here, I'll pass it as a provider
+        <ListContext.Provider value={{ removeList, lsts, setLsts }}>
             <List />
         </ListContext.Provider>
-    )
-
-}
-
+    );
+};
 
 const List = () => {
     const { removeList, lsts, setLsts } = useContext(ListContext);
@@ -38,61 +67,78 @@ const List = () => {
     
     const [isAddingList, setIsAddingList] = useState(false)
     
-    const handleSaveCard = (lst) => {
-        if (newCardName.trim() !== '') {
-            const updatedList = lst.cards.push({ id: Date.now(), name:newCardName, 
-                members:[], dates:[Date.now(), Date.now()],
-            description:'',checklists:[]})
-            console.log('updated List', updatedList)
-            setNewCardName('')
-            }
-    };
+    
 
     // const [newList, setNewList] = useState({})
     const [newListName, setNewListName] = useState('')
     
     
-    const addNewList = () => {  // new code
-    if (newListName.trim() !== '') {
-    const newListToAdd = {
-    id: Date.now(),
-    name: newListName,
-    cards: [
-        {
-            id: Date.now(),
-            name: 'کارد جدید',
-            members: ['alex', 'josh', 'lucas', 'peter'],
-            dates: ['24th august', '21st september'],
-            description: 'default description',
-            checklists: [
-                {
-                    id: 1,
-                    name: 'checklist 1',
-                    items: [
-                        {
-                            id: 1,
-                            name: 'item 1',
-                            dueDate: '24th september',
-                            assignedTo: ['josh', 'peter'],
-                        },
-                        {
-                            id: 2,
-                            name: 'item 2',
-                            dueDate: '30th september',
-                            assignedTo: ['alex', 'lucas'],
-                        },
-                            ],
-                        },
-                    ],
-                },
-            ],
-        };
-
-        setLsts(prevLsts => [...prevLsts, newListToAdd]);
-        setNewListName('');
-        setIsAddingList(false);
+    const createListOnServer = async (newListName) => {
+        try {
+          const response = await fetch('http://localhost:8080/api/lists', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ name: newListName }), // Send the new list name in the request body
+          });
+          
+          if (!response.ok) {
+            throw new Error('Failed to create a new list');
+          }
+      
+          const newList = await response.json();
+          // Handle the response as needed, e.g., update your component state
+          // newList contains the data returned from your Go backend
+        } catch (error) {
+          console.error('Error creating a new list:', error);
+          // Handle the error as needed
         }
-};
+      };
+
+      
+      const addNewList = () => {
+        if (newListName.trim() !== '') {
+            createListOnServer(newListName)
+            setNewListName('');
+            setIsAddingList(false)
+        }
+      }
+
+
+
+    const createCardOnServer = async (id) => {
+        
+        try{
+            const response = await fetch(`http://localhost:8080/api/lists/${id}/cards`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ name: newCardName })
+            });
+            if (!response.ok) {
+                throw new Error('Failed to create a new card');
+              }
+          
+              const newCard = await response.json();
+              // Handle the response as needed, e.g., update your component state
+              // newList contains the data returned from your Go backend
+
+        } catch (error) {
+              console.error('Error creating a new card:', error);
+              // Handle the error as needed
+            }      
+    };
+
+
+    const addNewCard = (id) => {
+        if (newCardName.trim() !== '') {
+            createCardOnServer(id)
+            setNewCardName('');
+            setIsAddingCard(false);
+        }
+    }
 
 
     return (
@@ -120,7 +166,7 @@ const List = () => {
                                     setNewCardName('')
                                     setIsAddingCard(false)
                                 }}>لغو</button>
-                                <button type="submit" onClick={() => handleSaveCard(lst)}>ذخیره</button>
+                                <button type="submit" onClick={() => addNewCard(lst.id)}>ذخیره</button>
                             </div>
                         )}
                     
@@ -168,6 +214,9 @@ const List = () => {
 const ShowCards = ({ list }) => {
 
 
+
+
+
     const history = useHistory();
     const [selectedCard, setSelectedCard] = useState(null);
     const [modalIsOpen, setModalIsOpen] = useState(false);
@@ -176,19 +225,6 @@ const ShowCards = ({ list }) => {
     const openModal = (card) => {
       setSelectedCard(card);
       setModalIsOpen(true);
-
-
-
-      return (
-
-            <div>
-                {console.log('hello')}
-            </div>
-      )
-
-
-
-
     };
   
     const closeModal = () => {
@@ -222,7 +258,7 @@ const ShowCards = ({ list }) => {
                 <div className="modal-content">
                 
                     {/* Display modal content with selectedCard data */}
-                    <Card card={card} list={list}></Card>
+                    <Card card={selectedCard} list={list}></Card>
                     {/* Rest of the modal content */}
                     <button onClick={closeModal}>Close Modal</button>
                 </div>

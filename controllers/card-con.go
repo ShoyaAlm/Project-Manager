@@ -469,20 +469,20 @@ func CreateCard(w http.ResponseWriter, r *http.Request) {
 
 	emptyItem := &model.Item{
 		ID:         newItemID,
-		Name:       "default item",
+		Name:       "آیتم 1",
 		DueDate:    "2023-09-20T00:00:00Z",
-		AssignedTo: []string{"person1", "person2"},
+		AssignedTo: []string{"شخص 1", "شخص 2"},
 	}
 
 	emptyChecklist := &model.Checklist{
 		ID:    newChecklistID,
-		Name:  "default checklist",
+		Name:  "چکلیست جدید",
 		Items: []*model.Item{emptyItem},
 	}
 
 	emptyMember := &model.Member{
 		ID:   newMemberID,
-		Name: "member 1",
+		Name: "عضو 1",
 	}
 
 	tx, err := db.Begin()

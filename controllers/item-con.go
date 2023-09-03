@@ -126,7 +126,7 @@ func CreateItem(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	checklistID, err := strconv.Atoi(vars["checklistID"])
 	if err != nil {
-		http.Error(w, "Invalid card ID", http.StatusBadRequest)
+		http.Error(w, "Invalid checklist ID", http.StatusBadRequest)
 		return
 	}
 
@@ -151,23 +151,39 @@ func CreateItem(w http.ResponseWriter, r *http.Request) {
 	var newItemID int
 
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to create checklist, %s", err), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Failed to create item, %s", err), http.StatusInternalServerError)
 		return
 	}
+
+	tx, err := db.Begin()
+	if err != nil {
+		http.Error(w, "Failed to start transaction", http.StatusInternalServerError)
+		return
+	}
+	defer tx.Rollback() // Rollback the transaction if there's an error or it's not explicitly committed
 
 	// Create a new card with non-null fields
 	newItem := &model.Item{
 		ID:         newItemID,
 		Name:       requestData.Name,
-		DueDate:    "september 20th",
-		AssignedTo: []string{"person1", "person2"},
+		DueDate:    "2023-09-20T00:00:00Z",
+		AssignedTo: []string{"شخص 1", "شخص 2"},
 	}
 
-	err = db.QueryRow("INSERT INTO items (name, duedate, assignedto, checklist_id) VALUES ($1, $2, $3, $4) RETURNING id",
+	err = tx.QueryRow("INSERT INTO items (name, due_date, assigned_to, checklist_id) VALUES ($1, $2, $3, $4) RETURNING id",
 		newItem.Name, newItem.DueDate, pq.Array(newItem.AssignedTo), checklistID).Scan(&newItemID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to insert items, %s", err), http.StatusInternalServerError)
+		return
+	}
+
+	if err := tx.Commit(); err != nil {
+		http.Error(w, "Failed to commit transaction", http.StatusInternalServerError)
+		return
+	}
 
 	// Fetch the associated list
-	checklistRow := db.QueryRow("SELECT id, name FROM checklists WHERE id = $1", checklistID)
+	checklistRow := tx.QueryRow("SELECT id, name FROM checklists WHERE id = $1", checklistID)
 	checklist := &model.Checklist{}
 	err = checklistRow.Scan(&checklist.ID, &checklist.Name)
 	if err != nil {

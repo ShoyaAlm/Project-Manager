@@ -467,27 +467,27 @@ func CreateList(w http.ResponseWriter, r *http.Request) {
 
 	emptyItem := &model.Item{
 		ID:         newItemID,
-		Name:       "default item",
+		Name:       "آیتم 1",
 		DueDate:    "2023-09-20T00:00:00Z",
-		AssignedTo: []string{"person1", "person2"},
+		AssignedTo: []string{"شخص 1", "شخص 2"},
 	}
 
 	emptyChecklist := &model.Checklist{
 		ID:    newChecklistID,
-		Name:  "default checklist",
+		Name:  "چکلیست جدید",
 		Items: []*model.Item{emptyItem},
 	}
 
 	emptyMember := &model.Member{
 		ID:   newMemberID,
-		Name: "member 1",
+		Name: "عضو 1",
 	}
 
 	emptyCard := &model.Card{
 		ID:          newCardID,
-		Name:        "default card",
-		Description: "default",
-		Dates:       []string{"october 1st", "november 1st"},
+		Name:        "کارد جدید",
+		Description: "توضیحات",
+		Dates:       []string{"1 شهریور", "1 مهر"},
 		Checklists:  []*model.Checklist{emptyChecklist},
 		Members:     []*model.Member{emptyMember},
 	}

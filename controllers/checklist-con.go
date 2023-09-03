@@ -241,10 +241,17 @@ func CreateChecklist(w http.ResponseWriter, r *http.Request) {
 
 	emptyItem := &model.Item{
 		ID:         newItemID,
-		Name:       "default item",
-		DueDate:    "september 20th",
-		AssignedTo: []string{"person1", "person2"},
+		Name:       "آیتم 1",
+		DueDate:    "2023-09-20T00:00:00Z",
+		AssignedTo: []string{"شخص 1", "شخص 2"},
 	}
+
+	tx, err := db.Begin()
+	if err != nil {
+		http.Error(w, "Failed to start transaction", http.StatusInternalServerError)
+		return
+	}
+	defer tx.Rollback() // Rollback the transaction if there's an error or it's not explicitly committed
 
 	// Create a new card with non-null fields
 	newChecklist := &model.Checklist{
@@ -253,14 +260,19 @@ func CreateChecklist(w http.ResponseWriter, r *http.Request) {
 		Items: []*model.Item{emptyItem},
 	}
 
-	// err = db.QueryRow("INSERT INTO cards (name, description, dates, list_id) VALUES ($1, $2, $3, $4) RETURNING id",
-	// 	newCard.Name, newCard.Description, pq.Array(newCard.Dates), listID).Scan(&newCardID)
-
 	err = db.QueryRow("INSERT INTO checklists (name, card_id) VALUES ($1, $2) RETURNING id",
 		newChecklist.Name, cardID).Scan(&newChecklistID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to insert checklist, %s", err), http.StatusInternalServerError)
+		return
+	}
 
-	err = db.QueryRow("INSERT INTO items (name, duedate, assignedto, checklist_id) VALUES ($1, $2, $3, $4) RETURNING id",
+	err = db.QueryRow("INSERT INTO items (name, due_date, assigned_to, checklist_id) VALUES ($1, $2, $3, $4) RETURNING id",
 		emptyItem.Name, emptyItem.DueDate, pq.Array(emptyItem.AssignedTo), newChecklistID).Scan(&newItemID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to insert item into checklist, %s", err), http.StatusInternalServerError)
+		return
+	}
 
 	// Fetch the associated list
 	cardRow := db.QueryRow("SELECT id, name, description, dates FROM cards WHERE id = $1", cardID)

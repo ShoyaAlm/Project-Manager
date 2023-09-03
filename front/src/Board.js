@@ -233,9 +233,6 @@ const List = () => {
 const ShowCards = ({ list }) => {
 
 
-
-
-
     const history = useHistory();
     const [selectedCard, setSelectedCard] = useState(null);
     const [modalIsOpen, setModalIsOpen] = useState(false);

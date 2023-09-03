@@ -457,8 +457,8 @@ func CreateList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var newListID int
-	err = db.QueryRow("INSERT INTO lists (name) VALUES ($1) RETURNING id", requestData.Name).Scan(&newListID)
+	var newListID, newCardID, newChecklistID, newItemID, newMemberID int
+	// err = db.QueryRow("INSERT INTO lists (name) VALUES ($1) RETURNING id", requestData.Name).Scan(&newListID)
 
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to create list, %s", err), http.StatusInternalServerError)
@@ -466,25 +466,25 @@ func CreateList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	emptyItem := &model.Item{
-		ID:         0,
+		ID:         newItemID,
 		Name:       "default item",
-		DueDate:    "september 20th",
+		DueDate:    "2023-09-20T00:00:00Z",
 		AssignedTo: []string{"person1", "person2"},
 	}
 
 	emptyChecklist := &model.Checklist{
-		ID:    0,
+		ID:    newChecklistID,
 		Name:  "default checklist",
 		Items: []*model.Item{emptyItem},
 	}
 
 	emptyMember := &model.Member{
-		ID:   0,
+		ID:   newMemberID,
 		Name: "member 1",
 	}
 
 	emptyCard := &model.Card{
-		ID:          0,
+		ID:          newCardID,
 		Name:        "default card",
 		Description: "default",
 		Dates:       []string{"october 1st", "november 1st"},
@@ -492,13 +492,74 @@ func CreateList(w http.ResponseWriter, r *http.Request) {
 		Members:     []*model.Member{emptyMember},
 	}
 
-	responseData := &model.List{
+	tx, err := db.Begin()
+	if err != nil {
+		log.Printf("Failed to start transaction: %v", err)
+		http.Error(w, "Failed to start transaction", http.StatusInternalServerError)
+		return
+	}
+	defer tx.Rollback()
+
+	newList := &model.List{
 		ID:    newListID,
 		Name:  requestData.Name,
 		Cards: []*model.Card{emptyCard}, // Initialize an empty cards attribute
 	}
 
-	jsonData, err := json.Marshal(responseData)
+	err = tx.QueryRow("INSERT INTO lists (name) VALUES ($1) RETURNING id", newList.Name).Scan(&newListID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to insert card, %s", err), http.StatusInternalServerError)
+		return
+	}
+
+	err = tx.QueryRow("INSERT INTO cards (name, description, dates, list_id) VALUES ($1, $2, $3, $4) RETURNING id",
+		emptyCard.Name, emptyCard.Description, pq.Array(emptyCard.Dates), newListID).Scan(&newCardID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to insert card, %s", err), http.StatusInternalServerError)
+		return
+	}
+
+	err = tx.QueryRow("INSERT INTO checklists (name, card_id) VALUES ($1, $2) RETURNING id",
+		emptyChecklist.Name, newCardID).Scan(&newChecklistID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to insert checklists, %s", err), http.StatusInternalServerError)
+		return
+	}
+
+	err = tx.QueryRow("INSERT INTO items (name, due_date, assigned_to, checklist_id) VALUES ($1, $2, $3, $4) RETURNING id",
+		emptyItem.Name, emptyItem.DueDate, pq.Array(emptyItem.AssignedTo), newChecklistID).Scan(&newItemID)
+	if err != nil {
+		log.Printf("Failed to insert items: %v", err)
+		http.Error(w, fmt.Sprintf("Failed to insert items, %s", err), http.StatusInternalServerError)
+		return
+	}
+
+	err = tx.QueryRow("INSERT INTO members (name, card_id) VALUES ($1, $2) RETURNING id",
+		emptyMember.Name, newCardID).Scan(&newMemberID)
+	if err != nil {
+		log.Printf("Failed to insert members: %v", err)
+		http.Error(w, fmt.Sprintf("Failed to insert members, %s", err), http.StatusInternalServerError)
+		return
+	}
+
+	if err := tx.Commit(); err != nil {
+		http.Error(w, "Failed to commit transaction", http.StatusInternalServerError)
+		return
+	}
+
+	// Fetch the associated list
+	listRow := tx.QueryRow("SELECT id, name FROM lists WHERE id = $1", newListID)
+	list := []*model.List{}
+	err = listRow.Scan(&newList.ID, &newList.Name)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to fetch list data, %s", err), http.StatusInternalServerError)
+		return
+	}
+
+	// Append the new card to the list's cards slice
+	list = append(list, newList)
+
+	jsonData, err := json.Marshal(list)
 	if err != nil {
 		http.Error(w, "Failed to marshal response data", http.StatusInternalServerError)
 		return
@@ -515,6 +576,74 @@ func DeleteAList(w http.ResponseWriter, r *http.Request) {
 	listID, err := strconv.Atoi(vars["id"])
 	if err != nil {
 		http.Error(w, "Invalid list ID", http.StatusBadRequest)
+		return
+	}
+
+	var cardIDs []int
+	rows, err := db.Query("SELECT id FROM cards WHERE list_id = $1", listID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to fetch card IDs, %s", err), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var cardID int
+		if err := rows.Scan(&cardID); err != nil {
+			http.Error(w, fmt.Sprintf("Failed to scan card ID, %s", err), http.StatusInternalServerError)
+			return
+		}
+		cardIDs = append(cardIDs, cardID)
+	}
+
+	// loop for deleting the list's data
+	for _, cardID := range cardIDs {
+
+		_, err := db.Exec("DELETE FROM members WHERE card_id = $1", cardID)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Failed to delete members of list, %s", err), http.StatusInternalServerError)
+			return
+		}
+
+		// deleting items & checklists
+		var checklistIDs []int
+		checklistRows, err := db.Query("SELECT id FROM checklists WHERE card_id = $1", cardID)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Failed to fetch checklist IDs, %s", err), http.StatusInternalServerError)
+			return
+		}
+
+		defer rows.Close()
+
+		for checklistRows.Next() {
+			var checklistID int
+			if err := checklistRows.Scan(&checklistID); err != nil {
+				http.Error(w, fmt.Sprintf("Failed to scan checklist ID, %s", err), http.StatusInternalServerError)
+				return
+			}
+			checklistIDs = append(checklistIDs, checklistID)
+		}
+
+		for _, checklistID := range checklistIDs {
+			_, err := db.Exec("DELETE FROM items WHERE checklist_id = $1", checklistID)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Failed to delete items of checklist, %s", err), http.StatusInternalServerError)
+				return
+			}
+		}
+
+		//delete checklists
+		_, err = db.Exec("DELETE FROM checklists WHERE card_id = $1", cardID)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Failed to delete checklists of a list, %s", err), http.StatusInternalServerError)
+			return
+		}
+
+	}
+
+	_, err = db.Exec("DELETE FROM cards WHERE list_id = $1", listID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to delete card, %s", err), http.StatusInternalServerError)
 		return
 	}
 

@@ -506,7 +506,6 @@ func CreateCard(w http.ResponseWriter, r *http.Request) {
 	err = tx.QueryRow("INSERT INTO cards (name, description, dates, list_id) VALUES ($1, $2, $3, $4) RETURNING id",
 		newCard.Name, newCard.Description, pq.Array(newCard.Dates), listID).Scan(&newCardID)
 	if err != nil {
-		log.Printf("Failed to insert card: %v", err)
 		http.Error(w, fmt.Sprintf("Failed to insert card, %s", err), http.StatusInternalServerError)
 		return
 	}
@@ -514,7 +513,6 @@ func CreateCard(w http.ResponseWriter, r *http.Request) {
 	err = tx.QueryRow("INSERT INTO checklists (name, card_id) VALUES ($1, $2) RETURNING id",
 		emptyChecklist.Name, newCardID).Scan(&newChecklistID)
 	if err != nil {
-		log.Printf("Failed to insert checklists: %v", err)
 		http.Error(w, fmt.Sprintf("Failed to insert checklists, %s", err), http.StatusInternalServerError)
 		return
 	}

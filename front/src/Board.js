@@ -141,6 +141,25 @@ const List = () => {
     }
 
 
+    const handleDeleteList = async (id) => {
+        try {
+            const response = await fetch(`http://localhost:8080/api/lists/${id}`,{
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json"
+                }
+                
+            });
+
+            if (!response.ok){
+                throw new Error("Failed to delete the list")
+            }
+        } catch (error) {
+            console.log("Error deleting the list");
+        }
+    };
+
+
     return (
         <div className="list-container">
             {lsts.map((lst) => (
@@ -172,7 +191,7 @@ const List = () => {
                     
 
                     <br />
-                    <button onClick={() => removeList(lst.id)} className="remove-button">
+                    <button onClick={() => handleDeleteList(lst.id)} className="remove-button">
                         پاک کردن
                     </button>
                 </div>

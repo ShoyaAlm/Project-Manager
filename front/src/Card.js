@@ -170,6 +170,45 @@ export const Card = ({card, list}) => {
     }
     
 
+    const removeCard = async () => {
+
+            try {
+                const response = await fetch(`http://localhost:8080/api/lists/${newList.id}/cards/${newCard.id}`,{
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                });
+                if (!response.ok){
+                    throw new Error('Error deleting the card')
+                }
+            } catch (error) {
+                console.log(error);
+            }
+
+    }
+
+
+    const removeMember = async (id) => {
+
+            try {
+                const response = await fetch(`http://localhost:8080/api/lists/${newList.id}/cards/${newCard.id}/members/${id}`,{
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                });
+                if (!response.ok){
+                    throw new Error('Error deleting the member')
+                }
+            } catch (error) {
+                console.log(error);
+            }
+
+    }
+
+    
+
     const removeChecklist = async (id) => {
         try{
             const response = await fetch(`http://localhost:8080/api/lists/${list.id}/cards/${card.id}/checklists/${id}`, {
@@ -187,26 +226,42 @@ export const Card = ({card, list}) => {
         }
     }
 
+
+    const removeItem = async (checklistID, itemID) => {
+        try{
+            const response = await fetch(`http://localhost:8080/api/lists/${newList.id}/cards/${newCard.id}/checklists/${checklistID}/items/${itemID}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+            });
+            if (!response.ok){
+                throw new Error("Failed to delete the item")
+            }
+
+        } catch (error) {
+        console.log("Error deleting the item");
+        }
+    }
+
+
     return (
         
         <div>
            
             <div className='card-container'>
                 
-                <div className='card-details' style={{ textAlign: 'left', width: '800px', 
-                    height: 'auto', marginLeft: '320px' }}>
-                    <h2 className='card-title' style={{textAlign:'right'}}><img src={require('./icons/list.png')} alt="" style={{width:'50px', height:'50px', marginRight:'-20%' , marginBottom:'-30px' , position:'relative'}}/>
-                    {cardName}</h2>
+                <div className='card-details'>
+                    <h2 className='card-title' style={{textAlign:'right'}}><img src={require('./icons/list.png')} alt="" style={{width:'50px', height:'50px', marginRight:'-6%' , position:'relative', float:'right'}}/>
+                    {cardName} 
+                    </h2>
+                    <h3 className='list-name' style={{textAlign:'right', marginRight:'40px', marginTop:'10px'}}> لیست:  {newList.name}</h3>
+
+                    <button className='remove-card-button' onClick={() => removeCard()}>حذف کارد</button>
                     
-                    <h3 className='list-name' style={{textAlign:'right', marginRight:'40px', marginTop:'10px'}}>در لیست <Link to={`/list/${newList.id}`} style={{
-                        textDecoration:'none',
-                        color:'blue'
-                    }}>{newList.name}</Link></h3>
-
-
 
                     <div className='card-members' style={{marginRight:'30px'}}>
-                        <img src={require('./icons/members.png')} alt="" style={{width:'24px', height:'24px', marginLeft:'780px', marginBottom:'-36px', position:'relative'}}/>
+                        <img src={require('./icons/members.png')} alt="" style={{width:'24px', height:'24px', marginLeft:'800px', marginTop:'30px', position:'relative', float:'right'}}/>
                         <h3 style={{textAlign:'right', marginRight:'6px'}}>اعضا</h3>
                         <h4 style={{textAlign:'right'}}>
                             {cardMembers.map((member, index) => (
@@ -271,6 +326,7 @@ export const Card = ({card, list}) => {
                                 {checklist.items.map((item, itemIndex) => (
                                     
                                         <div className="checklist-item" key={itemIndex}>
+                                            <button className='remove-item-button' onClick={() => removeItem(checklist.id, item.id)}>حذف</button>
                                             <label htmlFor="item">{item.name}</label>
                                             <input type="checkbox" id="item"/>
                                         </div>
@@ -328,7 +384,8 @@ export const Card = ({card, list}) => {
                                 {cardMembers.map((member, index) => {
                                     return (
                                     <div key={index}>
-                                         <a href="#">{member.name}</a>
+                                         <span >{member.name}</span>
+                                         <button className='remove-member-button' onClick={() => removeMember(member.id)}>X</button>
                                     </div>
                                     )
                                 })}

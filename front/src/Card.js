@@ -1,4 +1,4 @@
-import {useState} from 'react'
+import {useState, useEffect} from 'react'
 import {Link, useParams} from 'react-router-dom'
 // import { useReducer } from 'react';
 import './card.css'
@@ -13,6 +13,7 @@ export const Card = ({card, list}) => {
     const [cardMembers, setCardMembers] = useState(members)
     const [cardChecklists, setCardChecklists] = useState(checklists)
 
+    const [items, setItems] = useState([])
 
     // Define state for managing description editing
     const [isEditingDescription, setIsEditingDescription] = useState(false);
@@ -77,7 +78,12 @@ export const Card = ({card, list}) => {
 
     const AddItem = ({ checklist }) => {
         const [newItemName, setNewItemName] = useState('');
-    
+        
+        useEffect(() => {
+            // This effect runs whenever items change
+            console.log('Items have changed:', items);
+        }, [items]);
+
         const handleSaveItem = async () => {
             try{
 
@@ -92,6 +98,14 @@ export const Card = ({card, list}) => {
                     throw new Error("Failed to create the item")
                 }
 
+                const newItem = await response.json();
+                setItems((prevItems) => [...prevItems, newItem]);
+    
+                // Clear the newItemName input
+                setNewItemName('');
+                setIsAddingItem(false)
+
+
             } catch (error) {
             console.log("Error creating the item");
                 }
@@ -101,8 +115,8 @@ export const Card = ({card, list}) => {
         const addNewItem = () => {
             if (newItemName.trim() !== '') {
                 handleSaveItem(newItemName)
-                setNewItemName('');
-                setIsAddingItem(false)
+                // setNewItemName('');
+                // setIsAddingItem(false)
             }
           }
     
@@ -264,9 +278,16 @@ export const Card = ({card, list}) => {
                         <img src={require('./icons/members.png')} alt="" style={{width:'24px', height:'24px', marginLeft:'800px', marginTop:'30px', position:'relative', float:'right'}}/>
                         <h3 style={{textAlign:'right', marginRight:'6px'}}>اعضا</h3>
                         <h4 style={{textAlign:'right'}}>
-                            {cardMembers.map((member, index) => (
-                                <span key={index} style={{ marginRight: '8px', textAlign:'right' }}>{member.name} </span>
-                            ))}
+                        {cardMembers && cardMembers.length > 0 ? (
+                            cardMembers.map((member, index) => (
+                                <span key={index} style={{ marginRight: '8px', textAlign: 'right' }}>
+                                {member.name}
+                                </span>
+                            ))
+                            ) : (
+                            <span>No members</span>
+                        )}
+
                         </h4>
 
 
@@ -318,20 +339,30 @@ export const Card = ({card, list}) => {
 
 
                     <div className='showcase-checklists' style={{marginRight:'auto'}}>
-                        {cardChecklists.map((checklist, index) => (
+                        
+                        {cardChecklists && cardChecklists.length > 0 ? (
+                        
+                        cardChecklists.map((checklist, index) => (
 
                             <div className='checklist' key={index}>
+                                
+                                
                                 <h2 className='checklist-title'><img src={require('./icons/checklist.png')} alt="" style={{width:'25px', height:'25px', marginBottom:'-5px', marginLeft:'-30px', marginRight:'10px'}}/>
                                 {checklist.name}</h2>
-                                {checklist.items.map((item, itemIndex) => (
+                                {checklist.items && checklist.items.length > 0 ? (
+                                    checklist.items.map((item, itemIndex) => (
+                                        
+                                            <div className="checklist-item" key={itemIndex}>
+                                                <button className='remove-item-button' onClick={() => removeItem(checklist.id, item.id)}>حذف</button>
+                                                <label htmlFor="item">{item.name}</label>
+                                                <input type="checkbox" id="item"/>
+                                            </div>
+    
+                                    ))
                                     
-                                        <div className="checklist-item" key={itemIndex}>
-                                            <button className='remove-item-button' onClick={() => removeItem(checklist.id, item.id)}>حذف</button>
-                                            <label htmlFor="item">{item.name}</label>
-                                            <input type="checkbox" id="item"/>
-                                        </div>
-   
-                                ))}
+                                ) : (
+                                    <span>No items</span>
+                                )}
 
 
                                 {isAddingItem === checklist.id && <AddItem checklist={checklist}/> }
@@ -352,10 +383,15 @@ export const Card = ({card, list}) => {
                             
 
                             </div>
-
-
                             
-                        ))}
+                        ))
+
+                        
+                            
+                        ) : (
+                            <span>No Checklists</span>
+                        )}
+                        
 
                             {/* here we add the new checklists */}
                             <div className='add-checklist'>
@@ -381,27 +417,37 @@ export const Card = ({card, list}) => {
                         <div className='dropdown'>
                         <button className='dropbtn'>اعضا</button>
                             <div className='dropdown-content'>
-                                {cardMembers.map((member, index) => {
+                            {cardMembers && cardMembers.length > 0 ? (
+                                cardMembers.map((member, index) => {
                                     return (
                                     <div key={index}>
                                          <span >{member.name}</span>
                                          <button className='remove-member-button' onClick={() => removeMember(member.id)}>X</button>
                                     </div>
                                     )
-                                })}
+                                })
+
+                            ) : (
+                                <span>No members</span>
+                            )}
                             </div>
                         </div>
 
                         <div className='dropdown'>
                         <button className='dropbtn'>چکلیست</button>
                             <div className='dropdown-content'>
-                                {cardChecklists.map((checklist, index) => {
+                            {cardChecklists && cardChecklists.length > 0 ? (
+                                cardChecklists.map((checklist, index) => {
                                     return (
                                     <div key={index}>
                                          <a href="#">{checklist.name}</a>
                                     </div>
                                     )
-                                })}
+                                })
+
+                            ) : (
+                                <span>No Checklist</span>
+                            )}
                             </div>
                         </div>
 

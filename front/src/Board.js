@@ -253,7 +253,8 @@ const ShowCards = ({ list }) => {
     return (
         <div className="showcards-container">
             <hr />
-            {list.cards.map((card) => (
+            {list.cards && list.cards.length > 0 ? (
+            list.cards.map((card) => (
                 <div key={card.id} className="card-item">
                 <div
                         style={{ textDecoration: 'none', color: 'black', cursor: 'pointer' }}
@@ -282,7 +283,11 @@ const ShowCards = ({ list }) => {
             </Modal>
                 </div>
 
-            ))}
+            ))
+
+            ) : (
+                <span>no cards</span>
+            )}
 
 
         </div>

@@ -485,7 +485,7 @@ func CreateList(w http.ResponseWriter, r *http.Request) {
 
 	emptyCard := &model.Card{
 		ID:          newCardID,
-		Name:        "کارد جدید",
+		Name:        "کارت جدید",
 		Description: "توضیحات",
 		Dates:       []string{"1 شهریور", "1 مهر"},
 		Checklists:  []*model.Checklist{emptyChecklist},

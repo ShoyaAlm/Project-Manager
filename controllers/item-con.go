@@ -155,12 +155,12 @@ func CreateItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tx, err := db.Begin()
-	if err != nil {
-		http.Error(w, "Failed to start transaction", http.StatusInternalServerError)
-		return
-	}
-	defer tx.Rollback() // Rollback the transaction if there's an error or it's not explicitly committed
+	// tx, err := db.Begin()
+	// if err != nil {
+	// 	http.Error(w, "Failed to start transaction", http.StatusInternalServerError)
+	// 	return
+	// }
+	// defer tx.Rollback() // Rollback the transaction if there's an error or it's not explicitly committed
 
 	// Create a new card with non-null fields
 	newItem := &model.Item{
@@ -170,20 +170,20 @@ func CreateItem(w http.ResponseWriter, r *http.Request) {
 		AssignedTo: []string{"شخص 1", "شخص 2"},
 	}
 
-	err = tx.QueryRow("INSERT INTO items (name, due_date, assigned_to, checklist_id) VALUES ($1, $2, $3, $4) RETURNING id",
+	err = db.QueryRow("INSERT INTO items (name, due_date, assigned_to, checklist_id) VALUES ($1, $2, $3, $4) RETURNING id",
 		newItem.Name, newItem.DueDate, pq.Array(newItem.AssignedTo), checklistID).Scan(&newItemID)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to insert items, %s", err), http.StatusInternalServerError)
 		return
 	}
 
-	if err := tx.Commit(); err != nil {
-		http.Error(w, "Failed to commit transaction", http.StatusInternalServerError)
-		return
-	}
+	// if err := db.Commit(); err != nil {
+	// 	http.Error(w, "Failed to commit transaction", http.StatusInternalServerError)
+	// 	return
+	// }
 
 	// Fetch the associated list
-	checklistRow := tx.QueryRow("SELECT id, name FROM checklists WHERE id = $1", checklistID)
+	checklistRow := db.QueryRow("SELECT id, name FROM checklists WHERE id = $1", checklistID)
 	checklist := &model.Checklist{}
 	err = checklistRow.Scan(&checklist.ID, &checklist.Name)
 	if err != nil {

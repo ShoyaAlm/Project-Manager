@@ -246,12 +246,12 @@ func CreateChecklist(w http.ResponseWriter, r *http.Request) {
 		AssignedTo: []string{"شخص 1", "شخص 2"},
 	}
 
-	tx, err := db.Begin()
-	if err != nil {
-		http.Error(w, "Failed to start transaction", http.StatusInternalServerError)
-		return
-	}
-	defer tx.Rollback() // Rollback the transaction if there's an error or it's not explicitly committed
+	// tx, err := db.Begin()
+	// if err != nil {
+	// 	http.Error(w, "Failed to start transaction", http.StatusInternalServerError)
+	// 	return
+	// }
+	// defer tx.Rollback() // Rollback the transaction if there's an error or it's not explicitly committed
 
 	// Create a new card with non-null fields
 	newChecklist := &model.Checklist{

@@ -485,14 +485,6 @@ func CreateCard(w http.ResponseWriter, r *http.Request) {
 		Name: "عضو 1",
 	}
 
-	tx, err := db.Begin()
-	if err != nil {
-		log.Printf("Failed to start transaction: %v", err)
-		http.Error(w, "Failed to start transaction", http.StatusInternalServerError)
-		return
-	}
-	defer tx.Rollback() // Rollback the transaction if there's an error or it's not explicitly committed
-
 	// Create a new card with non-null fields
 	newCard := &model.Card{
 		ID:          newCardID,
@@ -503,21 +495,21 @@ func CreateCard(w http.ResponseWriter, r *http.Request) {
 		Members:     []*model.Member{emptyMember},
 	}
 
-	err = tx.QueryRow("INSERT INTO cards (name, description, dates, list_id) VALUES ($1, $2, $3, $4) RETURNING id",
+	err = db.QueryRow("INSERT INTO cards (name, description, dates, list_id) VALUES ($1, $2, $3, $4) RETURNING id",
 		newCard.Name, newCard.Description, pq.Array(newCard.Dates), listID).Scan(&newCardID)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to insert card, %s", err), http.StatusInternalServerError)
 		return
 	}
 
-	err = tx.QueryRow("INSERT INTO checklists (name, card_id) VALUES ($1, $2) RETURNING id",
+	err = db.QueryRow("INSERT INTO checklists (name, card_id) VALUES ($1, $2) RETURNING id",
 		emptyChecklist.Name, newCardID).Scan(&newChecklistID)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to insert checklists, %s", err), http.StatusInternalServerError)
 		return
 	}
 
-	err = tx.QueryRow("INSERT INTO items (name, due_date, assigned_to, checklist_id) VALUES ($1, $2, $3, $4) RETURNING id",
+	err = db.QueryRow("INSERT INTO items (name, due_date, assigned_to, checklist_id) VALUES ($1, $2, $3, $4) RETURNING id",
 		emptyItem.Name, emptyItem.DueDate, pq.Array(emptyItem.AssignedTo), newChecklistID).Scan(&newItemID)
 	if err != nil {
 		log.Printf("Failed to insert items: %v", err)
@@ -525,7 +517,7 @@ func CreateCard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = tx.QueryRow("INSERT INTO members (name, card_id) VALUES ($1, $2) RETURNING id",
+	err = db.QueryRow("INSERT INTO members (name, card_id) VALUES ($1, $2) RETURNING id",
 		emptyMember.Name, newCardID).Scan(&newMemberID)
 	if err != nil {
 		log.Printf("Failed to insert members: %v", err)
@@ -533,13 +525,8 @@ func CreateCard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := tx.Commit(); err != nil {
-		http.Error(w, "Failed to commit transaction", http.StatusInternalServerError)
-		return
-	}
-
 	// Fetch the associated list
-	listRow := tx.QueryRow("SELECT id, name FROM lists WHERE id = $1", listID)
+	listRow := db.QueryRow("SELECT id, name FROM lists WHERE id = $1", listID)
 	list := &model.List{}
 	err = listRow.Scan(&list.ID, &list.Name)
 	if err != nil {

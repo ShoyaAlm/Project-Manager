@@ -1,4 +1,4 @@
-import {useState, useEffect} from 'react'
+import {useEffect, useState} from 'react'
 import {Link, useParams} from 'react-router-dom'
 // import { useReducer } from 'react';
 import './card.css'
@@ -12,28 +12,27 @@ export const Card = ({card, list}) => {
     const [cardDescription, setCardDescription] = useState(description)
     const [cardMembers, setCardMembers] = useState(members)
     const [cardChecklists, setCardChecklists] = useState(checklists)
-
-    const [items, setItems] = useState([])
-
+    
     // Define state for managing description editing
     const [isEditingDescription, setIsEditingDescription] = useState(false);
-
+    
     // Define state to store the temporary edited description
     const [editedDescription, setEditedDescription] = useState(cardDescription);
-
+    
     const [isAddingChecklist, setIsAddingChecklist] = useState(false)
-
+    
     const [isAddingItem, setIsAddingItem] = useState(false)
-
+    
     const [isAddingMember, setIsAddingMember] = useState(false)
-
-
+    
+    
     const AddChecklist = ({ card, list }) => {
         const [newChecklistName, setNewChecklistName] = useState('');
+        
 
         const handleSaveChecklist = async () => {
             try{
-
+                
                 const response = await fetch(`http://localhost:8080/api/lists/${list.id}/cards/${card.id}/checklists`, {
                     method: 'POST',
                     headers: {
@@ -45,23 +44,26 @@ export const Card = ({card, list}) => {
                     throw new Error("Failed to create the checklist")
                 }
 
+                const newChecklist = await response.json();
+                setCardChecklists([...cardChecklists, newChecklist])
+                
             } catch (error) {
-            console.log("Error creating the checklist");
+                console.log("Error creating the checklist");
             }
-
+            
         }
-
+        
         const addNewChecklist = () => {
             if (newChecklistName.trim() !== '') {
                 handleSaveChecklist(newChecklistName)
                 setNewChecklistName('');
                 setIsAddingChecklist(false)
             }
-          }
-
+        }
+        
         return (
             <div>
-                <button onClick={() => addNewChecklist()} style={{width:'auto', height:'auto'}}>ذخیره</button>
+                <button onClick={() => addNewChecklist()} style={{width:'auto', height:'auto'}} type="button">ذخیره</button>
                 <input
                     type="text"
                     value={newChecklistName}
@@ -70,23 +72,22 @@ export const Card = ({card, list}) => {
                     style={{width:'200px', height: '60px'}}/>
             </div>
         );
+        
 
-
-
+        
     }
-
+    
 
     const AddItem = ({ checklist }) => {
         const [newItemName, setNewItemName] = useState('');
+        const [checklistItems, setChecklistItems] = useState(checklist.items)
         
-        useEffect(() => {
-            // This effect runs whenever items change
-            console.log('Items have changed:', items);
-        }, [items]);
-
+        // useEffect(() => {
+        //     console.log('ChecklistItems changed, ', checklistItems);
+        // }, [checklistItems])
         const handleSaveItem = async () => {
             try{
-
+                
                 const response = await fetch(`http://localhost:8080/api/lists/${newList.id}/cards/${newCard.id}/checklists/${checklist.id}/items`, {
                     method: 'POST',
                     headers: {
@@ -99,12 +100,8 @@ export const Card = ({card, list}) => {
                 }
 
                 const newItem = await response.json();
-                setItems((prevItems) => [...prevItems, newItem]);
-    
-                // Clear the newItemName input
-                setNewItemName('');
-                setIsAddingItem(false)
-
+                setChecklistItems([...checklistItems, newItem])
+                                
 
             } catch (error) {
             console.log("Error creating the item");
@@ -115,8 +112,8 @@ export const Card = ({card, list}) => {
         const addNewItem = () => {
             if (newItemName.trim() !== '') {
                 handleSaveItem(newItemName)
-                // setNewItemName('');
-                // setIsAddingItem(false)
+                setNewItemName('');
+                setIsAddingItem(false)
             }
           }
     
@@ -350,16 +347,16 @@ export const Card = ({card, list}) => {
                                 <h2 className='checklist-title'><img src={require('./icons/checklist.png')} alt="" style={{width:'25px', height:'25px', marginBottom:'-5px', marginLeft:'-30px', marginRight:'10px'}}/>
                                 {checklist.name}</h2>
                                 {checklist.items && checklist.items.length > 0 ? (
-                                    checklist.items.map((item, itemIndex) => (
-                                        
-                                            <div className="checklist-item" key={itemIndex}>
-                                                <button className='remove-item-button' onClick={() => removeItem(checklist.id, item.id)}>حذف</button>
-                                                <label htmlFor="item">{item.name}</label>
-                                                <input type="checkbox" id="item"/>
-                                            </div>
-    
-                                    ))
+                                checklist.items.map((item, itemIndex) => (
                                     
+                                        <div className="checklist-item" key={itemIndex}>
+                                            <button className='remove-item-button' onClick={() => removeItem(checklist.id, item.id)}>حذف</button>
+                                            <label htmlFor="item">{item.name}</label>
+                                            <input type="checkbox" id="item"/>
+                                        </div>
+   
+                                ))
+                                
                                 ) : (
                                     <span>No items</span>
                                 )}

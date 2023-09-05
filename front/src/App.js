@@ -11,7 +11,6 @@ import {Link, useParams} from 'react-router-dom'
 
 import { AllLists } from './Board'
 import { HandleSigninLogin } from './signup-login.js'
-import { List } from './List'
 import { Card } from './Card'
 
 const App = () => {
@@ -27,8 +26,6 @@ const App = () => {
             
                 <Switch>
                     <Route exact path='/'> <AllLists/> </Route>
-
-                    <Route path='/list/:id'> <List/> </Route>
                     
                     <Route path='/lists/:listId/cards/:cardId'> <Card/> </Route>
                     

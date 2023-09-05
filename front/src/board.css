@@ -132,6 +132,25 @@ body {
 }
 
 
+.add-card-buttons {
+    margin-top: 10px;
+    display: flex;
+    justify-content: center;
+    margin-right: 2%;
+}
+
+.add-card-buttons button {
+    margin: 10px 5px;
+    padding: 5px 10px;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+
+
 /* .add-list{
     margin: '10px';
     padding: '10px';

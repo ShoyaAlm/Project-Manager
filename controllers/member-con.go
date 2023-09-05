@@ -152,33 +152,21 @@ func CreateMember(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tx, err := db.Begin()
-	if err != nil {
-		http.Error(w, "Failed to start transaction", http.StatusInternalServerError)
-		return
-	}
-	defer tx.Rollback() // Rollback the transaction if there's an error or it's not explicitly committed
-
 	// Create a new card with non-null fields
 	newMember := &model.Member{
 		ID:   newMemberID,
 		Name: requestData.Name,
 	}
 
-	err = tx.QueryRow("INSERT INTO members (name, card_id) VALUES ($1, $2) RETURNING id",
+	err = db.QueryRow("INSERT INTO members (name, card_id) VALUES ($1, $2) RETURNING id",
 		newMember.Name, cardID).Scan(&newMemberID)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to insert member, %s", err), http.StatusInternalServerError)
 		return
 	}
 
-	if err := tx.Commit(); err != nil {
-		http.Error(w, "Failed to commit transaction", http.StatusInternalServerError)
-		return
-	}
-
 	// Fetch the associated list
-	cardRow := tx.QueryRow("SELECT id, name, description, dates FROM cards WHERE id = $1", cardID)
+	cardRow := db.QueryRow("SELECT id, name, description, dates FROM cards WHERE id = $1", cardID)
 	card := &model.Card{}
 	err = cardRow.Scan(&card.ID, &card.Name, &card.Description, &card.Dates)
 	if err != nil {

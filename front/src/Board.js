@@ -1,5 +1,3 @@
-import lists from './lists'
-
 import React, {useContext } from 'react'
 import {useState} from 'react'
 
@@ -14,133 +12,167 @@ const ListContext = React.createContext()
 
 export const AllLists = () => {
     const [lsts, setLsts] = useState([]);
-
+    const [isNewListAddedOrRemoved, setIsNewListAddedOrRemoved] = useState(false);
+    
+    
     useEffect(() => {
-        async function fetchData() {
-            try {
-                const response = await fetch('http://localhost:8080/api/lists', {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to get lists');
+    const fetchData = async () => {
+        try {
+            const response = await fetch('http://localhost:8080/api/lists', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
                 }
+            });
 
-                const allLists = await response.json();
-                // Handle the response as needed, e.g., update your component state
-                // allLists contains the data returned from your Go backend
-                setLsts(allLists);
-            } catch (error) {
-                console.error('Error getting all lists:', error);
-                // Handle the error as needed
+            if (!response.ok) {
+                throw new Error('Failed to get lists');
             }
+
+            const Lists = await response.json();
+            setLsts(Lists);
+
+        } catch (error) {
+            console.error('Error getting all lists:', error);
         }
+    }
 
-        // Call the async fetchData function
-        fetchData();
-    }, []); // Empty dependency array to run the effect only once
+    fetchData();
+    
+        if (isNewListAddedOrRemoved){
+            fetchData();
+            setIsNewListAddedOrRemoved(false);
+        }
+    }, [isNewListAddedOrRemoved]);
 
-    const removeList = (id) => {
-        setLsts((currentLists) => {
-            return currentLists.filter((list) => list.id !== id);
-        });
-    };
 
     return (
-        // and in here, I'll pass it as a provider
-        <ListContext.Provider value={{ removeList, lsts, setLsts }}>
+        <ListContext.Provider value={{ lsts, setLsts, setIsNewListAddedOrRemoved }}>
             <List />
         </ListContext.Provider>
     );
 };
 
 const List = () => {
-    const { removeList, lsts, setLsts } = useContext(ListContext);
+    const { lsts, setLsts, setIsNewListAddedOrRemoved } = useContext(ListContext);
     
-    const [isAddingCard, setIsAddingCard] = useState(false);
-    
-    const [newCardName, setNewCardName] = useState('random')
-    
+    const [isAddingCard, setIsAddingCard] = useState(false);    
     
     const [isAddingList, setIsAddingList] = useState(false)
     
-    
-
-    // const [newList, setNewList] = useState({})
     const [newListName, setNewListName] = useState('')
-    
-    
-    const createListOnServer = async (newListName) => {
-        try {
-          const response = await fetch('http://localhost:8080/api/lists', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ name: newListName }), // Send the new list name in the request body
-          });
-          
-          if (!response.ok) {
-            throw new Error('Failed to create a new list');
-          }
-      
-          const newList = await response.json();
-          // Handle the response as needed, e.g., update your component state
-          // newList contains the data returned from your Go backend
-        } catch (error) {
-          console.error('Error creating a new list:', error);
-          // Handle the error as needed
-        }
-      };
 
-      
-      const addNewList = () => {
-        if (newListName.trim() !== '') {
-            createListOnServer(newListName)
-            setNewListName('');
-            setIsAddingList(false)
-        }
-      }
+    const AddList = () => {
 
 
-
-    const createCardOnServer = async (id) => {
-        
-        try{
-            const response = await fetch(`http://localhost:8080/api/lists/${id}/cards`, {
+        const handleSaveList = async (newListName) => {
+            try {
+              const response = await fetch('http://localhost:8080/api/lists', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                  'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ name: newCardName })
-            });
-            if (!response.ok) {
-                throw new Error('Failed to create a new card');
+                body: JSON.stringify({ name: newListName }), // Send the new list name in the request body
+              });
+              
+              if (!response.ok) {
+                throw new Error('Failed to create a new list');
               }
           
-              const newCard = await response.json();
-              // Handle the response as needed, e.g., update your component state
-              // newList contains the data returned from your Go backend
+            //   const newList = await response.json();
+            //   setLsts([...lsts, newList])
+              setIsNewListAddedOrRemoved(true)
 
-        } catch (error) {
-              console.error('Error creating a new card:', error);
-              // Handle the error as needed
-            }      
-    };
+            } catch (error) {
+              console.error('Error creating a new list:', error);
+            }
 
+            
+        };
+        
+        
+        const addNewList = () => {
+            if (newListName.trim() !== '') {
+                handleSaveList(newListName)
+                setNewListName('');
+                setIsAddingList(false)
+            }
+          }
 
-    const addNewCard = (id) => {
-        if (newCardName.trim() !== '') {
-            createCardOnServer(id)
-            setNewCardName('');
-            setIsAddingCard(false);
-        }
+         return (
+            <div className="add-list-buttons">
+                <button type="submit" onClick={() => {
+                    setIsAddingList(false)
+                }}>لغو</button>
+                <button type="submit" onClick={() => addNewList()}>ذخیره</button>
+            </div>
+        )
+
     }
 
 
+    const [newCardName, setNewCardName] = useState('')
+
+
+    const AddCard = ({id}) => {
+
+        const handleSaveCard = async (newCardName) => {
+            try{
+                const response = await fetch(`http://localhost:8080/api/lists/${id}/cards`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name: newCardName })
+                });
+                if (!response.ok) {
+                    throw new Error('Failed to create a new card');
+                  }
+              
+                  const newCard = await response.json();
+                  const updatedLists = lsts.map((list) => {
+                    if (list.id === id) {
+                      return {
+                        ...list,
+                        cards: [...list.cards, newCard],
+                      };
+                    }
+                    return list;
+                  });
+                  
+                  setLsts(updatedLists);
+                  
+
+
+            } catch (error) {
+                  console.error('Error creating a new card:', error);
+                  // Handle the error as needed
+                }      
+        };
+        
+        
+        const addNewCard = () => {
+            if (newCardName.trim() !== '') {
+                handleSaveCard(newCardName)
+                setIsNewListAddedOrRemoved(true);
+                setNewCardName('');
+                setIsAddingCard(false);
+            }
+        }
+
+
+        return (
+            <div className="add-card-buttons">
+                <button type="submit" onClick={() => {
+                    setIsAddingCard(false)
+                }}>لغو</button>
+                <button type="submit" onClick={() => addNewCard()}>ذخیره</button>
+            </div>
+        )
+
+    }
+    
+        
     const handleDeleteList = async (id) => {
         try {
             const response = await fetch(`http://localhost:8080/api/lists/${id}`,{
@@ -154,6 +186,9 @@ const List = () => {
             if (!response.ok){
                 throw new Error("Failed to delete the list")
             }
+
+            setIsNewListAddedOrRemoved(true)
+
         } catch (error) {
             console.log("Error deleting the list");
         }
@@ -169,25 +204,15 @@ const List = () => {
                     <input
                         type="text"
                         placeholder='add item'
-                        onFocus={() => setIsAddingCard(lst.id)} // Pass the list ID to setIsAddingCard
-                        // onBlur={() => setIsAddingCard(null)}
+                        onFocus={() => setIsAddingCard(lst.id)}
                         className={isAddingCard === lst.id ? 'add-card-active' : 'add-card'}
-                        // value={newCardName}        
                         onChange={(e) => setNewCardName(e.target.value)}
                         style={{margin: '10px', padding: '10px', 
                         width: '200px', height: 'auto', 
                         border: '2px solid #ccc', borderRadius: '20px'}}/>
                     
                     
-                    {isAddingCard === lst.id && (
-                            <div className="add-item-buttons">
-                                <button type='submit' onClick={() => {
-                                    setNewCardName('')
-                                    setIsAddingCard(false)
-                                }}>لغو</button>
-                                <button type="submit" onClick={() => addNewCard(lst.id)}>ذخیره</button>
-                            </div>
-                        )}
+                    {isAddingCard === lst.id && <AddCard id={lst.id}/>}
                     
 
                     <br />
@@ -197,10 +222,6 @@ const List = () => {
                 </div>
             ))}
 
-
-
-
-
             <div className="add-list-container">
                 <input
                     type="text"
@@ -209,15 +230,7 @@ const List = () => {
                     onFocus={() => setIsAddingList(true)}
                     onChange={(e) => setNewListName(e.target.value)}
                 />
-                {isAddingList === true && (
-                    <div className="add-list-buttons">
-                        <button type="submit" onClick={() => {
-                            setNewListName('');
-                            setIsAddingList(false);
-                        }}>لغو</button>
-                        <button type="submit" onClick={() => addNewList()}>ذخیره</button>
-                    </div>
-                )}
+                {isAddingList === true &&  <AddList/>}
             </div>
 
 

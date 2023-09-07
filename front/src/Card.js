@@ -26,11 +26,44 @@ export const Card = ({card, list}) => {
     const [isAddingMember, setIsAddingMember] = useState(false)
     
     
+    const [isNewChecklistAddedOrRemoved, setIsNewChecklistAddedOrRemoved] = useState(false)
     const AddChecklist = ({ card, list }) => {
         const [newChecklistName, setNewChecklistName] = useState('');
+
+        
+        useEffect(() => {
+            
+            const fetchChecklists = async () => {
+                try {
+                    const response = await fetch(`http://localhost:8080/api/lists/${list.id}/cards/${card.id}/checklists`,{
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                    });
+                    if (!response.ok){
+                        throw new Error('Error getting the checklists')
+                    }
+            
+                    const allChecklists = await response.json();
+                    setCardMembers(allChecklists)
+                    
+                } catch (error) {
+                    console.log('got error : ', error);
+                }
+
+            }
+
+
+            if(isNewChecklistAddedOrRemoved){
+                fetchChecklists();
+                isNewChecklistAddedOrRemoved(false)
+            }
+
+        },[isNewChecklistAddedOrRemoved])
         
 
-        const handleSaveChecklist = async () => {
+        const handleSaveChecklist = async (newChecklistName) => {
             try{
                 
                 const response = await fetch(`http://localhost:8080/api/lists/${list.id}/cards/${card.id}/checklists`, {
@@ -44,8 +77,9 @@ export const Card = ({card, list}) => {
                     throw new Error("Failed to create the checklist")
                 }
 
-                const newChecklist = await response.json();
-                setCardChecklists([...cardChecklists, newChecklist])
+                isNewChecklistAddedOrRemoved(true)
+                // const newChecklist = await response.json();
+                // setCardChecklists([...cardChecklists, newChecklist]);
                 
             } catch (error) {
                 console.log("Error creating the checklist");
@@ -69,22 +103,180 @@ export const Card = ({card, list}) => {
                     value={newChecklistName}
                     onChange={(e) => setNewChecklistName(e.target.value)}
                     placeholder="نام چکلیست را وارد کنید"
-                    style={{width:'200px', height: '60px'}}/>
+                    style={{width:'200px', height: '60px', textAlign:'right'}}/>
             </div>
         );
         
 
         
     }
+
+
+
+    const removeChecklist = async (id) => {
+        try{
+            const response = await fetch(`http://localhost:8080/api/lists/${list.id}/cards/${card.id}/checklists/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+            });
+            if (!response.ok){
+                throw new Error("Failed to delete the checklist")
+            }
+
+            setIsNewChecklistAddedOrRemoved(true)
+            // setCardChecklists(cardChecklists.filter((checklist) => checklist.id !== id))
+
+        } catch (error) {
+        console.log("Error deleting the checklist");
+        }
+    }
     
+    const [isNewMemberAddedOrRemoved, setIsNewMemberAddedOrRemoved] =  useState(false)
+
+    const AddMember = ({ card, list }) => {
+
+        const [newMemberName, setNewMemberName] = useState('')
+
+        useEffect(() => {
+            
+            const fetchMembers = async () => {
+                try {
+                    const response = await fetch(`http://localhost:8080/api/lists/${list.id}/cards/${card.id}/members`,{
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                    });
+                    if (!response.ok){
+                        throw new Error('Error deleting the member')
+                    }
+            
+                    const allMembers = await response.json();
+                    setCardMembers(allMembers)
+                    
+                } catch (error) {
+                    console.log('got error : ', error);
+                }
+
+            }
+
+
+            if(isNewMemberAddedOrRemoved){
+                fetchMembers();
+                setIsNewMemberAddedOrRemoved(false)
+            }
+
+        },[isNewMemberAddedOrRemoved])
+        
+        
+        const handleNewMember = async (newMemberName) => {
+            try {
+                const response = await fetch(`http://localhost:8080/api/lists/${list.id}/cards/${card.id}/members`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-type': 'application/json'
+                    },
+                    body: JSON.stringify({name: newMemberName}),
+                });
+                if(!response.ok){
+                    throw new Error("Failed to create new member")
+                }
+
+                const newMember = await response.json()
+                console.log('new member: ', newMember);
+                // setCardMembers([...cardMembers, newMember])
+                setIsNewMemberAddedOrRemoved(true)
+
+            } catch (error) {
+                console.log('Error creating the member');
+            }
+        }
+        
+        
+        const addNewMember = () => {
+            if(newMemberName !== ''){
+                handleNewMember(newMemberName)
+                setNewMemberName('')
+                setIsAddingMember(false)
+            }
+
+        }
+
+        return (
+            <div className='add-member'>
+                <button onClick={() => addNewMember()} style={{width:'50px', height:'40px', marginLeft:'600px'}}>ذخیره</button>
+                <input
+                    type="text"
+                    value={newMemberName}
+                    onChange={(e) => setNewMemberName(e.target.value)}
+                    placeholder="Enter member name"
+                    style={{width:'150px', height: '40px', marginLeft:'auto'}}/>
+            </div>
+        );
+
+        
+
+
+    }
+    
+
+
+
+    const removeMember = async (id) => {
+
+        try {
+            const response = await fetch(`http://localhost:8080/api/lists/${newList.id}/cards/${newCard.id}/members/${id}`,{
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+            });
+            if (!response.ok){
+                throw new Error('Error deleting the member')
+            }
+
+            setIsNewMemberAddedOrRemoved(true)
+            // const listID = newList.id
+            // const cardID = newCard.id
+            // fetchMembers(listID, cardID)
+            // setCardMembers(setCardMembers.filter((member) => member.id !== id))
+
+
+        } catch (error) {
+            console.log(error);
+        }
+
+}
+
+
+
+
+    const removeCard = async () => {
+
+            try {
+                const response = await fetch(`http://localhost:8080/api/lists/${newList.id}/cards/${newCard.id}`,{
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                });
+                if (!response.ok){
+                    throw new Error('Error deleting the card')
+                }
+            } catch (error) {
+                console.log(error);
+            }
+
+    }
+
+
 
     const AddItem = ({ checklist }) => {
         const [newItemName, setNewItemName] = useState('');
         const [checklistItems, setChecklistItems] = useState(checklist.items)
         
-        // useEffect(() => {
-        //     console.log('ChecklistItems changed, ', checklistItems);
-        // }, [checklistItems])
         const handleSaveItem = async () => {
             try{
                 
@@ -130,112 +322,7 @@ export const Card = ({card, list}) => {
         );
     };
     
-
-    const AddMember = ({ card, list }) => {
-
-        const [newMemberName, setNewMemberName] = useState('')
-
-        const handleNewMember = async () => {
-            try {
-                const response = await fetch(`http://localhost:8080/api/lists/${list.id}/cards/${card.id}/members`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-type': 'application/json'
-                    },
-                    body: JSON.stringify({name: newMemberName}),
-                });
-                if(!response.ok){
-                    throw new Error("Failed to create new member")
-                }
-
-            } catch (error) {
-                console.log('Error creating the member');
-            }
-        }
-        
-        
-        const addNewMember = () => {
-            if(newMemberName !== ''){
-                handleNewMember(newMemberName)
-                setNewMemberName('')
-                setIsAddingMember(false)
-            }
-
-        }
-
-        return (
-            <div className='add-member'>
-                <button onClick={() => addNewMember()} style={{width:'50px', height:'40px', marginLeft:'600px'}}>ذخیره</button>
-                <input
-                    type="text"
-                    value={newMemberName}
-                    onChange={(e) => setNewMemberName(e.target.value)}
-                    placeholder="Enter member name"
-                    style={{width:'150px', height: '40px', marginLeft:'auto'}}/>
-            </div>
-        );
-
-        
-
-
-    }
-    
-
-    const removeCard = async () => {
-
-            try {
-                const response = await fetch(`http://localhost:8080/api/lists/${newList.id}/cards/${newCard.id}`,{
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                });
-                if (!response.ok){
-                    throw new Error('Error deleting the card')
-                }
-            } catch (error) {
-                console.log(error);
-            }
-
-    }
-
-
-    const removeMember = async (id) => {
-
-            try {
-                const response = await fetch(`http://localhost:8080/api/lists/${newList.id}/cards/${newCard.id}/members/${id}`,{
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                });
-                if (!response.ok){
-                    throw new Error('Error deleting the member')
-                }
-            } catch (error) {
-                console.log(error);
-            }
-
-    }
-
-    
-
-    const removeChecklist = async (id) => {
-        try{
-            const response = await fetch(`http://localhost:8080/api/lists/${list.id}/cards/${card.id}/checklists/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-            });
-            if (!response.ok){
-                throw new Error("Failed to delete the checklist")
-            }
-
-        } catch (error) {
-        console.log("Error deleting the checklist");
-        }
-    }
+ 
 
 
     const removeItem = async (checklistID, itemID) => {
@@ -268,7 +355,7 @@ export const Card = ({card, list}) => {
                     </h2>
                     <h3 className='list-name' style={{textAlign:'right', marginRight:'40px', marginTop:'10px'}}> لیست:  {newList.name}</h3>
 
-                    <button className='remove-card-button' onClick={() => removeCard()}>حذف کارد</button>
+                    <button className='remove-card-button' onClick={() => removeCard()}>حذف کارت</button>
                     
 
                     <div className='card-members' style={{marginRight:'30px'}}>

@@ -79,8 +79,6 @@ const List = () => {
                 throw new Error('Failed to create a new list');
               }
           
-            //   const newList = await response.json();
-            //   setLsts([...lsts, newList])
               setIsNewListAddedOrRemoved(true)
 
             } catch (error) {

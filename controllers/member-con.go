@@ -12,6 +12,7 @@ import (
 	// "project-manager/model"
 	"strconv"
 
+	"github.com/lib/pq"
 	_ "github.com/lib/pq"
 
 	// "github.com/codegangsta/gin"
@@ -166,12 +167,58 @@ func CreateMember(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Fetch the associated list
+	var datesArray pq.StringArray
 	cardRow := db.QueryRow("SELECT id, name, description, dates FROM cards WHERE id = $1", cardID)
 	card := &model.Card{}
-	err = cardRow.Scan(&card.ID, &card.Name, &card.Description, &card.Dates)
+	err = cardRow.Scan(&card.ID, &card.Name, &card.Description, &datesArray)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to fetch card data, %s", err), http.StatusInternalServerError)
 		return
+	}
+
+	card.Dates = []string(datesArray)
+
+	// Fetch the associated checklists for the card
+	checklistsRows, err := db.Query("SELECT id, name FROM checklists WHERE card_id = $1", cardID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to fetch checklists for card, %s", err), http.StatusInternalServerError)
+		return
+	}
+	defer checklistsRows.Close()
+
+	for checklistsRows.Next() {
+		checklist := &model.Checklist{}
+		err := checklistsRows.Scan(&checklist.ID, &checklist.Name)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Failed to scan checklist data, %s", err), http.StatusInternalServerError)
+			return
+		}
+
+		// Fetch checklist items for each checklist
+		itemsRows, err := db.Query("SELECT id, name, due_date, assigned_to FROM items WHERE checklist_id = $1", checklist.ID)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Failed to fetch checklist items for checklist, %s", err), http.StatusInternalServerError)
+			return
+		}
+		defer itemsRows.Close()
+
+		for itemsRows.Next() {
+			item := &model.Item{}
+			var assignedTo pq.StringArray
+			err := itemsRows.Scan(&item.ID, &item.Name, &item.DueDate, &assignedTo)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Failed to scan checklist item data, %s", err), http.StatusInternalServerError)
+				return
+			}
+
+			item.AssignedTo = []string(assignedTo)
+
+			// Append checklist item to checklist
+			checklist.Items = append(checklist.Items, item)
+		}
+
+		// Append checklist to card's checklists
+		card.Checklists = append(card.Checklists, checklist)
 	}
 
 	// Append the new card to the list's cards slice

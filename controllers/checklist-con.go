@@ -270,11 +270,14 @@ func CreateChecklist(w http.ResponseWriter, r *http.Request) {
 	// Fetch the associated list
 	cardRow := db.QueryRow("SELECT id, name, description, dates FROM cards WHERE id = $1", cardID)
 	card := &model.Card{}
-	err = cardRow.Scan(&card.ID, &card.Name, &card.Description, &card.Dates)
+	var datesArray pq.StringArray
+	err = cardRow.Scan(&card.ID, &card.Name, &card.Description, &datesArray)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to fetch card data, %s", err), http.StatusInternalServerError)
 		return
 	}
+
+	card.Dates = []string(datesArray)
 
 	// Append the new card to the list's cards slice
 	card.Checklists = append(card.Checklists, newChecklist)

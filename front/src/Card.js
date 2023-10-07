@@ -11,7 +11,6 @@ export const Card = ({card, list}) => {
     const [cardName, setCardName] = useState(name)
     const [cardDescription, setCardDescription] = useState(description)
     const [cardMembers, setCardMembers] = useState(members)
-    const [cardChecklists, setCardChecklists] = useState(checklists)
     
     // Define state for managing description editing
     const [isEditingDescription, setIsEditingDescription] = useState(false);
@@ -19,18 +18,22 @@ export const Card = ({card, list}) => {
     // Define state to store the temporary edited description
     const [editedDescription, setEditedDescription] = useState(cardDescription);
     
-    const [isAddingChecklist, setIsAddingChecklist] = useState(false)
     
     const [isAddingItem, setIsAddingItem] = useState(false)
     
     const [isAddingMember, setIsAddingMember] = useState(false)
     
+    const [isNewMemberAddedOrRemoved, setIsNewMemberAddedOrRemoved] =  useState(false)
+    
+    
     
     const [isNewChecklistAddedOrRemoved, setIsNewChecklistAddedOrRemoved] = useState(false)
+    const [isAddingChecklist, setIsAddingChecklist] = useState(false)
+    const [cardChecklists, setCardChecklists] = useState(checklists)
+    const [checklistCardID, setChecklistCardID] = useState('')
     const AddChecklist = ({ card, list }) => {
         const [newChecklistName, setNewChecklistName] = useState('');
 
-        
         useEffect(() => {
             
             const fetchChecklists = async () => {
@@ -46,7 +49,7 @@ export const Card = ({card, list}) => {
                     }
             
                     const allChecklists = await response.json();
-                    setCardMembers(allChecklists)
+                    setCardChecklists(allChecklists)
                     
                 } catch (error) {
                     console.log('got error : ', error);
@@ -54,10 +57,9 @@ export const Card = ({card, list}) => {
 
             }
 
-
             if(isNewChecklistAddedOrRemoved){
                 fetchChecklists();
-                isNewChecklistAddedOrRemoved(false)
+                setIsNewChecklistAddedOrRemoved(false)
             }
 
         },[isNewChecklistAddedOrRemoved])
@@ -65,7 +67,7 @@ export const Card = ({card, list}) => {
 
         const handleSaveChecklist = async (newChecklistName) => {
             try{
-                
+
                 const response = await fetch(`http://localhost:8080/api/lists/${list.id}/cards/${card.id}/checklists`, {
                     method: 'POST',
                     headers: {
@@ -76,10 +78,13 @@ export const Card = ({card, list}) => {
                 if (!response.ok){
                     throw new Error("Failed to create the checklist")
                 }
+                console.log('newchecklistname: ', newChecklistName);
+                setNewChecklistName('');
 
-                isNewChecklistAddedOrRemoved(true)
-                // const newChecklist = await response.json();
-                // setCardChecklists([...cardChecklists, newChecklist]);
+                const newChecklist = await response.json();
+                setCardChecklists([...cardChecklists, newChecklist]);
+                
+                setIsNewChecklistAddedOrRemoved(true)
                 
             } catch (error) {
                 console.log("Error creating the checklist");
@@ -90,27 +95,24 @@ export const Card = ({card, list}) => {
         const addNewChecklist = () => {
             if (newChecklistName.trim() !== '') {
                 handleSaveChecklist(newChecklistName)
-                setNewChecklistName('');
                 setIsAddingChecklist(false)
             }
         }
         
         return (
             <div>
-                <button onClick={() => addNewChecklist()} style={{width:'auto', height:'auto'}} type="button">ذخیره</button>
+                <button onClick={() => addNewChecklist()} style={{width:'auto', height:'auto', marginRight: '45px'}} type="button">ذخیره</button>
                 <input
                     type="text"
                     value={newChecklistName}
                     onChange={(e) => setNewChecklistName(e.target.value)}
-                    placeholder="نام چکلیست را وارد کنید"
-                    style={{width:'200px', height: '60px', textAlign:'right'}}/>
+                    style={{width:'200px', height: '60px', marginRight: '45px', direction:'rtl'}}/>
             </div>
         );
         
 
         
     }
-
 
 
     const removeChecklist = async (id) => {
@@ -133,7 +135,6 @@ export const Card = ({card, list}) => {
         }
     }
     
-    const [isNewMemberAddedOrRemoved, setIsNewMemberAddedOrRemoved] =  useState(false)
 
     const AddMember = ({ card, list }) => {
 
@@ -206,7 +207,7 @@ export const Card = ({card, list}) => {
 
         return (
             <div className='add-member'>
-                <button onClick={() => addNewMember()} style={{width:'50px', height:'40px', marginLeft:'600px'}}>ذخیره</button>
+                <button onClick={() => addNewMember()} style={{width:'50px', height:'40px'}}>ذخیره</button>
                 <input
                     type="text"
                     value={newMemberName}
@@ -221,7 +222,6 @@ export const Card = ({card, list}) => {
 
     }
     
-
 
 
     const removeMember = async (id) => {
@@ -249,7 +249,6 @@ export const Card = ({card, list}) => {
         }
 
 }
-
 
 
 
@@ -317,7 +316,7 @@ export const Card = ({card, list}) => {
                     value={newItemName}
                     onChange={(e) => setNewItemName(e.target.value)}
                     placeholder="Enter item name"
-                    style={{width:'200px', height: '40px'}}/>
+                    style={{width:'200px', height: '40px', direction:"rtl"}}/>
             </div>
         );
     };
@@ -369,7 +368,7 @@ export const Card = ({card, list}) => {
                                 </span>
                             ))
                             ) : (
-                            <span>No members</span>
+                            <span>بدون عضو</span>
                         )}
 
                         </h4>
@@ -445,7 +444,7 @@ export const Card = ({card, list}) => {
                                 ))
                                 
                                 ) : (
-                                    <span>No items</span>
+                                    <span>بدون آیتم</span>
                                 )}
 
 
@@ -473,20 +472,21 @@ export const Card = ({card, list}) => {
                         
                             
                         ) : (
-                            <span>No Checklists</span>
+                            <span>بدون چکلیست</span>
                         )}
                         
 
                             {/* here we add the new checklists */}
                             <div className='add-checklist'>
                             
-                            {isAddingChecklist === newCard.id && <AddChecklist card={newCard} list={newList}/>}
+                            {checklistCardID === newCard.id && <AddChecklist card={newCard} list={newList}/>}
                         
                             <button type='button' className='add-checklist-button' onClick={() => {
-                                        if(isAddingChecklist === ''){
-                                            setIsAddingChecklist(card.id)
+                                        if(checklistCardID === ''){
+                                            setIsAddingChecklist(true)
+                                            setChecklistCardID(card.id)
                                         } else {
-                                            setIsAddingChecklist('')
+                                            setChecklistCardID('')
                                         } 
                                         
                                     }}>اضافه کردن چکلیست</button>

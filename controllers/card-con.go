@@ -489,8 +489,8 @@ func CreateCard(w http.ResponseWriter, r *http.Request) {
 	newCard := &model.Card{
 		ID:          newCardID,
 		Name:        requestData.Name,
-		Description: "default description",
-		Dates:       []string{"october 1st", "november 1st"}, // Initialize as empty slice
+		Description: "توضیحات",
+		Dates:       []string{"1 شهریور", "1 مهر"}, // Initialize as empty slice
 		Checklists:  []*model.Checklist{emptyChecklist},      // Initialize as empty slice
 		Members:     []*model.Member{emptyMember},
 	}

@@ -109,6 +109,30 @@ const List = () => {
     }
 
 
+     
+    const handleDeleteList = async (id) => {
+        try {
+            const response = await fetch(`http://localhost:8080/api/lists/${id}`,{
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json"
+                }
+                
+            });
+
+            if (!response.ok){
+                throw new Error("Failed to delete the list")
+            }
+
+            setIsNewListAddedOrRemoved(true)
+
+        } catch (error) {
+            console.log("Error deleting the list");
+        }
+    };
+
+
+
     const [newCardName, setNewCardName] = useState('')
 
 
@@ -170,27 +194,7 @@ const List = () => {
 
     }
     
-        
-    const handleDeleteList = async (id) => {
-        try {
-            const response = await fetch(`http://localhost:8080/api/lists/${id}`,{
-                method: "DELETE",
-                headers: {
-                    "Content-Type": "application/json"
-                }
-                
-            });
-
-            if (!response.ok){
-                throw new Error("Failed to delete the list")
-            }
-
-            setIsNewListAddedOrRemoved(true)
-
-        } catch (error) {
-            console.log("Error deleting the list");
-        }
-    };
+   
 
 
     return (
@@ -297,7 +301,7 @@ const ShowCards = ({ list }) => {
             ))
 
             ) : (
-                <span>no cards</span>
+                <span>بدون کارت</span>
             )}
 
 

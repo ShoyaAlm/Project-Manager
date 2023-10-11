@@ -571,7 +571,8 @@ func UpdateCard(w http.ResponseWriter, r *http.Request) {
 
 	// Parse the JSON request body
 	var requestData struct {
-		Name string `json:"name"`
+		Name *string `json:"name"`
+		Description *string `json:"description"`
 	}
 
 	err = json.Unmarshal(body, &requestData)
@@ -580,10 +581,30 @@ func UpdateCard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+
+	var query string
+	var args []interface{}
+
+	if requestData.Name != nil  && requestData.Description != nil {
+		query = "UPDATE cards SET name = $1, description = $2 WHERE id = $3"
+		args = []interface{}{*requestData.Name, *requestData.Description, cardID}
+	} else if requestData.Name != nil {
+		query = "UPDATE cards SET name = $1 WHERE id = $2"
+		args = []interface{}{*requestData.Name, cardID}
+	} else if requestData.Description != nil {
+		query = "UPDATE cards SET description = $1 WHERE id = $2"
+		args = []interface{}{*requestData.Description, cardID}
+	} else {
+		http.Error(w, "No update data provided", http.StatusBadRequest)
+		return
+	}
+
+
+
 	// Update the list's name in the database
-	_, err = db.Exec("UPDATE cards SET name = $1 WHERE id = $2", requestData.Name, cardID)
+	_, err = db.Exec(query, args...)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to update list, %s", err), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Failed to update card, %s", err), http.StatusInternalServerError)
 		return
 	}
 

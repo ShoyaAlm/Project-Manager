@@ -4,13 +4,14 @@ import {Link, useParams} from 'react-router-dom'
 import './card.css'
 export const Card = ({card, list}) => {
 
+
+    
     const newCard = card
     const newList = list
     
     const {name, description, members, checklists} = newCard
     const [cardName, setCardName] = useState(name)
     const [cardDescription, setCardDescription] = useState(description)
-    const [cardMembers, setCardMembers] = useState(members)
     
     // Define state for managing description editing
     const [isEditingDescription, setIsEditingDescription] = useState(false);
@@ -19,18 +20,14 @@ export const Card = ({card, list}) => {
     const [editedDescription, setEditedDescription] = useState(cardDescription);
     
     
-    const [isAddingItem, setIsAddingItem] = useState(false)
-    
-    const [isAddingMember, setIsAddingMember] = useState(false)
-    
-    const [isNewMemberAddedOrRemoved, setIsNewMemberAddedOrRemoved] =  useState(false)
     
     
     
     const [isNewChecklistAddedOrRemoved, setIsNewChecklistAddedOrRemoved] = useState(false)
     const [isAddingChecklist, setIsAddingChecklist] = useState(false)
-    const [cardChecklists, setCardChecklists] = useState(checklists)
     const [checklistCardID, setChecklistCardID] = useState('')
+    const [cardChecklists, setCardChecklists] = useState(checklists)
+    
     const AddChecklist = ({ card, list }) => {
         const [newChecklistName, setNewChecklistName] = useState('');
 
@@ -56,6 +53,7 @@ export const Card = ({card, list}) => {
                 }
 
             }
+            
 
             if(isNewChecklistAddedOrRemoved){
                 fetchChecklists();
@@ -78,13 +76,17 @@ export const Card = ({card, list}) => {
                 if (!response.ok){
                     throw new Error("Failed to create the checklist")
                 }
-                console.log('newchecklistname: ', newChecklistName);
-                setNewChecklistName('');
 
+                setIsNewChecklistAddedOrRemoved(true)
+                
                 const newChecklist = await response.json();
+                
                 setCardChecklists([...cardChecklists, newChecklist]);
                 
-                setIsNewChecklistAddedOrRemoved(true)
+
+                setIsAddingChecklist(false)
+                setNewChecklistName('');
+
                 
             } catch (error) {
                 console.log("Error creating the checklist");
@@ -95,7 +97,6 @@ export const Card = ({card, list}) => {
         const addNewChecklist = () => {
             if (newChecklistName.trim() !== '') {
                 handleSaveChecklist(newChecklistName)
-                setIsAddingChecklist(false)
             }
         }
         
@@ -136,12 +137,140 @@ export const Card = ({card, list}) => {
     }
     
 
+
+
+    const [isNewItemAddedOrRemoved, setIsNewItemAddedOrRemoved] = useState(false)
+    const [isAddingItem, setIsAddingItem] = useState(false)
+    const [itemChecklistID, setItemChecklistID] = useState('')
+  
+    const AddItem = ({ checklist }) => {
+        
+        const [checklistItems, setChecklistItems] = useState(checklist.items)
+        const [newItemName, setNewItemName] = useState('');
+        // setChecklistItems(checklist.items)
+
+        useEffect(() => {
+            
+            const fetchChecklistItems = async () => {
+                try {
+                    const response = await fetch(`http://localhost:8080/api/lists/${list.id}/cards/${card.id}/checklists/${checklist.id}/items`,{
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                    });
+                    if (!response.ok){
+                        throw new Error('Error getting the checklists')
+                    }
+            
+                    const allChecklistItems = await response.json();
+                    setChecklistItems(allChecklistItems)
+                    
+                } catch (error) {
+                    console.log('got error : ', error);
+                }
+
+            }
+            
+            
+
+            if(isNewItemAddedOrRemoved){
+                fetchChecklistItems();
+                setIsNewItemAddedOrRemoved(false)
+            }
+
+        },[isNewItemAddedOrRemoved])  
+
+
+
+        const handleSaveItem = async (newItemName) => {
+            try{
+                
+                const response = await fetch(`http://localhost:8080/api/lists/${newList.id}/cards/${newCard.id}/checklists/${checklist.id}/items`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name: newItemName }),
+                });
+                if (!response.ok){
+                    throw new Error("Failed to create the item")
+                }
+
+                setIsNewItemAddedOrRemoved(true)
+
+                const newItem = await response.json();
+
+                setChecklistItems([...checklistItems, newItem])
+                checklist.items = checklistItems
+                
+                setIsAddingItem(false);
+                setNewItemName('');
+
+
+            } catch (error) {
+            console.log("Error creating the item");
+                }
+
+        }
+
+        const addNewItem = () => {
+            if (newItemName.trim() !== '') {
+                handleSaveItem(newItemName)
+            }
+          }
+    
+        return (
+            <div>
+                <button onClick={() => addNewItem()} style={{width:'auto', height:'auto'}}>ذخیره</button>
+                <input
+                    type="text"
+                    value={newItemName}
+                    onChange={(e) => setNewItemName(e.target.value)}
+                    placeholder="Enter item name"
+                    style={{width:'200px', height: '40px', direction:"rtl"}}/>
+            </div>
+        );
+    };
+    
+
+
+    const removeItem = async (checklistID, itemID) => {
+        try{
+            const response = await fetch(`http://localhost:8080/api/lists/${newList.id}/cards/${newCard.id}/checklists/${checklistID}/items/${itemID}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+            });
+            if (!response.ok){
+                throw new Error("Failed to delete the item")
+            }
+
+        } catch (error) {
+        console.log("Error deleting the item");
+        }
+    }
+
+
+
+
+    const [isAddingMember, setIsAddingMember] = useState(false)
+    
+    const [isNewMemberAddedOrRemoved, setIsNewMemberAddedOrRemoved] =  useState(false)
+    
+    const [cardMembers, setCardMembers] = useState(members)
+
+    const [memberCardID, setMemberCardID] = useState('')
+
+    
+
     const AddMember = ({ card, list }) => {
 
         const [newMemberName, setNewMemberName] = useState('')
 
         useEffect(() => {
-            
+
             const fetchMembers = async () => {
                 try {
                     const response = await fetch(`http://localhost:8080/api/lists/${list.id}/cards/${card.id}/members`,{
@@ -160,9 +289,8 @@ export const Card = ({card, list}) => {
                 } catch (error) {
                     console.log('got error : ', error);
                 }
-
+        
             }
-
 
             if(isNewMemberAddedOrRemoved){
                 fetchMembers();
@@ -187,8 +315,12 @@ export const Card = ({card, list}) => {
 
                 const newMember = await response.json()
                 console.log('new member: ', newMember);
+
+                setNewMemberName('')
+                setIsAddingMember(false)
+
                 // setCardMembers([...cardMembers, newMember])
-                setIsNewMemberAddedOrRemoved(true)
+                // setIsNewMemberAddedOrRemoved(true)
 
             } catch (error) {
                 console.log('Error creating the member');
@@ -199,21 +331,19 @@ export const Card = ({card, list}) => {
         const addNewMember = () => {
             if(newMemberName !== ''){
                 handleNewMember(newMemberName)
-                setNewMemberName('')
-                setIsAddingMember(false)
             }
 
         }
 
         return (
-            <div className='add-member'>
-                <button onClick={() => addNewMember()} style={{width:'50px', height:'40px'}}>ذخیره</button>
+            <div className='add-member' style={{marginLeft: '620px', marginRight:'auto'}}>
+                <button onClick={() => addNewMember()} style={{width:'50px', height:'40px', marginRight:'10px'}}>ذخیره</button>
                 <input
                     type="text"
                     value={newMemberName}
                     onChange={(e) => setNewMemberName(e.target.value)}
                     placeholder="Enter member name"
-                    style={{width:'150px', height: '40px', marginLeft:'auto'}}/>
+                    style={{width:'150px', height: '40px', direction:'rtl'}}/>
             </div>
         );
 
@@ -272,72 +402,30 @@ export const Card = ({card, list}) => {
 
 
 
-    const AddItem = ({ checklist }) => {
-        const [newItemName, setNewItemName] = useState('');
-        const [checklistItems, setChecklistItems] = useState(checklist.items)
-        
-        const handleSaveItem = async () => {
-            try{
-                
-                const response = await fetch(`http://localhost:8080/api/lists/${newList.id}/cards/${newCard.id}/checklists/${checklist.id}/items`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ name: newItemName }),
-                });
-                if (!response.ok){
-                    throw new Error("Failed to create the item")
-                }
+    const changeDescription = async (editedDescription) => {
 
-                const newItem = await response.json();
-                setChecklistItems([...checklistItems, newItem])
-                                
+        try {
 
-            } catch (error) {
-            console.log("Error creating the item");
-                }
+            const requestBody = {
+                description: editedDescription // Include the updated description
+            };
 
-        }
-
-        const addNewItem = () => {
-            if (newItemName.trim() !== '') {
-                handleSaveItem(newItemName)
-                setNewItemName('');
-                setIsAddingItem(false)
-            }
-          }
-    
-        return (
-            <div>
-                <button onClick={() => addNewItem()} style={{width:'auto', height:'auto'}}>ذخیره</button>
-                <input
-                    type="text"
-                    value={newItemName}
-                    onChange={(e) => setNewItemName(e.target.value)}
-                    placeholder="Enter item name"
-                    style={{width:'200px', height: '40px', direction:"rtl"}}/>
-            </div>
-        );
-    };
-    
- 
-
-
-    const removeItem = async (checklistID, itemID) => {
-        try{
-            const response = await fetch(`http://localhost:8080/api/lists/${newList.id}/cards/${newCard.id}/checklists/${checklistID}/items/${itemID}`, {
-                method: 'DELETE',
+            const response = await fetch(`http://localhost:8080/api/lists/${newList.id}/cards/${newCard.id}`, {
+                method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json'
                 },
+                body: JSON.stringify(requestBody)
             });
-            if (!response.ok){
-                throw new Error("Failed to delete the item")
+            if(!response.ok){
+                throw new Error("Failed to create new member")
             }
 
+            const updatedCard = await response.json();
+            console.log('Updated card:', updatedCard);
+
         } catch (error) {
-        console.log("Error deleting the item");
+            console.log('Error changing the description');
         }
     }
 
@@ -364,7 +452,7 @@ export const Card = ({card, list}) => {
                         {cardMembers && cardMembers.length > 0 ? (
                             cardMembers.map((member, index) => (
                                 <span key={index} style={{ marginRight: '8px', textAlign: 'right' }}>
-                                {member.name}
+                                , {member.name}
                                 </span>
                             ))
                             ) : (
@@ -374,13 +462,13 @@ export const Card = ({card, list}) => {
                         </h4>
 
 
-                        {isAddingMember === newCard.id && <AddMember card={card} list={list}/>}
+                        {memberCardID === newCard.id && <AddMember card={card} list={list}/>}
                         
                         <button className='add-member-button' onClick={() => {
-                            if(isAddingMember === ''){
-                                setIsAddingMember(newCard.id)
+                            if(memberCardID === ''){
+                                setMemberCardID(newCard.id)
                             } else {
-                                setIsAddingMember('')
+                                setMemberCardID('')
                             }
                         }}>اضافه کردن عضو جدید</button>
                     
@@ -401,11 +489,12 @@ export const Card = ({card, list}) => {
                             // onBlur={() => {setIsEditingDescription(false)}}
                             // onBlur={cancelDescription}
                             onChange={(e) => setEditedDescription(e.target.value)}
-                        />
+                        style={{direction:'rtl'}}/>
                         {isEditingDescription && (
                             <div className="description-buttons">
                                 <button type="submit" onClick={() => {
-                                    setCardDescription(editedDescription)
+                                    // setCardDescription(editedDescription)
+                                    changeDescription(editedDescription)
                                     setIsEditingDescription(false);
                                 }}>ذخیره</button>
                                 <button type="submit" onClick={() => {
@@ -448,14 +537,16 @@ export const Card = ({card, list}) => {
                                 )}
 
 
-                                {isAddingItem === checklist.id && <AddItem checklist={checklist}/> }
+                                {itemChecklistID === checklist.id && isAddingItem && <AddItem checklist={checklist}/> }
 
 
                                 <button type='button' className='add-item-button' onClick={() => {
-                                    if(isAddingItem === ''){
-                                        setIsAddingItem(checklist.id)
+                                    if(itemChecklistID === ''){
+                                        setIsAddingItem(true)
+                                        setItemChecklistID(checklist.id)
                                     } else {
-                                        setIsAddingItem('')
+                                        setIsAddingItem(false)
+                                        setItemChecklistID('')
                                     } 
                                     
                                 }}>اضافه کردن آیتم</button>
@@ -479,13 +570,14 @@ export const Card = ({card, list}) => {
                             {/* here we add the new checklists */}
                             <div className='add-checklist'>
                             
-                            {checklistCardID === newCard.id && <AddChecklist card={newCard} list={newList}/>}
+                            {checklistCardID === newCard.id && isAddingChecklist && <AddChecklist card={newCard} list={newList}/>}
                         
                             <button type='button' className='add-checklist-button' onClick={() => {
                                         if(checklistCardID === ''){
                                             setIsAddingChecklist(true)
                                             setChecklistCardID(card.id)
                                         } else {
+                                            setIsAddingChecklist(false)
                                             setChecklistCardID('')
                                         } 
                                         

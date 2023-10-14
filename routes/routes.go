@@ -46,3 +46,13 @@ func SetMemberRoutes(r *mux.Router) {
 	r.HandleFunc("/api/lists/{id:[0-9]+}/cards/{cardID:[0-9]+}/members/{memberID:[0-9]+}", controllers.DeleteMember).Methods("DELETE")
 
 }
+
+func SetSignInUpRoutes(r *mux.Router) {
+	r.HandleFunc("/api/users", controllers.GetAllUsers).Methods("GET")
+	r.HandleFunc("/api/users/{userID:[0-9]+}", controllers.DeleteUser).Methods("DELETE")
+	
+	
+	r.HandleFunc("/api/signup", controllers.SignUp).Methods("POST")
+	
+	r.HandleFunc("/api/login", controllers.Login).Methods("POST")
+}

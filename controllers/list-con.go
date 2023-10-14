@@ -88,6 +88,16 @@ func GetAllLists(w http.ResponseWriter, r *http.Request) {
 				Checklists:  []*model.Checklist{},
 			}
 
+			owner := &model.User{}
+
+			ownerRow := db.QueryRow("SELECT u.id, u.name, u.email, u.bio FROM users u JOIN user_cards uc ON u.id = uc.user_id WHERE uc.card_id = $1", cardID)
+			err = ownerRow.Scan(&owner.ID, &owner.Name, &owner.Email, &owner.Bio)
+			if err != nil {
+				owner = nil
+			}
+	
+			card.Owner = owner
+
 			// Start checking for checklists inside every card
 			checklistRows, err := db.Query(`SELECT cl.id AS checklist_id, cl.name AS checklist_name
 								FROM checklists cl
@@ -290,6 +300,17 @@ func GetAList(w http.ResponseWriter, r *http.Request) {
 			Members:     []*model.Member{},
 			Checklists:  []*model.Checklist{},
 		}
+
+
+		owner := &model.User{}
+
+		ownerRow := db.QueryRow("SELECT u.id, u.name, u.email, u.bio FROM users u JOIN user_cards uc ON u.id = uc.user_id WHERE uc.card_id = $1", cardID)
+		err = ownerRow.Scan(&owner.ID, &owner.Name, &owner.Email, &owner.Bio)
+		if err != nil {
+			owner = nil
+		}
+
+		card.Owner = owner
 
 		// Start checking for checklists inside every card
 		checklistRows, err := db.Query(`SELECT cl.id AS checklist_id, cl.name AS checklist_name

@@ -57,6 +57,19 @@ func GetAllCards(w http.ResponseWriter, r *http.Request) {
 			Checklists:  []*model.Checklist{},
 		}
 
+
+		owner := &model.User{}
+
+		ownerRow := db.QueryRow("SELECT u.id, u.name, u.email, u.bio FROM users u JOIN user_cards uc ON u.id = uc.user_id WHERE uc.card_id = $1", cardID)
+		err = ownerRow.Scan(&owner.ID, &owner.Name, &owner.Email, &owner.Bio)
+		if err != nil {
+			owner = nil
+		}
+
+		card.Owner = owner
+
+
+
 		// Start checking for checklists inside every card
 		checklistRows, err := db.Query(`SELECT cl.id AS checklist_id, cl.name AS checklist_name
 								FROM checklists cl
@@ -493,7 +506,37 @@ func CreateCard(w http.ResponseWriter, r *http.Request) {
 		Dates:       []string{"1 شهریور", "1 مهر"}, // Initialize as empty slice
 		Checklists:  []*model.Checklist{emptyChecklist},      // Initialize as empty slice
 		Members:     []*model.Member{emptyMember},
+		Owner:       &model.User{ID: 12},
 	}
+
+
+	owner := &model.User{}
+
+	var bio sql.NullString
+
+	ownerRow := db.QueryRow("SELECT id, name, password, email, bio FROM users WHERE id = 12")
+	err = ownerRow.Scan(&owner.ID, &owner.Name, &owner.Password, &owner.Email, &bio)
+	if err != nil {
+		log.Printf("Error fetching owner details: %v", err)
+        http.Error(w, "Failed to fetch owner details", http.StatusInternalServerError)
+        return
+    }
+
+	if bio.Valid {
+		owner.Bio = bio.String
+	} else {
+		owner.Bio = "" // Set a default value for an invalid (NULL) "bio" field
+	}
+
+	newCard.Owner = owner
+
+
+	_, err = db.Exec("INSERT INTO user_cards (user_id, card_id) VALUES ($1, $2)", 12, newCardID)
+	if err != nil {
+        log.Printf("Failed to insert user_card: %v", err)
+        http.Error(w, "Failed to insert user_card", http.StatusInternalServerError)
+        return
+    }	
 
 	err = db.QueryRow("INSERT INTO cards (name, description, dates, list_id) VALUES ($1, $2, $3, $4) RETURNING id",
 		newCard.Name, newCard.Description, pq.Array(newCard.Dates), listID).Scan(&newCardID)
@@ -536,6 +579,10 @@ func CreateCard(w http.ResponseWriter, r *http.Request) {
 
 	// Append the new card to the list's cards slice
 	list.Cards = append(list.Cards, newCard)
+
+
+
+
 
 	jsonData, err := json.Marshal(list)
 	if err != nil {

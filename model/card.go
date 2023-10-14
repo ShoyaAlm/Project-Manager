@@ -7,4 +7,5 @@ type Card struct {
 	Dates       []string     `json:"dates"`
 	Checklists  []*Checklist `json:"checklists"`
 	Members     []*Member    `json:"members"`
+	Owner       *User        `json:"owner"`
 }

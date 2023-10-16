@@ -506,7 +506,7 @@ func CreateCard(w http.ResponseWriter, r *http.Request) {
 		Dates:       []string{"1 شهریور", "1 مهر"}, // Initialize as empty slice
 		Checklists:  []*model.Checklist{emptyChecklist},      // Initialize as empty slice
 		Members:     []*model.Member{emptyMember},
-		Owner:       &model.User{ID: 12},
+		Owner:       &model.User{ID: 1},
 	}
 
 
@@ -514,7 +514,7 @@ func CreateCard(w http.ResponseWriter, r *http.Request) {
 
 	var bio sql.NullString
 
-	ownerRow := db.QueryRow("SELECT id, name, password, email, bio FROM users WHERE id = 12")
+	ownerRow := db.QueryRow("SELECT id, name, password, email, bio FROM users WHERE id = 1")
 	err = ownerRow.Scan(&owner.ID, &owner.Name, &owner.Password, &owner.Email, &bio)
 	if err != nil {
 		log.Printf("Error fetching owner details: %v", err)
@@ -531,12 +531,7 @@ func CreateCard(w http.ResponseWriter, r *http.Request) {
 	newCard.Owner = owner
 
 
-	_, err = db.Exec("INSERT INTO user_cards (user_id, card_id) VALUES ($1, $2)", 12, newCardID)
-	if err != nil {
-        log.Printf("Failed to insert user_card: %v", err)
-        http.Error(w, "Failed to insert user_card", http.StatusInternalServerError)
-        return
-    }	
+		
 
 	err = db.QueryRow("INSERT INTO cards (name, description, dates, list_id) VALUES ($1, $2, $3, $4) RETURNING id",
 		newCard.Name, newCard.Description, pq.Array(newCard.Dates), listID).Scan(&newCardID)
@@ -576,6 +571,13 @@ func CreateCard(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Failed to fetch list data, %s", err), http.StatusInternalServerError)
 		return
 	}
+
+	_, err = db.Exec("INSERT INTO user_cards (user_id, card_id) VALUES ($1, $2)", 1, newCardID)
+	if err != nil {
+        log.Printf("Failed to insert user_card: %v", err)
+        http.Error(w, "Failed to insert user_card", http.StatusInternalServerError)
+        return
+    }
 
 	// Append the new card to the list's cards slice
 	list.Cards = append(list.Cards, newCard)

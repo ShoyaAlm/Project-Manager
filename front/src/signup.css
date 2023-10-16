@@ -72,6 +72,7 @@ body {
 .submitBtn {
   display: block;
   margin-left: auto;
+  margin-right: 115px;
   padding: 15px 30px;
   border: none;
   background-color: purple;
@@ -80,6 +81,7 @@ body {
   cursor: pointer;
   font-size: 16px;
   margin-top: 30px;
+
 }
 
 .submitBtn:hover {

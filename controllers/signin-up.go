@@ -6,114 +6,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"project-manager/model"
-	"strconv"
+	_ "strconv"
 
-	"github.com/gorilla/mux"
+	_ "github.com/gorilla/mux"
 	_ "github.com/lib/pq" // Import the PostgreSQL driver
 )
 
 
 
-func GetAllUsers(w http.ResponseWriter, r *http.Request){
-
-	
-	userRows, err := db.Query("SELECT id, name, email, password, bio FROM users")
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to fetch users, %s", err), http.StatusInternalServerError)
-		return
-	}
-
-	defer userRows.Close()
-
-	var users []*model.User
-
-	for userRows.Next() {
-		var (
-			userID                int
-			userName, userEmail, userPassword string
-			userBio sql.NullString
-		)
-
-		err := userRows.Scan(&userID, &userName, &userEmail, &userPassword, &userBio)
-		if err != nil {
-			http.Error(w, fmt.Sprintf("Error scanning rows, %s", err), http.StatusInternalServerError)
-			return
-		}
-
-		user := &model.User{
-			ID:         userID,
-			Name:       userName,
-			Email:		userEmail,
-			Password: 	userPassword,
-			// Bio: 		userBio,
-		}
-
-
-		if userBio.Valid { // Check if the bio column is not NULL
-            user.Bio = userBio.String
-        } else {
-            user.Bio = "" // Set to an empty string or handle it as needed
-        }
-
-
-		// SAVE THIS PART FOR WHEN YOU ARE READY TO CHANGE THE CARDS AND GIVE THEM AN ACTUAL OWNER
-
-		cardsRows, err := db.Query(`SELECT c.id AS card_id, c.name AS card_name, c.description AS card_description
-									FROM cards c
-									WHERE c.owner_id = $1`, userID)
-
-		if err != nil {
-			http.Error(w, fmt.Sprintf("Failed to fetch the cards inside user, %s", err), http.StatusInternalServerError)
-					return						
-		}
-								
-		defer cardsRows.Close()
-										
-		
-		var cards []*model.Card
-
-		for cardsRows.Next() {
-			var (
-				cardID int
-				cardName, cardDescription string
-			)
-
-			err := cardsRows.Scan(&cardID, &cardName, &cardDescription)
-
-			if err != nil {
-				http.Error(w, fmt.Sprintf("Error scanning cardsRows, %s", err), http.StatusInternalServerError)
-				return
-			}
-
-			card := &model.Card{
-				ID: cardID,
-				Name: cardName,
-				Description: cardDescription,
-			}
-
-			cards = append(cards, card)
-
-		}
-
-		user.Cards = cards
-
-		users = append(users, user)
-
-	}
-
-	jsonData, err := json.Marshal(users)
-	if err != nil {
-		http.Error(w, "Failed to marshal users data", http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(jsonData)
-
-
-}
 
 func SignUp(w http.ResponseWriter, r *http.Request) {
 
@@ -128,8 +31,8 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
         Name     string `json:"name"`
         Email    string `json:"email"`
         Password string `json:"password"`
-		Bio string `json:"bio"`
-		Cards []*model.Card `json:"cards"`
+		Bio 	 string `json:"bio"`
+		Cards 	 []*model.Card `json:"cards"`
     }
 
 
@@ -154,7 +57,7 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 		Name: requestData.Name,
 		Password: requestData.Password,
 		Email: requestData.Email,
-		Bio: requestData.Bio,
+		Bio: "",
 		Cards: []*model.Card{},
 	}
 
@@ -187,31 +90,49 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 
 }
 
-
-
-
-func DeleteUser(w http.ResponseWriter, r *http.Request){
-
-	vars := mux.Vars(r)
-	userID, err := strconv.Atoi(vars["userID"])
-	if err != nil {
-		http.Error(w, "Invalid user ID", http.StatusBadRequest)
-		return
-	}
-
-	_, err = db.Exec("DELETE FROM users WHERE id = $1", userID)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to delete the user, %s", err), http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusAccepted)
-
-
-}
-
-
 func Login(w http.ResponseWriter, r *http.Request) {
+	// Parse the JSON request
+	var requestData struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	err := json.NewDecoder(r.Body).Decode(&requestData)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to parse JSON data: %s", err), http.StatusBadRequest)
+		return
+	}
+
+	// Query the database to find a user with the given email
+	user := model.User{}
+	err = db.QueryRow("SELECT id, name, email, password FROM users WHERE email = $1", requestData.Email).Scan(&user.ID, &user.Name, &user.Email, &user.Password)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			// User not found
+			http.Error(w, "User not found", http.StatusUnauthorized)
+			return
+		} else {
+			log.Printf("Error querying the database: %v", err)
+			http.Error(w, "Failed to query the database", http.StatusInternalServerError)
+			return
+		}
+	}
+
+	// Check if the password matches
+	if requestData.Password != user.Password {
+		http.Error(w, "Incorrect password", http.StatusUnauthorized)
+		return
+	}
+
+	// Authentication successful
+	responseData := map[string]interface{}{
+		"message": "Login successful",
+		"user":    user,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(responseData)
 
 }
 

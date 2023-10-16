@@ -49,6 +49,7 @@ func SetMemberRoutes(r *mux.Router) {
 
 func SetSignInUpRoutes(r *mux.Router) {
 	r.HandleFunc("/api/users", controllers.GetAllUsers).Methods("GET")
+	r.HandleFunc("/api/users/{userID:[0-9]+}", controllers.GetUser).Methods("GET")
 	r.HandleFunc("/api/users/{userID:[0-9]+}", controllers.DeleteUser).Methods("DELETE")
 	
 	

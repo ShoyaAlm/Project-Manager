@@ -1,0 +1,36 @@
+.profile-container {
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+  }
+  
+  .profile-heading {
+    font-size: 24px;
+    margin: 0;
+    color: #333;
+  }
+  
+  .profile-info {
+    margin-top: 20px;
+  }
+  
+  .profile-info p {
+    margin: 10px 0;
+    color: #333;
+  }
+  
+  .profile-loading {
+    text-align: center;
+    font-size: 18px;
+    margin-top: 50px;
+    color: #888;
+  }
+  
+  .profile-info p strong {
+    color: #555;
+  }
+  

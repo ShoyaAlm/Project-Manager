@@ -10,8 +10,9 @@ import {Link, useParams} from 'react-router-dom'
 
 
 import { AllLists } from './Board'
-import { HandleSigninLogin } from './signup-login.js'
+import { HandleSignupLogin } from './signup-login.js'
 import { Card } from './Card'
+import Profile from './Profile'
 
 const App = () => {
 
@@ -22,14 +23,21 @@ const App = () => {
 
            <Link to="/" style={{textDecoration:'none', fontFamily:'bardiya', color:'black'}}><h1 style={{textAlign:'center'}}>خوش آمدید</h1></Link> <br />
             <Link to="/signup" style={{textDecoration:'none'}}><h3 style={{textAlign: 'right', 
-             fontFamily:'sans-serif', color:'black'}}>ورود/ثبت نام</h3></Link> <hr /> <br />
+             fontFamily:'sans-serif', color:'black'}}>ورود/ثبت نام</h3></Link> 
+             <Link to="/profile" style={{textDecoration:'none'}}> <h3 style={{textAlign:'left',
+             fontFamily:'sans-serif', color:'black'}}>پروفایل من</h3> </Link>
+             <hr /> <br />
+             
             
                 <Switch>
                     <Route exact path='/'> <AllLists/> </Route>
                     
                     <Route path='/lists/:listId/cards/:cardId'> <Card/> </Route>
                     
-                    <Route path='/signup'> <HandleSigninLogin/> </Route>
+                    <Route path='/signup'> <HandleSignupLogin/> </Route>
+
+                    <Route path='/profile'> <Profile/> </Route>
+
 
                 </Switch>
 

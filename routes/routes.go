@@ -57,3 +57,9 @@ func SetSignInUpRoutes(r *mux.Router) {
 	
 	r.HandleFunc("/api/login", controllers.Login).Methods("POST")
 }
+
+
+func SetNotifRoutes(r *mux.Router) {
+	r.HandleFunc("/api/notifs", controllers.CreateNotif).Methods("POST")
+	r.HandleFunc("/api/notifs", controllers.GetAllNotifs).Methods("GET")
+}

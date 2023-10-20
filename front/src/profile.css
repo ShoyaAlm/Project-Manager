@@ -6,9 +6,12 @@
     border-radius: 5px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     background-color: #fff;
+    width: 400;
+    height: auto;
   }
   
   .profile-heading {
+    text-align: center;
     font-size: 24px;
     margin: 0;
     color: #333;
@@ -16,6 +19,7 @@
   
   .profile-info {
     margin-top: 20px;
+    text-align: right;
   }
   
   .profile-info p {
@@ -34,3 +38,23 @@
     color: #555;
   }
   
+
+
+  .user-cards{
+    margin-top: 30px;
+  }
+
+  .user-cards-title-h2{
+    text-align: center;
+  }
+
+  .user-card{
+    text-align: right;
+  }
+
+.user-card-details h3,
+.user-card-details p {
+  display: inline;
+  margin: 0;
+  padding: 0;
+}

@@ -9,11 +9,14 @@ import (
 	"log"
 	"net/http"
 	"project-manager/model"
+	"project-manager/secret"
 	_ "strconv"
 
+	"github.com/dgrijalva/jwt-go"
 	_ "github.com/gorilla/mux"
 	_ "github.com/lib/pq" // Import the PostgreSQL driver
 )
+
 
 
 
@@ -90,53 +93,68 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 
 }
 
+
+
+
 func Login(w http.ResponseWriter, r *http.Request) {
-	// Parse the JSON request
-	var requestData struct {
-		Email    string `json:"email"`
-		Password string `json:"password"`
-	}
+    // Parse the JSON request
+    var requestData struct {
+        Email    string `json:"email"`
+        Password string `json:"password"`
+    }
 
-	err := json.NewDecoder(r.Body).Decode(&requestData)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to parse JSON data: %s", err), http.StatusBadRequest)
-		return
-	}
+    err := json.NewDecoder(r.Body).Decode(&requestData)
+    if err != nil {
+        http.Error(w, fmt.Sprintf("Failed to parse JSON data: %s", err), http.StatusBadRequest)
+        return
+    }
 
-	// Query the database to find a user with the given email
-	user := model.User{}
-	err = db.QueryRow("SELECT id, name, email, password FROM users WHERE email = $1", requestData.Email).Scan(&user.ID, &user.Name, &user.Email, &user.Password)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			// User not found
-			http.Error(w, "User not found", http.StatusUnauthorized)
-			return
-		} else {
-			log.Printf("Error querying the database: %v", err)
-			http.Error(w, "Failed to query the database", http.StatusInternalServerError)
-			return
-		}
-	}
+    // Query the database to find a user with the given email
+    user := model.User{}
+    err = db.QueryRow("SELECT id, name, email, password FROM users WHERE email = $1", requestData.Email).Scan(&user.ID, &user.Name, &user.Email, &user.Password)
+    if err != nil {
+        if err == sql.ErrNoRows {
+            // User not found
+            http.Error(w, "User not found", http.StatusUnauthorized)
+            return
+        } else {
+            log.Printf("Error querying the database: %v", err)
+            http.Error(w, "Failed to query the database", http.StatusInternalServerError)
+            return
+        }
+    }
 
-	// Check if the password matches
-	if requestData.Password != user.Password {
-		http.Error(w, "Incorrect password", http.StatusUnauthorized)
-		return
-	}
+    // Check if the password matches
+    if requestData.Password != user.Password {
+        http.Error(w, "Incorrect password", http.StatusUnauthorized)
+        return
+    }
 
-	// Authentication successful
-	responseData := map[string]interface{}{
-		"message": "Login successful",
-		"user":    user,
-	}
+    // Create a new token
+    token := jwt.New(jwt.SigningMethodHS256)
+    claims := token.Claims.(jwt.MapClaims)
+    claims["user_id"] = user.ID
+	claims["name"] = user.Name
+    claims["email"] = user.Email
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(responseData)
+    // Sign the token with the secret key
+    tokenString, err := token.SignedString(secret.JwtSecret)
+    if err != nil {
+        http.Error(w, "Failed to generate JWT", http.StatusInternalServerError)
+        return
+    }
 
+    // Authentication successful
+    responseData := map[string]interface{}{
+        "message": "Login successful",
+        "user":    user,
+        "token":   tokenString,
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(http.StatusOK)
+    json.NewEncoder(w).Encode(responseData)
 }
-
-
 
 
 

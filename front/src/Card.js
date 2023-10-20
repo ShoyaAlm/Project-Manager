@@ -2,6 +2,12 @@ import {useEffect, useState} from 'react'
 import {Link, useParams} from 'react-router-dom'
 // import { useReducer } from 'react';
 import './card.css'
+
+import { getJwtFromCookie } from './App'
+import jwt_decode from 'jwt-decode'
+
+
+
 export const Card = ({card, list}) => {
 
 
@@ -381,24 +387,56 @@ export const Card = ({card, list}) => {
 }
 
 
-
     const removeCard = async () => {
+        let user = null; // Define user variable here
 
-            try {
-                const response = await fetch(`http://localhost:8080/api/lists/${newList.id}/cards/${newCard.id}`,{
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                });
-                if (!response.ok){
-                    throw new Error('Error deleting the card')
-                }
-            } catch (error) {
-                console.log(error);
+        // First try-catch block: Get user info from JWT
+        try {
+            const jwt = getJwtFromCookie();
+            if (jwt) {
+                const decoded = jwt_decode(jwt);
+                user = decoded; // Update user data from the JWT
+                console.log(user);
             }
+        } catch (error) {
+            console.log(error);
+        }
 
-    }
+        // Second try-catch block: Send a new notification
+        try {
+            if (user) { // Check if user is available
+                const notifResponse = await fetch(`http://localhost:8080/api/notifs`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: `User ${user.name} has deleted the card named ${newCard.name}`, user_id: user.user_id }),
+                });
+
+                if (!notifResponse.ok) {
+                    throw new Error('Error making a new notification');
+                }
+            }
+        } catch (error) {
+            console.log(error);
+        }
+
+        // Third try-catch block: Delete the card
+        try {
+            const response = await fetch(`http://localhost:8080/api/lists/${newList.id}/cards/${newCard.id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+            if (!response.ok) {
+                throw new Error('Error deleting the card');
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
 
 
 

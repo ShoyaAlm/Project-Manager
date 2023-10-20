@@ -435,6 +435,16 @@ func DeleteCard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+
+
+	// var newNotifID int
+
+	// var newNotifMsg string
+
+
+
+
+
 	// Delete the list and related data
 	_, err = db.Exec("DELETE FROM cards WHERE id = $1", cardID)
 	if err != nil {
@@ -647,6 +657,11 @@ func UpdateCard(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "No update data provided", http.StatusBadRequest)
 		return
 	}
+
+
+
+
+	
 
 
 

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Switch, Route, Link, Redirect } from 'react-router-dom';
 import './signup.css';
+import Cookies from 'js-cookie'
+
 
 export const HandleSignupLogin = () => {
     const [name, setName] = useState('');
@@ -75,6 +77,12 @@ export const HandleSignupLogin = () => {
                     // Login successful
                     response.json().then((data) => {
                         console.log('Login successful:', data);
+
+                        const token = data.token;
+
+                        Cookies.set('jwtToken', token);
+
+                        window.location.href = '/';
                         // Redirect to the main page or perform other actions
                     });
                 } else {

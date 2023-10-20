@@ -29,6 +29,9 @@ func main() {
 	routes.SetItemRoutes(r)
 	routes.SetMemberRoutes(r)
 	routes.SetSignInUpRoutes(r)
+	routes.SetNotifRoutes(r)
+
+	
 	http.Handle("/", cors(r))
 
 	if err := http.ListenAndServe(":8080", nil); err != nil {

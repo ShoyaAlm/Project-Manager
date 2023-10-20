@@ -29,12 +29,54 @@ const Profile = () => {
 
   return (
     <div className="profile-container">
-      <h2 className="profile-heading">User Profile</h2>
+      <h1 className="profile-heading">حساب کاربری</h1>
       <div className="profile-info">
-        <p><strong>Name:</strong> {user.name}</p>
-        <p><strong>Email:</strong> {user.email}</p>
-        <p><strong>Bio:</strong> {user.bio || 'Not provided'}</p>
-        {/* Display other user data as needed */}
+        <p> <strong>نام کاربری :</strong> {user.name}</p>
+        <p> {user.email} <strong>: آدرس ایمیل</strong> </p>
+        <p> <strong>بیوی کاربر : </strong> {user.bio || 'ارائه نشده'}</p>
+        <br />
+        <div className='user-cards'>
+          <h2 className='user-cards-title-h2'>کارت های کاربر</h2>
+          
+        {user.cards.map((card) => {
+
+        return (
+          <div key={card.id} className='user-card'>
+            <div className='user-card-details'>
+              <h3> نام کارت : </h3>
+              <p>{card.name}</p>
+            </div>
+            <div className='user-card-details'>
+              <h3>توضیحات : </h3>
+              <p>{card.description}</p>
+            </div>
+            <div className='user-card-details'>
+              <h3>تاریخ : </h3>
+              <p>{card.dates.join(', ')}</p>
+            </div>
+            <div className='user-card-checklists'>
+              <h3>چکلیست های کارت</h3>
+              <div className='user-card-checklist'>
+                {card.checklists && card.checklists.length > 0 ? (
+                  card.checklists.map((checklist) => (
+                    <h4 key={checklist.id}>{checklist.name}</h4>
+                  ))
+                ) : (
+                  <p>بدون چکلیست</p>
+                )}
+              </div>
+            </div>
+            <hr />
+          </div>
+        );
+
+        })}
+
+
+
+        </div>
+
+
       </div>
     </div>
   );

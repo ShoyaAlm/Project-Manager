@@ -361,9 +361,9 @@ func CreateUser(w http.ResponseWriter, r *http.Request){
 	}
 
 	var requestData struct {
-		Name       string         `json:"name"`
+		Name     string	        `json:"name"`
 		Email    string         `json:"email"`
-		Password string `json:"password"`
+		Password string 		`json:"password"`
 	}
 
 	err = json.Unmarshal(body, &requestData)
@@ -426,4 +426,33 @@ func DeleteUser(w http.ResponseWriter, r *http.Request){
 
 
 }
+
+
+// func JwtHandler(w http.ResponseWriter, r *http.Request) {
+// 	if r.Method == http.MethodPost {
+// 		// Parse the JSON request
+// 		var request model.JwtRequest
+// 		decoder := json.NewDecoder(r.Body)
+// 		if err := decoder.Decode(&request); err != nil {
+// 			http.Error(w, "Failed to parse JSON data", http.StatusBadRequest)
+// 			return
+// 		}
+
+// 		// Access the JWT in request.Jwt
+// 		jwt := request.Jwt
+
+// 		// Use the JWT as needed (e.g., for authentication)
+// 		// ...
+
+// 		// Send a response
+// 		responseData := map[string]interface{}{
+// 			"message": "Received JWT",
+// 		}
+// 		w.Header().Set("Content-Type", "application/json")
+// 		w.WriteHeader(http.StatusOK)
+// 		json.NewEncoder(w).Encode(responseData)
+// 	} else {
+// 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+// 	}
+// }
 

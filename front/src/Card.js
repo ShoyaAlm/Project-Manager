@@ -286,7 +286,7 @@ export const Card = ({card, list}) => {
                         },
                     });
                     if (!response.ok){
-                        throw new Error('Error deleting the member')
+                        throw new Error('Error getting the member')
                     }
             
                     const allMembers = await response.json();
@@ -307,6 +307,46 @@ export const Card = ({card, list}) => {
         
         
         const handleNewMember = async (newMemberName) => {
+
+            // notification when a new member gets added to a card
+       
+            let user = null; // Define user variable here
+
+            // First try-catch block: Get user info from JWT
+            try {
+                const jwt = getJwtFromCookie();
+                if (jwt) {
+                    const decoded = jwt_decode(jwt);
+                    user = decoded; // Update user data from the JWT
+                    console.log(user);
+                }
+            } catch (error) {
+                console.log(error);
+            }
+
+            // Second try-catch block: Send a new notification
+            try {
+                // if (user) { // Check if user is available
+                    const notifResponse = await fetch(`http://localhost:8080/api/notifs`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ message: `کاربر جدید بنام "${newMemberName}" به کارت "${card.name}" اضافه شد`, user_id: user.user_id }),
+                    });
+
+                    if (!notifResponse.ok) {
+                        throw new Error('Error making a new notification');
+                    }
+                // }
+            } catch (error) {
+                console.log(error);
+            }
+
+
+
+
+
             try {
                 const response = await fetch(`http://localhost:8080/api/lists/${list.id}/cards/${card.id}/members`, {
                     method: 'POST',
@@ -410,7 +450,7 @@ export const Card = ({card, list}) => {
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ message: `User ${user.name} has deleted the card named ${newCard.name}`, user_id: user.user_id }),
+                    body: JSON.stringify({ message: `کاربر ${user.name} کارت با نامه ${newCard.name} را پاک کرد`, user_id: user.user_id }),
                 });
 
                 if (!notifResponse.ok) {
@@ -442,6 +482,47 @@ export const Card = ({card, list}) => {
 
     const changeDescription = async (editedDescription) => {
 
+
+        let user = null; // Define user variable here
+
+        // First try-catch block: Get user info from JWT
+        try {
+            const jwt = getJwtFromCookie();
+            if (jwt) {
+                const decoded = jwt_decode(jwt);
+                user = decoded; // Update user data from the JWT
+                console.log(user);
+            }
+        } catch (error) {
+            console.log(error);
+        }
+
+        // Second try-catch block: Send a new notification
+        try {
+            // if (user) { // Check if user is available
+                const notifResponse = await fetch(`http://localhost:8080/api/notifs`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: `کاربر ${user.name} توضیحات کارت "${newCard.name}" را تغییر داد`, user_id: user.user_id }),
+                });
+
+                if (!notifResponse.ok) {
+                    throw new Error('Error making a new notification');
+                }
+            // }
+        } catch (error) {
+            console.log(error);
+        }
+
+
+        // now in here, you can send that newly created notif to every user that is a member of that card
+        
+        // write the code here...
+
+
+
         try {
 
             const requestBody = {
@@ -456,7 +537,7 @@ export const Card = ({card, list}) => {
                 body: JSON.stringify(requestBody)
             });
             if(!response.ok){
-                throw new Error("Failed to create new member")
+                throw new Error("Failed to change description")
             }
 
             const updatedCard = await response.json();

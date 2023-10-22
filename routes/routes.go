@@ -62,4 +62,7 @@ func SetSignInUpRoutes(r *mux.Router) {
 func SetNotifRoutes(r *mux.Router) {
 	r.HandleFunc("/api/notifs", controllers.CreateNotif).Methods("POST")
 	r.HandleFunc("/api/notifs", controllers.GetAllNotifs).Methods("GET")
+	r.HandleFunc("/api/notifs/{notifID:[0-9]+}", controllers.DeleteNotif).Methods("DELETE")
+	r.HandleFunc("/api/notifs/{userID:[0-9]+}", controllers.GetUserNotifs).Methods("GET")
+	r.HandleFunc("/api/notifs/{userID:[0-9]+}", controllers.MarkAsReadNotifs).Methods("PATCH")
 }

@@ -1,7 +1,7 @@
 import {useEffect, useState} from 'react'
 import {Link, useParams} from 'react-router-dom'
 // import { useReducer } from 'react';
-import './card.css'
+import './css/card.css'
 
 import { getJwtFromCookie } from './App'
 import jwt_decode from 'jwt-decode'
@@ -326,7 +326,6 @@ export const Card = ({card, list}) => {
 
             // Second try-catch block: Send a new notification
             try {
-                // if (user) { // Check if user is available
                     const notifResponse = await fetch(`http://localhost:8080/api/notifs`, {
                         method: 'POST',
                         headers: {
@@ -338,7 +337,6 @@ export const Card = ({card, list}) => {
                     if (!notifResponse.ok) {
                         throw new Error('Error making a new notification');
                     }
-                // }
             } catch (error) {
                 console.log(error);
             }
@@ -491,7 +489,7 @@ export const Card = ({card, list}) => {
             if (jwt) {
                 const decoded = jwt_decode(jwt);
                 user = decoded; // Update user data from the JWT
-                console.log(user);
+                // console.log(user);
             }
         } catch (error) {
             console.log(error);
@@ -717,7 +715,7 @@ export const Card = ({card, list}) => {
                                     return (
                                     <div key={index}>
                                          <span >{member.name}</span>
-                                         <button className='remove-member-button' onClick={() => removeMember(member.id)}>X</button>
+                                         {/* <button className='remove-member-button' onClick={() => removeMember(member.id)}>X</button> */}
                                     </div>
                                     )
                                 })

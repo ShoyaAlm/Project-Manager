@@ -1,5 +1,5 @@
 // import projects from './projects.js'
-import './index.css'
+import './css/index.css'
 
 import React, { useState, useEffect, useContext } from 'react'
 // import {useState} from 'react'

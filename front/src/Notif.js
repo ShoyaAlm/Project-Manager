@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { getJwtFromCookie } from './App';
 import jwt_decode from 'jwt-decode'
 
-import './notif.css'
+import './css/notif.css'
 
 const NotificationDropdown = () => {
   const [notifications, setNotifications] = useState([]);

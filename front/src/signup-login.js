@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Switch, Route, Link, Redirect } from 'react-router-dom';
-import './signup.css';
+import './css/signup.css';
 import Cookies from 'js-cookie'
 
 

@@ -471,6 +471,9 @@ func CreateCard(w http.ResponseWriter, r *http.Request) {
 
 	var requestData struct {
 		Name        string             `json:"name"`
+		UserID 		int			   	   `json:"user_id"`
+		Username 	string			   `json:"username"`
+		UserEmail 	string			   `json:"user_email"`
 		Description string             `json:"description"`
 		Dates       []string           `json:"dates"`
 		Checklists  []*model.Checklist `json:"checklists"`
@@ -505,7 +508,8 @@ func CreateCard(w http.ResponseWriter, r *http.Request) {
 
 	emptyMember := &model.Member{
 		ID:   newMemberID,
-		Name: "عضو 1",
+		Name: requestData.Username,
+		Email: requestData.UserEmail,
 	}
 
 	// Create a new card with non-null fields
@@ -516,7 +520,7 @@ func CreateCard(w http.ResponseWriter, r *http.Request) {
 		Dates:       []string{"1 شهریور", "1 مهر"}, // Initialize as empty slice
 		Checklists:  []*model.Checklist{emptyChecklist},      // Initialize as empty slice
 		Members:     []*model.Member{emptyMember},
-		Owner:       &model.User{ID: 1},
+		Owner:       &model.User{ID: requestData.UserID},
 	}
 
 
@@ -565,8 +569,8 @@ func CreateCard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = db.QueryRow("INSERT INTO members (name, card_id) VALUES ($1, $2) RETURNING id",
-		emptyMember.Name, newCardID).Scan(&newMemberID)
+	err = db.QueryRow("INSERT INTO members (card_id, name, email) VALUES ($1, $2, $3) RETURNING id",
+	newCardID, emptyMember.Name, emptyMember.Email).Scan(&newMemberID)
 	if err != nil {
 		log.Printf("Failed to insert members: %v", err)
 		http.Error(w, fmt.Sprintf("Failed to insert members, %s", err), http.StatusInternalServerError)

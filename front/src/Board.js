@@ -4,9 +4,15 @@ import {useState} from 'react'
 import { BrowserRouter as Router, Route, Switch, Link, useHistory } from 'react-router-dom';
 import Modal from 'react-modal'
 
+
+import { getJwtFromCookie } from './App';
+import jwt_decode from 'jwt-decode'
+
+import SimpleCard from './simpleCard';
+
 import { Card } from './Card';
 
-import './board.css'
+import './css/board.css'
 import { useEffect } from 'react';
 const ListContext = React.createContext()
 
@@ -65,6 +71,42 @@ const List = () => {
     const AddList = () => {
 
 
+        let user = null; // Define user variable here
+
+        // First try-catch block: Get user info from JWT
+        try {
+            const jwt = getJwtFromCookie();
+            if (jwt) {
+                const decoded = jwt_decode(jwt);
+                user = decoded; // Update user data from the JWT
+                // console.log(user);
+            }
+        } catch (error) {
+            console.log(error);
+        }
+
+        const handleNotif = async () => {
+            try{
+                const response = await fetch(`http://localhost:8080/api/notifs`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message: `شما لیست ${newListName} را ساختید `, 
+                    user_id: user.id, username: user.name, user_email: user.email })
+                });
+                if (!response.ok) {
+                    throw new Error('Failed to create a new card');
+                  } 
+                  
+                }
+                catch (error) {
+                console.log('error : ' , error);
+            }
+        }
+
+
+
         const handleSaveList = async (newListName) => {
             try {
               const response = await fetch('http://localhost:8080/api/lists', {
@@ -91,6 +133,7 @@ const List = () => {
         
         const addNewList = () => {
             if (newListName.trim() !== '') {
+                handleNotif()
                 handleSaveList(newListName)
                 setNewListName('');
                 setIsAddingList(false)
@@ -138,6 +181,45 @@ const List = () => {
 
     const AddCard = ({id}) => {
 
+
+
+        let user = null; // Define user variable here
+
+        // First try-catch block: Get user info from JWT
+        try {
+            const jwt = getJwtFromCookie();
+            if (jwt) {
+                const decoded = jwt_decode(jwt);
+                user = decoded; // Update user data from the JWT
+                // console.log(user);
+            }
+        } catch (error) {
+            console.log(error);
+        }
+
+        const handleNotif = async () => {
+            try{
+                const response = await fetch(`http://localhost:8080/api/notifs`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message: `شما کارت ${newCardName} را ساختید `, 
+                    user_id: user.id, username: user.name, user_email: user.email })
+                });
+                if (!response.ok) {
+                    throw new Error('Failed to create a new card');
+                  } 
+                  
+                }
+                catch (error) {
+                console.log('error : ' , error);
+            }
+        }
+
+
+
+
         const handleSaveCard = async (newCardName) => {
             try{
                 const response = await fetch(`http://localhost:8080/api/lists/${id}/cards`, {
@@ -145,7 +227,7 @@ const List = () => {
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ name: newCardName })
+                    body: JSON.stringify({ name: newCardName, username: user.name, user_id: user.id })
                 });
                 if (!response.ok) {
                     throw new Error('Failed to create a new card');
@@ -175,6 +257,7 @@ const List = () => {
         
         const addNewCard = () => {
             if (newCardName.trim() !== '') {
+                handleNotif()
                 handleSaveCard(newCardName)
                 setIsNewListAddedOrRemoved(true);
                 setNewCardName('');
@@ -265,6 +348,22 @@ const ShowCards = ({ list }) => {
     };
 
 
+
+     let user = null; // Define user variable here
+
+    // First try-catch block: Get user info from JWT
+    try {
+        const jwt = getJwtFromCookie();
+        if (jwt) {
+            const decoded = jwt_decode(jwt);
+            user = decoded; // Update user data from the JWT
+            // console.log(user);
+        }
+    } catch (error) {
+        console.log(error);
+    }
+
+
     return (
         <div className="showcards-container">
             <hr />
@@ -288,11 +387,20 @@ const ShowCards = ({ list }) => {
             <Modal isOpen={modalIsOpen} onRequestClose={closeModal} className="modal">
                 {selectedCard && (
                 <div className="modal-content">
-                
+                { user != null && user.name === selectedCard.owner.name ? (
+                    <>
                     {/* Display modal content with selectedCard data */}
                     <Card card={selectedCard} list={list}></Card>
                     {/* Rest of the modal content */}
                     <button onClick={closeModal}>Close Modal</button>
+                    </>
+                 ) : ( 
+                    <>
+                        <SimpleCard card={selectedCard} list={list}></SimpleCard>
+
+                        <button onClick={closeModal}>Close Modal</button>
+                    </> 
+                )}
                 </div>
                 )}
             </Modal>

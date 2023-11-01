@@ -85,7 +85,7 @@ const App = () => {
 
                 {/* this is for the notifs */}
                 <div>
-                  <NotificationDropdown/>
+                  <NotificationDropdown user={user}/>
                 </div>
 
 

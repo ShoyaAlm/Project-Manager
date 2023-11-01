@@ -181,7 +181,7 @@ func GetAllLists(w http.ResponseWriter, r *http.Request) {
 			card.Checklists = checklists
 
 			// Start looking for members inside every card
-			memberRows, err := db.Query(`SELECT m.id AS member_id, m.name AS member_name
+			memberRows, err := db.Query(`SELECT m.id AS member_id, m.name AS member_name, m.email AS member_email
 							FROM members m
 						WHERE m.card_id = $1`, cardID)
 
@@ -199,10 +199,10 @@ func GetAllLists(w http.ResponseWriter, r *http.Request) {
 
 				var (
 					memberID   int
-					memberName string
+					memberName, memberEmail string
 				)
 
-				err := memberRows.Scan(&memberID, &memberName)
+				err := memberRows.Scan(&memberID, &memberName, &memberEmail)
 
 				if err != nil {
 					http.Error(w, fmt.Sprintf("Error scanning memberRows, %s", err), http.StatusInternalServerError)
@@ -212,6 +212,7 @@ func GetAllLists(w http.ResponseWriter, r *http.Request) {
 				member := &model.Member{
 					ID:   memberID,
 					Name: memberName,
+					Email: memberEmail,
 				}
 
 				members = append(members, member)
@@ -388,7 +389,7 @@ func GetAList(w http.ResponseWriter, r *http.Request) {
 		card.Checklists = checklists
 
 		// Start looking for members inside every card
-		memberRows, err := db.Query(`SELECT m.id AS member_id, m.name AS member_name
+		memberRows, err := db.Query(`SELECT m.id AS member_id, m.name AS member_name, m.email AS member_email
 			FROM members m
 			WHERE m.card_id = $1`, cardID)
 
@@ -406,10 +407,10 @@ func GetAList(w http.ResponseWriter, r *http.Request) {
 
 			var (
 				memberID   int
-				memberName string
+				memberName, memberEmail string
 			)
 
-			err := memberRows.Scan(&memberID, &memberName)
+			err := memberRows.Scan(&memberID, &memberName, &memberEmail)
 
 			if err != nil {
 				http.Error(w, fmt.Sprintf("Error scanning memberRows, %s", err), http.StatusInternalServerError)
@@ -419,6 +420,7 @@ func GetAList(w http.ResponseWriter, r *http.Request) {
 			member := &model.Member{
 				ID:   memberID,
 				Name: memberName,
+				Email: memberEmail,
 			}
 
 			members = append(members, member)

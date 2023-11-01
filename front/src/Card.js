@@ -448,7 +448,7 @@ export const Card = ({card, list}) => {
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ message: `کاربر ${user.name} کارت با نامه ${newCard.name} را پاک کرد`, user_id: user.user_id }),
+                    body: JSON.stringify({ message: `کاربر "${user.name}" کارت با نام "${newCard.name}" را پاک کرد`, user_id: user.user_id }),
                 });
 
                 if (!notifResponse.ok) {

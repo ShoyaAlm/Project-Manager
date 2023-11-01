@@ -5,25 +5,25 @@ import jwt_decode from 'jwt-decode'
 
 import './css/notif.css'
 
-const NotificationDropdown = () => {
+const NotificationDropdown = ({user}) => {
   const [notifications, setNotifications] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [notificationsRead, setNotificationsRead] = useState(false);
 
-  let userId = 1; // User ID for whom you want to fetch notifications
+  // let userId = 1; // User ID for whom you want to fetch notifications
 
-  let user = null
+  // let user = null
 
-  try {
-    const jwt = getJwtFromCookie();
-    if (jwt) {
-        const decoded = jwt_decode(jwt);
-        user = decoded; // Update user data from the JWT
-    }
-  } catch (error) {
-      console.log(error);
-  }
+  // try {
+  //   const jwt = getJwtFromCookie();
+  //   if (jwt) {
+  //       const decoded = jwt_decode(jwt);
+  //       user = decoded; // Update user data from the JWT
+  //   }
+  // } catch (error) {
+  //     console.log(error);
+  // }
 
   const fetchNotifications = async () => {
     try {
@@ -86,20 +86,38 @@ const NotificationDropdown = () => {
       </button>
       {isOpen && (
         <div className="notification-list">
-          {notifications.map((notification) => (
-            <div key={notification.id} className="notification-item">
-              {notification.message}
+          
+          {notifications && notifications.length > 0 ? (
+            <div>
+              {notifications.map((notification) => (
+                <div key={notification.id} className="notification-item">
+                    {!notification.read ? (
+                        // Render the message as a paragraph
+                        <p>{notification.message}</p>
+                    ) : (
+                        // Render the message as a paragraph with "new" text
+                        <p><span className="new-notification">:جدید</span><br /> {notification.message}</p>
+                    )}
+                </div>
+              ))}
+
+              {user && unreadCount > 0 && !notificationsRead && (
+                <button onClick={markNotificationsAsRead} className="mark-read-button">
+                  Mark as Read
+                </button>
+              )}
             </div>
-          ))}
-          {unreadCount > 0 && !notificationsRead && (
-            <button onClick={markNotificationsAsRead} className="mark-read-button">
-              Mark as Read
-            </button>
+          ) : (
+            <h3>هیچ اعلانی وجود ندارد</h3>
           )}
+
+
+
         </div>
       )}
     </div>
   );
 };
 
+// notifications && notifications.length > 0 ?
 export default NotificationDropdown;

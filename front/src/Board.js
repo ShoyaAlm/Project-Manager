@@ -68,10 +68,28 @@ const List = () => {
     
     const [newListName, setNewListName] = useState('')
 
+
+    const findUser = () => {
+        let user = null; // Define user variable here
+
+        // First try-catch block: Get user info from JWT
+        try {
+            const jwt = getJwtFromCookie();
+            if (jwt) {
+                const decoded = jwt_decode(jwt);
+                user = decoded; // Update user data from the JWT
+                // console.log(user);
+                return user;
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
     const AddList = () => {
 
 
-        let user = null; // Define user variable here
+        let user = findUser(); // Define user variable here
 
         // First try-catch block: Get user info from JWT
         try {
@@ -87,14 +105,15 @@ const List = () => {
 
         const handleNotif = async () => {
             try{
-                const response = await fetch(`http://localhost:8080/api/notifs`, {
+                const response = await fetch(`http://localhost:8080/api/notifs/${user.user_id}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ message: `شما لیست ${newListName} را ساختید `, 
-                    user_id: user.id, username: user.name, user_email: user.email })
+                    body: JSON.stringify({ message: `شما لیست "${newListName}" را ساختید `, 
+                    user_id: user.user_id, })
                 });
+                // console.log(user);
                 if (!response.ok) {
                     throw new Error('Failed to create a new card');
                   } 
@@ -183,29 +202,18 @@ const List = () => {
 
 
 
-        let user = null; // Define user variable here
+        let user = findUser(); // Define user variable here
 
-        // First try-catch block: Get user info from JWT
-        try {
-            const jwt = getJwtFromCookie();
-            if (jwt) {
-                const decoded = jwt_decode(jwt);
-                user = decoded; // Update user data from the JWT
-                // console.log(user);
-            }
-        } catch (error) {
-            console.log(error);
-        }
 
         const handleNotif = async () => {
             try{
-                const response = await fetch(`http://localhost:8080/api/notifs`, {
+                const response = await fetch(`http://localhost:8080/api/notifs/${user.user_id}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ message: `شما کارت ${newCardName} را ساختید `, 
-                    user_id: user.id, username: user.name, user_email: user.email })
+                    body: JSON.stringify({ message: `شما کارت "${newCardName}" را ساختید `, 
+                    user_id: user.user_id })
                 });
                 if (!response.ok) {
                     throw new Error('Failed to create a new card');

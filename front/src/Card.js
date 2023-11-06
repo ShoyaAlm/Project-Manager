@@ -2,9 +2,28 @@ import {useEffect, useState} from 'react'
 import {Link, useParams} from 'react-router-dom'
 // import { useReducer } from 'react';
 import './css/card.css'
+import React from 'react'
 
 import { getJwtFromCookie } from './App'
 import jwt_decode from 'jwt-decode'
+
+
+const findUser = () => {
+
+    try {
+        const jwt = getJwtFromCookie();
+        if (jwt) {
+            const decoded = jwt_decode(jwt);
+            const user1 = decoded;
+            // console.log(user);
+            return user1;
+        }
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+let user = findUser();
 
 
 
@@ -426,19 +445,19 @@ export const Card = ({card, list}) => {
 
 
     const removeCard = async () => {
-        let user = null; // Define user variable here
+        // let user = null; // Define user variable here
 
-        // First try-catch block: Get user info from JWT
-        try {
-            const jwt = getJwtFromCookie();
-            if (jwt) {
-                const decoded = jwt_decode(jwt);
-                user = decoded; // Update user data from the JWT
-                console.log(user);
-            }
-        } catch (error) {
-            console.log(error);
-        }
+        // // First try-catch block: Get user info from JWT
+        // try {
+        //     const jwt = getJwtFromCookie();
+        //     if (jwt) {
+        //         const decoded = jwt_decode(jwt);
+        //         user = decoded; // Update user data from the JWT
+        //         console.log(user);
+        //     }
+        // } catch (error) {
+        //     console.log(error);
+        // }
 
         // Second try-catch block: Send a new notification
         try {

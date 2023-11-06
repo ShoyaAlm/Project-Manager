@@ -74,7 +74,6 @@ const App = () => {
 
            <Link to="/" style={{textDecoration:'none', fontFamily:'bardiya', color:'black'}}><h1 style={{textAlign:'center'}}>خوش آمدید</h1></Link> <br />
 
-
            {user ? (
             <div style={{textAlign:'right '}}>
                   <h3 style={{textAlign:'right', color:'black'}}>! خوش آمدی {user.name}</h3>

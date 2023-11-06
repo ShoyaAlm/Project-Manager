@@ -250,6 +250,17 @@ func GetACard(w http.ResponseWriter, r *http.Request) {
 		Checklists:  []*model.Checklist{},
 	}
 
+
+	owner := &model.User{}
+
+	ownerRow := db.QueryRow("SELECT u.id, u.name, u.email, u.bio FROM users u JOIN user_cards uc ON u.id = uc.user_id WHERE uc.card_id = $1", cardID)
+	err = ownerRow.Scan(&owner.ID, &owner.Name, &owner.Email, &owner.Bio)
+	if err != nil {
+		owner = nil
+	}
+
+	card.Owner = owner
+
 	// Start checking for checklists inside every card
 	checklistRows, err := db.Query(`SELECT cl.id AS checklist_id, cl.name AS checklist_name
 			FROM checklists cl
@@ -438,15 +449,6 @@ func DeleteCard(w http.ResponseWriter, r *http.Request) {
 	}
 
 
-
-	// var newNotifID int
-
-	// var newNotifMsg string
-
-
-
-
-
 	// Delete the list and related data
 	_, err = db.Exec("DELETE FROM cards WHERE id = $1", cardID)
 	if err != nil {
@@ -480,13 +482,17 @@ func CreateCard(w http.ResponseWriter, r *http.Request) {
 		Dates       []string           `json:"dates"`
 		Checklists  []*model.Checklist `json:"checklists"`
 		Members     []*model.Member    `json:"members"`
+		Owner 		  *model.User	   `json:"owner"`
 	}
 
+	
 	err = json.Unmarshal(body, &requestData)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to parse JSON data, %s", err), http.StatusBadRequest)
 		return
 	}
+
+	// log.Printf("userID : %v, username : %v, email : %v", requestData.UserID, requestData.Username, requestData.UserEmail)
 
 	var newCardID, newChecklistID, newItemID, newMemberID int
 
@@ -522,32 +528,35 @@ func CreateCard(w http.ResponseWriter, r *http.Request) {
 		Dates:       []string{"1 شهریور", "1 مهر"}, // Initialize as empty slice
 		Checklists:  []*model.Checklist{emptyChecklist},      // Initialize as empty slice
 		Members:     []*model.Member{emptyMember},
-		Owner:       &model.User{ID: requestData.UserID},
+		// Owner:       &model.User{ID: requestData.UserID},
+		Owner:       &model.User{},
 	}
 
 
-	owner := &model.User{}
+	owner := &model.User{
+		ID: requestData.UserID,
+		Name: requestData.Username,
+		Email: requestData.UserEmail,
+	}
 
-	var bio sql.NullString
-
-	ownerRow := db.QueryRow("SELECT id, name, password, email, bio FROM users WHERE id = 1")
-	err = ownerRow.Scan(&owner.ID, &owner.Name, &owner.Password, &owner.Email, &bio)
+	ownerRow := db.QueryRow("SELECT id, name, email FROM users WHERE id = $1", requestData.UserID)
+	err = ownerRow.Scan(&owner.ID, &owner.Name, &owner.Email)
 	if err != nil {
-		log.Printf("Error fetching owner details: %v", err)
-        http.Error(w, "Failed to fetch owner details", http.StatusInternalServerError)
-        return
-    }
-
-	if bio.Valid {
-		owner.Bio = bio.String
-	} else {
-		owner.Bio = "" // Set a default value for an invalid (NULL) "bio" field
+		if err == sql.ErrNoRows {
+			// Handle the case where no matching owner was found
+			log.Printf("Owner not found for UserID: %v", requestData.UserID)
+			// You can set a default owner or handle the situation as needed
+			// For example:
+			// owner = &model.User{ID: 0, Name: "Default Owner", Email: "default@example.com"}
+		} else {
+			log.Printf("Error fetching owner details: %v", err)
+			http.Error(w, "Failed to fetch owner details", http.StatusInternalServerError)
+			return
+		}
 	}
-
+	
 	newCard.Owner = owner
 
-
-		
 
 	err = db.QueryRow("INSERT INTO cards (name, description, dates, list_id) VALUES ($1, $2, $3, $4) RETURNING id",
 		newCard.Name, newCard.Description, pq.Array(newCard.Dates), listID).Scan(&newCardID)
@@ -597,8 +606,6 @@ func CreateCard(w http.ResponseWriter, r *http.Request) {
 
 	// Append the new card to the list's cards slice
 	list.Cards = append(list.Cards, newCard)
-
-
 
 
 

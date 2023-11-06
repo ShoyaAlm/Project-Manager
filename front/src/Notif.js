@@ -11,19 +11,6 @@ const NotificationDropdown = ({user}) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [notificationsRead, setNotificationsRead] = useState(false);
 
-  // let userId = 1; // User ID for whom you want to fetch notifications
-
-  // let user = null
-
-  // try {
-  //   const jwt = getJwtFromCookie();
-  //   if (jwt) {
-  //       const decoded = jwt_decode(jwt);
-  //       user = decoded; // Update user data from the JWT
-  //   }
-  // } catch (error) {
-  //     console.log(error);
-  // }
 
   const fetchNotifications = async () => {
     try {
@@ -35,16 +22,24 @@ const NotificationDropdown = ({user}) => {
       });
       if (response.ok) {
         const data = await response.json();
-        setNotifications(data);
-
+  
+        // Sort notifications by CreatedAt in ascending order (oldest first)
+        data.sort((a, b) => new Date(a.CreatedAt) - new Date(b.CreatedAt));
+  
+        // Get the last 4 notifications (most recent) and reverse the order
+        const last4Notifications = data.slice(-4).reverse();
+  
+        setNotifications(last4Notifications);
+  
         // Calculate the count of unread notifications
-        const newUnreadCount = data.filter((notification) => !notification.read).length;
+        const newUnreadCount = last4Notifications.filter((notification) => !notification.read).length;
         setUnreadCount(newUnreadCount);
       }
     } catch (error) {
       console.error('Error fetching notifications:', error);
     }
   };
+  
 
   const markNotificationsAsRead = async () => {
     try {
@@ -91,12 +86,13 @@ const NotificationDropdown = ({user}) => {
             <div>
               {notifications.map((notification) => (
                 <div key={notification.id} className="notification-item">
-                    {!notification.read ? (
+                    {notification.read ? (
                         // Render the message as a paragraph
                         <p>{notification.message}</p>
                     ) : (
                         // Render the message as a paragraph with "new" text
-                        <p><span className="new-notification">:جدید</span><br /> {notification.message}</p>
+                        
+                        <p> <span className="new-notification">جدید : </span> {notification.message} </p>
                     )}
                 </div>
               ))}

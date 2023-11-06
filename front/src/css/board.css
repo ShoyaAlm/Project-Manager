@@ -177,6 +177,7 @@ body {
     height: 60px;
     border: 2px solid #ccc;
     border-radius: 20px;
+    color: #333;
 }
 .modal {
     position: fixed;

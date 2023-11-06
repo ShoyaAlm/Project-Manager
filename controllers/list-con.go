@@ -86,6 +86,7 @@ func GetAllLists(w http.ResponseWriter, r *http.Request) {
 				Dates:       cardDates,
 				Members:     []*model.Member{},
 				Checklists:  []*model.Checklist{},
+				// Owner: 		 &model.User{},
 			}
 
 			owner := &model.User{}
@@ -467,7 +468,8 @@ func CreateList(w http.ResponseWriter, r *http.Request) {
 		UserID 		int			   	   `json:"user_id"`
 		Username 	string			   `json:"username"`
 		UserEmail 	string			   `json:"user_email"`
-		Cards []*model.Card 		   `json:"cards"`
+		Cards 		[]*model.Card 	   `json:"cards"`
+		Owner 		*model.User 	   `json:"owner"`
 	}
 
 	err = json.Unmarshal(body, &requestData)
@@ -475,6 +477,7 @@ func CreateList(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Failed to parse JSON data, %s", err), http.StatusBadRequest)
 		return
 	}
+
 
 	var newListID, newCardID, newChecklistID, newItemID, newMemberID int
 	// err = db.QueryRow("INSERT INTO lists (name) VALUES ($1) RETURNING id", requestData.Name).Scan(&newListID)
@@ -503,6 +506,7 @@ func CreateList(w http.ResponseWriter, r *http.Request) {
 		Email: requestData.UserEmail,
 	}
 
+
 	emptyCard := &model.Card{
 		ID:          newCardID,
 		Name:        "کارت جدید",
@@ -510,8 +514,30 @@ func CreateList(w http.ResponseWriter, r *http.Request) {
 		Dates:       []string{"1 شهریور", "1 مهر"},
 		Checklists:  []*model.Checklist{emptyChecklist},
 		Members:     []*model.Member{emptyMember},
-		Owner:       &model.User{ID: requestData.UserID},
+		// Owner:       &model.User{ID: requestData.UserID},
+		Owner:       &model.User{},
 	}
+
+
+	owner := &model.User{
+		ID: requestData.UserID,
+		Name: requestData.Username,
+		Email: requestData.UserEmail,
+	}
+
+	// Query the database to fetch owner details based on UserID
+	ownerRow := db.QueryRow("SELECT id, name, email FROM users WHERE id = $1", requestData.UserID)
+	err = ownerRow.Scan(&owner.ID, &owner.Name, &owner.Email)
+	if err != nil {
+		log.Printf("Error fetching owner details: %v", err)
+		http.Error(w, "Failed to fetch owner details", http.StatusInternalServerError)
+		return
+	}
+
+
+	emptyCard.Owner = owner
+
+	log.Printf("emptyCard owner: %v", emptyCard.Owner)
 
 	newList := &model.List{
 		ID:    newListID,
@@ -554,11 +580,6 @@ func CreateList(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Failed to insert members, %s", err), http.StatusInternalServerError)
 		return
 	}
-
-	// if err := tx.Commit(); err != nil {
-	// 	http.Error(w, "Failed to commit transaction", http.StatusInternalServerError)
-	// 	return
-	// }
 
 	// Fetch the associated list
 	listRow := db.QueryRow("SELECT id, name FROM lists WHERE id = $1", newListID)
@@ -670,6 +691,12 @@ func DeleteAList(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusAccepted)
 }
 
+
+
+
+
+
+
 func UpdateAList(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	listID, err := strconv.Atoi(vars["id"])
@@ -678,7 +705,6 @@ func UpdateAList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Read the request body
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
@@ -704,4 +730,57 @@ func UpdateAList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
+}
+
+
+
+func UpdateCardOrder(w http.ResponseWriter, r *http.Request) {
+    body, err := ioutil.ReadAll(r.Body)
+    if err != nil {
+        http.Error(w, "Failed to read request body", http.StatusInternalServerError)
+        return
+    }
+
+    // Parse the JSON request body
+    var requestData struct {
+		ListID 	   int	`json:"listId"`
+		CardOrder  []int    `json:"cardOrder"`
+	}
+	
+    err = json.Unmarshal(body, &requestData)
+    if err != nil {
+        http.Error(w, "Failed to parse JSON data", http.StatusBadRequest)
+        return
+    }
+
+	fmt.Printf("requestData : %v", requestData)
+
+    // Update the card order for the list
+    if len(requestData.CardOrder) > 0 {
+        // Use a loop or a function to update the card order in your database
+        // Example (use a transaction to ensure consistency):
+        tx, err := db.Begin()
+        if err != nil {
+            http.Error(w, "Failed to begin transaction", http.StatusInternalServerError)
+            return
+        }
+        defer tx.Rollback()
+
+        for i, cardID := range requestData.CardOrder {
+            _, err := tx.Exec("UPDATE cards SET position = $1 WHERE id = $2", i, cardID)
+            if err != nil {
+                http.Error(w, "Failed to update card order", http.StatusInternalServerError)
+                fmt.Printf("error : %v", err)
+				return
+            }
+        }
+
+        err = tx.Commit()
+        if err != nil {
+            http.Error(w, "Failed to commit transaction", http.StatusInternalServerError)
+            return
+        }
+    }
+
+    w.WriteHeader(http.StatusOK)
 }

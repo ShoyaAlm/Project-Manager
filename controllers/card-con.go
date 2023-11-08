@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	// "github.com/codegangsta/gin"
 	"project-manager/model"
@@ -48,11 +49,21 @@ func GetAllCards(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		var dates []time.Time
+		
+		for _, dateString := range cardDates {
+			date, err := time.Parse("2006-01-02", dateString)
+			if err != nil {
+				// Handle the error, e.g., log it or return an error response
+			}
+			dates = append(dates, date)
+		}
+
 		card := &model.Card{
 			ID:          cardID,
 			Name:        cardName,
 			Description: cardDescription,
-			Dates:       cardDates,
+			Dates:       dates,
 			Members:     []*model.Member{},
 			Checklists:  []*model.Checklist{},
 		}
@@ -241,11 +252,21 @@ func GetACard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var dates []time.Time
+
+	for _, dateString := range cardDates {
+		date, err := time.Parse("2006-01-02", dateString)
+		if err != nil {
+			// Handle the error, e.g., log it or return an error response
+		}
+		dates = append(dates, date)
+	}
+
 	card := &model.Card{
 		ID:          cardID,
 		Name:        cardName,
 		Description: cardDescription,
-		Dates:       cardDates,
+		Dates:       dates,
 		Members:     []*model.Member{},
 		Checklists:  []*model.Checklist{},
 	}
@@ -473,13 +494,15 @@ func CreateCard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	type Date time.Time
+
 	var requestData struct {
 		Name        string             `json:"name"`
 		UserID 		int			   	   `json:"user_id"`
 		Username 	string			   `json:"username"`
 		UserEmail 	string			   `json:"user_email"`
 		Description string             `json:"description"`
-		Dates       []string           `json:"dates"`
+		Dates       []Date             `json:"dates"`
 		Checklists  []*model.Checklist `json:"checklists"`
 		Members     []*model.Member    `json:"members"`
 		Owner 		  *model.User	   `json:"owner"`
@@ -520,12 +543,20 @@ func CreateCard(w http.ResponseWriter, r *http.Request) {
 		Email: requestData.UserEmail,
 	}
 
+
+	// Get the current time
+	currentDate := time.Now()
+
+	// Calculate one month later
+	oneMonthLater := currentDate.AddDate(0, 1, 0)
+
+	dates := []time.Time{currentDate, oneMonthLater}
 	// Create a new card with non-null fields
 	newCard := &model.Card{
 		ID:          newCardID,
 		Name:        requestData.Name,
 		Description: "توضیحات",
-		Dates:       []string{"1 شهریور", "1 مهر"}, // Initialize as empty slice
+		Dates:       dates,
 		Checklists:  []*model.Checklist{emptyChecklist},      // Initialize as empty slice
 		Members:     []*model.Member{emptyMember},
 		// Owner:       &model.User{ID: requestData.UserID},
@@ -559,7 +590,7 @@ func CreateCard(w http.ResponseWriter, r *http.Request) {
 
 
 	err = db.QueryRow("INSERT INTO cards (name, description, dates, list_id) VALUES ($1, $2, $3, $4) RETURNING id",
-		newCard.Name, newCard.Description, pq.Array(newCard.Dates), listID).Scan(&newCardID)
+		newCard.Name, newCard.Description, pq.Array(dates), listID).Scan(&newCardID)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to insert card, %s", err), http.StatusInternalServerError)
 		return
@@ -620,6 +651,8 @@ func CreateCard(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonData)
 }
 
+
+
 func UpdateCard(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	_, err := strconv.Atoi(vars["id"])
@@ -643,23 +676,30 @@ func UpdateCard(w http.ResponseWriter, r *http.Request) {
 
 	// Parse the JSON request body
 	var requestData struct {
-		Name *string `json:"name"`
-		Description *string `json:"description"`
+		Name 		*string 		`json:"name"`
+		Description *string 		`json:"description"`
+		Dates		[]time.Time 	`json:"dates"` 
 	}
-
 	err = json.Unmarshal(body, &requestData)
 	if err != nil {
 		http.Error(w, "Failed to parse JSON data", http.StatusBadRequest)
 		return
 	}
-
+	
+	fmt.Printf("requestData : %v", requestData)
 
 	var query string
 	var args []interface{}
 
-	if requestData.Name != nil  && requestData.Description != nil {
+	if requestData.Name != nil && requestData.Description != nil && len(requestData.Dates) > 0 {
+		query = "UPDATE cards SET name = $1, description = $2, dates = $3 WHERE id = $4"
+		args = []interface{}{*requestData.Name, *requestData.Description, pq.Array(requestData.Dates), cardID}
+	} else if requestData.Name != nil && requestData.Description != nil {
 		query = "UPDATE cards SET name = $1, description = $2 WHERE id = $3"
 		args = []interface{}{*requestData.Name, *requestData.Description, cardID}
+	} else if len(requestData.Dates) > 0 {
+		query = "UPDATE cards SET dates = $1 WHERE id = $2"
+		args = []interface{}{pq.Array(requestData.Dates), cardID}
 	} else if requestData.Name != nil {
 		query = "UPDATE cards SET name = $1 WHERE id = $2"
 		args = []interface{}{*requestData.Name, cardID}
@@ -672,12 +712,6 @@ func UpdateCard(w http.ResponseWriter, r *http.Request) {
 	}
 
 
-
-
-	
-
-
-
 	// Update the list's name in the database
 	_, err = db.Exec(query, args...)
 	if err != nil {
@@ -687,3 +721,66 @@ func UpdateCard(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 }
+
+
+// func UpdateCard(w http.ResponseWriter, r *http.Request) {
+// 	vars := mux.Vars(r)
+// 	_, err := strconv.Atoi(vars["id"])
+// 	if err != nil {
+// 		http.Error(w, "Invalid list ID", http.StatusBadRequest)
+// 		return
+// 	}
+
+// 	cardID, err := strconv.Atoi(vars["cardID"])
+// 	if err != nil {
+// 		http.Error(w, "Invalid card ID", http.StatusBadRequest)
+// 		return
+// 	}
+
+// 	// Read the request body
+// 	body, err := ioutil.ReadAll(r.Body)
+// 	if err != nil {
+// 		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	// Parse the JSON request body
+// 	var requestData struct {
+// 		Name *string `json:"name"`
+// 		Description *string `json:"description"`
+// 	}
+
+// 	err = json.Unmarshal(body, &requestData)
+// 	if err != nil {
+// 		http.Error(w, "Failed to parse JSON data", http.StatusBadRequest)
+// 		return
+// 	}
+
+
+// 	var query string
+// 	var args []interface{}
+
+// 	if requestData.Name != nil  && requestData.Description != nil {
+// 		query = "UPDATE cards SET name = $1, description = $2 WHERE id = $3"
+// 		args = []interface{}{*requestData.Name, *requestData.Description, cardID}
+// 	} else if requestData.Name != nil {
+// 		query = "UPDATE cards SET name = $1 WHERE id = $2"
+// 		args = []interface{}{*requestData.Name, cardID}
+// 	} else if requestData.Description != nil {
+// 		query = "UPDATE cards SET description = $1 WHERE id = $2"
+// 		args = []interface{}{*requestData.Description, cardID}
+// 	} else {
+// 		http.Error(w, "No update data provided", http.StatusBadRequest)
+// 		return
+// 	}
+
+
+// 	// Update the list's name in the database
+// 	_, err = db.Exec(query, args...)
+// 	if err != nil {
+// 		http.Error(w, fmt.Sprintf("Failed to update card, %s", err), http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	w.WriteHeader(http.StatusCreated)
+// }

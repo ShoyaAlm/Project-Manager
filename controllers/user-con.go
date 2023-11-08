@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"time"
 
 	// "log"
 	"net/http"
@@ -189,17 +190,27 @@ func GetUser(w http.ResponseWriter, r *http.Request){
 			)
 
 			err := cardsRows.Scan(&cardID, &cardName, &cardDescription, &cardDates)
-
 			if err != nil {
 				http.Error(w, fmt.Sprintf("Error scanning cardsRows, %s", err), http.StatusInternalServerError)
 				return
 			}
 
+			var dates []time.Time
+
+			for _, dateString := range cardDates {
+				date, err := time.Parse("2006-01-02", dateString)
+				if err != nil {
+					// Handle the error, e.g., log it or return an error response
+				}
+				dates = append(dates, date)
+			}
+		
+
 			card := &model.Card{
 				ID: cardID,
 				Name: cardName,
 				Description: cardDescription,
-				Dates:       cardDates,
+				Dates:       dates,
 				Members:     []*model.Member{},
 				Checklists:  []*model.Checklist{},
 			}

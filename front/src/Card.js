@@ -3,6 +3,8 @@ import {Link, useParams} from 'react-router-dom'
 // import { useReducer } from 'react';
 import './css/card.css'
 import React from 'react'
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 import { getJwtFromCookie } from './App'
 import jwt_decode from 'jwt-decode'
@@ -565,6 +567,55 @@ export const Card = ({card, list}) => {
         }
     }
 
+    const [editedDates, setEditedDates] = useState({
+        start: new Date(newCard.dates[0]), // Convert to Date object
+        end: new Date(newCard.dates[1]) // Convert to Date object
+      });
+    
+
+      // Define a function to handle changes in the edited dates
+      const handleDateChange = (date, fieldName) => {
+        setEditedDates({
+          ...editedDates,
+          [fieldName]: date
+        });
+      };
+
+
+    const changeDates = async () => {
+
+        let editedDatesArray = [editedDates.start, editedDates.end]
+        
+        try {
+
+            const requestBody = {
+                dates: editedDatesArray
+            }
+            
+            const backendEndpoint = await fetch(`http://localhost:8080/api/lists/${newList.id}/cards/${newCard.id}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestBody)
+            })
+            if(!backendEndpoint.ok){
+                throw new Error("Failed to change dates")
+            }
+
+            const updatedDates = await backendEndpoint.json();
+            console.log('Updated dates:', updatedDates);
+
+
+        } catch (error) {
+            // Handle any errors that occur during the API call
+            console.error('Error saving dates:', error);
+        }
+
+        
+            
+    }
+
 
     return (
         
@@ -641,8 +692,6 @@ export const Card = ({card, list}) => {
                         )}
                     </div>
                             
-
-
 
 
 
@@ -769,13 +818,44 @@ export const Card = ({card, list}) => {
                             </div>
                         </div>
 
+
+
+                            <link type="text/css" rel="stylesheet" href="jalalidatepicker.min.css" />
+                            <script type="text/javascript" src="jalalidatepicker.min.js"></script>
+
                         <div className='dropdown'>
-                        <button className='dropbtn'>تاریخ</button>
+                            <button className='dropbtn'>تاریخ</button>
                             <div className='dropdown-content'>
                                 <a href="#">{newCard.dates[0]} : شروع</a>
                                 <a href="#">{newCard.dates[1]} : پایان</a>
+
+                                {/* Button to open the date picker for the start date */} 
+                                {/* <button onClick={() => document.getElementById('start-date-picker').click()}>انتخاب تاریخ شروع</button> */}
+                                <p>انتخاب تاریخ شروع</p>
+                                <DatePicker
+                                id="start-date-picker"
+                                selected={editedDates.start}
+                                onChange={(date) => handleDateChange(date, 'start')}
+                                dateFormat="yyyy-MM-dd"
+                                showYearDropdown
+                                />
+
+                                {/* Button to open the date picker for the end date */}
+                                {/* <button onClick={() => document.getElementById('end-date-picker').click()}>انتخاب تاریخ پایان</button> */}
+                                <p>انتخاب تاریخ پایان</p>
+                                <DatePicker
+                                id="end-date-picker"
+                                selected={editedDates.end}
+                                onChange={(date) => handleDateChange(date, 'end')}
+                                dateFormat="yyyy-MM-dd"
+                                showYearDropdown
+                                />
+
+                                {/* Button to save the edited dates to the backend */}
+                                <button onClick={changeDates}>ثبت</button>
                             </div>
                         </div>
+
  
                     </div>
 

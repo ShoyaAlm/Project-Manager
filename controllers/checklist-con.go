@@ -3,6 +3,7 @@ package controllers
 import (
 	"database/sql"
 	"project-manager/model"
+	"time"
 
 	"encoding/json"
 	"fmt"
@@ -277,7 +278,19 @@ func CreateChecklist(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	card.Dates = []string(datesArray)
+	
+	var dates []time.Time
+
+	for _, dateString := range datesArray {
+		date, err := time.Parse("2006-01-02", dateString)
+		if err != nil {
+			// Handle the error, e.g., log it or return an error response
+		}
+		dates = append(dates, date)
+	}
+
+
+	card.Dates = dates
 
 	// Append the new card to the list's cards slice
 	card.Checklists = append(card.Checklists, newChecklist)

@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"project-manager/model"
 	"strconv"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/lib/pq"
@@ -79,11 +80,22 @@ func GetAllLists(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
+
+			var dates []time.Time
+
+			for _, dateString := range cardDates {
+				date, err := time.Parse("2006-01-02", dateString)
+				if err != nil {
+					// Handle the error, e.g., log it or return an error response
+				}
+				dates = append(dates, date)
+			}
+
 			card := &model.Card{
 				ID:          cardID,
 				Name:        cardName,
 				Description: cardDescription,
-				Dates:       cardDates,
+				Dates:       dates,
 				Members:     []*model.Member{},
 				Checklists:  []*model.Checklist{},
 				// Owner: 		 &model.User{},
@@ -287,11 +299,21 @@ func GetAList(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		var dates []time.Time
+
+		for _, dateString := range cardDates {
+			date, err := time.Parse("2006-01-02", dateString)
+			if err != nil {
+				// Handle the error, e.g., log it or return an error response
+			}
+			dates = append(dates, date)
+		}
+
 		card := &model.Card{
 			ID:          cardID,
 			Name:        cardName,
 			Description: cardDescription,
-			Dates:       cardDates,
+			Dates:       dates,
 			Members:     []*model.Member{},
 			Checklists:  []*model.Checklist{},
 		}
@@ -507,11 +529,21 @@ func CreateList(w http.ResponseWriter, r *http.Request) {
 	}
 
 
+
+	// Get the current time
+	currentDate := time.Now()
+
+	// Calculate one month later
+	oneMonthLater := currentDate.AddDate(0, 1, 0)
+
+	dates := []time.Time{currentDate, oneMonthLater}
+
+
 	emptyCard := &model.Card{
 		ID:          newCardID,
 		Name:        "کارت جدید",
 		Description: "توضیحات",
-		Dates:       []string{"1 شهریور", "1 مهر"},
+		Dates:       dates,
 		Checklists:  []*model.Checklist{emptyChecklist},
 		Members:     []*model.Member{emptyMember},
 		// Owner:       &model.User{ID: requestData.UserID},
@@ -552,7 +584,7 @@ func CreateList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = db.QueryRow("INSERT INTO cards (name, description, dates, list_id) VALUES ($1, $2, $3, $4) RETURNING id",
-		emptyCard.Name, emptyCard.Description, pq.Array(emptyCard.Dates), newListID).Scan(&newCardID)
+		emptyCard.Name, emptyCard.Description, pq.Array(dates), newListID).Scan(&newCardID)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to insert card, %s", err), http.StatusInternalServerError)
 		return
@@ -752,8 +784,6 @@ func UpdateCardOrder(w http.ResponseWriter, r *http.Request) {
         http.Error(w, "Failed to parse JSON data", http.StatusBadRequest)
         return
     }
-
-	fmt.Printf("requestData : %v", requestData)
 
     // Update the card order for the list
     if len(requestData.CardOrder) > 0 {

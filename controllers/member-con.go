@@ -3,6 +3,7 @@ package controllers
 import (
 	"database/sql"
 	"project-manager/model"
+	"time"
 
 	"encoding/json"
 	"fmt"
@@ -176,7 +177,18 @@ func CreateMember(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	card.Dates = []string(datesArray)
+	var dates []time.Time
+
+	for _, dateString := range datesArray {
+		date, err := time.Parse("2006-01-02", dateString)
+		if err != nil {
+			// Handle the error, e.g., log it or return an error response
+		}
+		dates = append(dates, date)
+	}
+
+
+	card.Dates = dates
 
 	// Fetch the associated checklists for the card
 	checklistsRows, err := db.Query("SELECT id, name FROM checklists WHERE card_id = $1", cardID)

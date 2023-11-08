@@ -390,24 +390,6 @@ const ShowCards = ({ list }) => {
 
 
 
-    // const onDragEnd = (result) => {
-    //     console.log(result);
-    //     // Check if the drag operation was completed successfully
-    //     if (!result.destination) {
-    //       return;
-    //     }
-      
-    //     // Create a copy of the current list's cards
-    //     const updatedCards = [...cardList];
-      
-    //     // Reorder the cards in the list
-    //     const [removed] = updatedCards.splice(result.source.index, 1);
-    //     updatedCards.splice(result.destination.index, 0, removed);
-      
-    //     // Update the state with the new order of cards only
-    //     setCardList(updatedCards);
-    //   };
-
     const onDragEnd = (result) => {
         // Check if the drag operation was completed successfully
         if (!result.destination) {
@@ -541,65 +523,5 @@ const ShowCards = ({ list }) => {
 
 };
 
-    // return (
-    //     <div className="showcards-container">
-    //         <hr />
-    //         {list.cards && list.cards.length > 0 ? (
-    //         list.cards.map((card) => (
-    //             <div key={card.id} className="card-item">
-    //             <div
-    //                     style={{ textDecoration: 'none', color: 'black', cursor: 'pointer' }}
-    //                     onClick={() => openModal(card)}>
-    //                     <h4 style={{ fontFamily: 'sans-serif' }}>{card.name}</h4>
-    //             </div>
-                     
-    //                 <div className="icons-container" style={{display:'inline-flex' , direction: 'rtl'}}>
-                        
-    //                     <h6><img src={require('./icons/members.png')} alt="members" style={{width:'15px', height:'24x'}} />{card.members && card.members.length}</h6>
-    //                     <img src={require('./icons/desc.png')} alt="desc" style={{width:'15px', height:'24x', marginRight:'20px', marginLeft:'20px'}} />
-    //                     <h6><img src={require('./icons/tasks.png')} alt="tasks" style={{width:'15px', height:'24x'}} />1/2</h6>                
-
-    //                 </div>
-    //                 <br />
-    //                 <Modal isOpen={modalIsOpen} onRequestClose={closeModal} className="modal">
-    //                     {selectedCard && (
-    //                         <div className="modal-content">
-    //                         {user ? (
-    //                             user.name === selectedCard.owner.name ? (
-    //                             <>
-    //                                 {/* Display modal content with selectedCard data */}
-    //                                 <Card card={selectedCard} list={list}></Card>
-    //                                 {/* Rest of the modal content */}
-    //                                 <button onClick={closeModal}>Close Modal</button>
-    //                             </>
-    //                             ) : (
-    //                             <>
-    //                                 <SimpleCard card={selectedCard} list={list}></SimpleCard>
-    //                                 <button onClick={closeModal}>Close Modal</button>
-    //                             </>
-    //                             )
-    //                         ) : (
-    //                             <>
-    //                             <p>You need to sign up to view this content.</p>
-    //                             <button onClick={() => {
-    //                                 history.push('/signup')
-    //                             }}>Sign Up</button>
-    //                             <button onClick={closeModal}>Close Modal</button>
-    //                             </>
-    //                         )}
-    //                         </div>
-    //                     )}
-    //                 </Modal>
-    //             </div>
-
-    //         ))
-
-    //         ) : (
-    //             <span>بدون کارت</span>
-    //         )}
-
-
-    //     </div>
-    // );
 
 Modal.setAppElement("#root")

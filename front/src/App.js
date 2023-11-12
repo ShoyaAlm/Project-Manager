@@ -72,7 +72,7 @@ const App = () => {
 
             <Router>
 
-           <Link to="/" style={{textDecoration:'none', fontFamily:'bardiya', color:'black'}}><h1 style={{textAlign:'center'}}>خوش آمدید</h1></Link> <br />
+           <Link to="/" style={{textDecoration:'none', fontFamily:'bardiya', color:'black'}}><h1 style={{textAlign:'center'}}>مدیریت پروژه</h1></Link> <br />
 
            {user ? (
             <div style={{textAlign:'right '}}>

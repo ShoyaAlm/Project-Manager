@@ -70,9 +70,10 @@ func GetAllLists(w http.ResponseWriter, r *http.Request) {
 		for cardRows.Next() {
 
 			var (
-				cardID                    int
+				cardID  		    	  int
 				cardName, cardDescription string
 				cardDates                 pq.StringArray
+				// ownerID					  int
 			)
 			err := cardRows.Scan(&cardID, &cardName, &cardDescription, &cardDates)
 			if err != nil {
@@ -96,9 +97,9 @@ func GetAllLists(w http.ResponseWriter, r *http.Request) {
 				Name:        cardName,
 				Description: cardDescription,
 				Dates:       dates,
-				Members:     []*model.Member{},
+				Members:     []*model.User{},
 				Checklists:  []*model.Checklist{},
-				// Owner: 		 &model.User{},
+				// OwnerID: 	 ownerID,
 			}
 
 			owner := &model.User{}
@@ -206,7 +207,7 @@ func GetAllLists(w http.ResponseWriter, r *http.Request) {
 
 			defer memberRows.Close()
 
-			var members []*model.Member
+			var members []*model.User
 
 			for memberRows.Next() {
 
@@ -222,7 +223,7 @@ func GetAllLists(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 
-				member := &model.Member{
+				member := &model.User{
 					ID:   memberID,
 					Name: memberName,
 					Email: memberEmail,
@@ -275,7 +276,7 @@ func GetAList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cardRows, err := db.Query(`SELECT c.id AS card_id, c.name AS card_name, c.description AS cardDescription, c.dates AS card_dates
+	cardRows, err := db.Query(`SELECT c.id AS card_id, c.name AS card_name, c.description AS cardDescription, c.dates AS card_dates, c.owner_id AS owner_id
 		FROM cards c
 		WHERE c.list_id = $1`, list.ID)
 	if err != nil {
@@ -292,8 +293,9 @@ func GetAList(w http.ResponseWriter, r *http.Request) {
 			cardID                    int
 			cardName, cardDescription string
 			cardDates                 pq.StringArray
+			ownerID 				  int
 		)
-		err := cardRows.Scan(&cardID, &cardName, &cardDescription, &cardDates)
+		err := cardRows.Scan(&cardID, &cardName, &cardDescription, &cardDates, &ownerID)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Error scanning cardRows, %s", err), http.StatusInternalServerError)
 			return
@@ -314,8 +316,9 @@ func GetAList(w http.ResponseWriter, r *http.Request) {
 			Name:        cardName,
 			Description: cardDescription,
 			Dates:       dates,
-			Members:     []*model.Member{},
+			Members:     []*model.User{},
 			Checklists:  []*model.Checklist{},
+			OwnerID: 	 ownerID,
 		}
 
 
@@ -424,7 +427,7 @@ func GetAList(w http.ResponseWriter, r *http.Request) {
 
 		defer memberRows.Close()
 
-		var members []*model.Member
+		var members []*model.User
 
 		for memberRows.Next() {
 
@@ -440,7 +443,7 @@ func GetAList(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			member := &model.Member{
+			member := &model.User{
 				ID:   memberID,
 				Name: memberName,
 				Email: memberEmail,
@@ -491,6 +494,7 @@ func CreateList(w http.ResponseWriter, r *http.Request) {
 		Username 	string			   `json:"username"`
 		UserEmail 	string			   `json:"user_email"`
 		Cards 		[]*model.Card 	   `json:"cards"`
+		OwnerID 	int 			   `json:"owner_id"`
 		Owner 		*model.User 	   `json:"owner"`
 	}
 
@@ -522,7 +526,7 @@ func CreateList(w http.ResponseWriter, r *http.Request) {
 		Items: []*model.Item{emptyItem},
 	}
 
-	emptyMember := &model.Member{
+	emptyMember := &model.User{
 		ID:   newMemberID,
 		Name: requestData.Username,
 		Email: requestData.UserEmail,
@@ -545,20 +549,20 @@ func CreateList(w http.ResponseWriter, r *http.Request) {
 		Description: "توضیحات",
 		Dates:       dates,
 		Checklists:  []*model.Checklist{emptyChecklist},
-		Members:     []*model.Member{emptyMember},
-		// Owner:       &model.User{ID: requestData.UserID},
-		Owner:       &model.User{},
+		Members:     []*model.User{emptyMember},
+		OwnerID: 	requestData.OwnerID,
+		// Owner:       &model.User{},
 	}
 
 
 	owner := &model.User{
-		ID: requestData.UserID,
+		ID: requestData.OwnerID,
 		Name: requestData.Username,
 		Email: requestData.UserEmail,
 	}
 
 	// Query the database to fetch owner details based on UserID
-	ownerRow := db.QueryRow("SELECT id, name, email FROM users WHERE id = $1", requestData.UserID)
+	ownerRow := db.QueryRow("SELECT id, name, email FROM users WHERE id = $1", requestData.OwnerID)
 	err = ownerRow.Scan(&owner.ID, &owner.Name, &owner.Email)
 	if err != nil {
 		log.Printf("Error fetching owner details: %v", err)
@@ -569,7 +573,7 @@ func CreateList(w http.ResponseWriter, r *http.Request) {
 
 	emptyCard.Owner = owner
 
-	log.Printf("emptyCard owner: %v", emptyCard.Owner)
+	log.Printf("emptyCard owner: %v", owner)
 
 	newList := &model.List{
 		ID:    newListID,
@@ -814,3 +818,100 @@ func UpdateCardOrder(w http.ResponseWriter, r *http.Request) {
 
     w.WriteHeader(http.StatusOK)
 }
+
+
+
+// in my GetAllLists, i try to get all the list's info, and all of its cards :
+
+// func GetAllLists(w http.ResponseWriter, r *http.Request) {
+
+// 	listRows, err := db.Query("SELECT id, name FROM lists")
+// 	if err != nil {
+// 		http.Error(w, fmt.Sprintf("Failed to fetch lists, %s", err), http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	defer listRows.Close()
+
+// 	var lists []*model.List
+
+// 	for listRows.Next() {
+// 		var (
+// 			listID   int
+// 			listName string
+// 		)
+
+// 		err := listRows.Scan(&listID, &listName)
+// 		if err != nil {
+// 			http.Error(w, fmt.Sprintf("Error scanning rows, %s", err), http.StatusInternalServerError)
+// 			return
+// 		}
+
+// 		list := &model.List{
+// 			ID:   listID,
+// 			Name: listName,
+// 		}
+
+// 		cardRows, err := db.Query(`SELECT c.id AS card_id, c.name AS card_name, c.description AS cardDescription, c.dates AS card_dates, c.owner_id AS ownerId
+// 									FROM cards c
+// 							   WHERE c.list_id = $1`, list.ID)
+// 		if err != nil {
+// 			http.Error(w, fmt.Sprintf("Failed to fetch cards for list, %s", err), http.StatusInternalServerError)
+// 			return
+// 		}
+// 		defer cardRows.Close()
+
+// 		var cards []*model.Card
+
+// 		for cardRows.Next() {
+
+// 			var (
+// 				cardID  		    	  int
+// 				cardName, cardDescription string
+// 				cardDates                 pq.StringArray
+// 				ownerID					  int
+// 			)
+// 			err := cardRows.Scan(&cardID, &cardName, &cardDescription, &cardDates, &ownerID)
+// 			if err != nil {
+// 				http.Error(w, fmt.Sprintf("Error scanning cardRows, %s", err), http.StatusInternalServerError)
+// 				return
+// 			}
+
+
+// 			var dates []time.Time
+
+// 			for _, dateString := range cardDates {
+// 				date, err := time.Parse("2006-01-02", dateString)
+// 				if err != nil {
+// 					// Handle the error, e.g., log it or return an error response
+// 				}
+// 				dates = append(dates, date)
+// 			}
+
+// 			card := &model.Card{
+// 				ID:          cardID,
+// 				Name:        cardName,
+// 				Description: cardDescription,
+// 				Dates:       dates,
+// 				Members:     []*model.Member{},
+// 				Checklists:  []*model.Checklist{},
+// 				OwnerID: 	 ownerID,
+// 			}
+
+// 			owner := &model.User{}
+
+// 			ownerRow := db.QueryRow("SELECT u.id, u.name, u.email, u.bio FROM users u JOIN user_cards uc ON u.id = uc.user_id WHERE uc.card_id = $1", cardID)
+// 			err = ownerRow.Scan(&owner.ID, &owner.Name, &owner.Email, &owner.Bio)
+// 			if err != nil {
+// 				owner = nil
+// 			}
+	
+// 			card.Owner = owner
+// {*other components*}
+
+
+// };
+
+// i get this error : name "ownerid": converting NULL to int is unsupported
+// what seems to be the problem?
+// ps: some cards might not actually have an owner_id, so can you tell the program to just consider owner_id as a null value at first, and if there was one, assign it to that card?

@@ -52,10 +52,8 @@ func SetSignInUpRoutes(r *mux.Router) {
 	r.HandleFunc("/api/users", controllers.GetAllUsers).Methods("GET")
 	r.HandleFunc("/api/users/{userID:[0-9]+}", controllers.GetUser).Methods("GET")
 	r.HandleFunc("/api/users/{userID:[0-9]+}", controllers.DeleteUser).Methods("DELETE")
-	
-	
+	r.HandleFunc("/api/users/{name:[a-zA-Z]+}", controllers.GetUserByName).Methods("GET")
 	r.HandleFunc("/api/signup", controllers.SignUp).Methods("POST")
-	
 	r.HandleFunc("/api/login", controllers.Login).Methods("POST")
 }
 

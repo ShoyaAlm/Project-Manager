@@ -96,6 +96,11 @@
 }
 
 
+.listItem {
+    cursor: pointer;
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+}
 
 .section-title {
     margin-top: 40px;

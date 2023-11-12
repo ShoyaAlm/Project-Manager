@@ -125,7 +125,7 @@ const List = () => {
                 headers: {
                   'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ name: newListName, username: user.name, user_id: user.user_id, user_email: user.email })
+                body: JSON.stringify({ name: newListName, username: user.name, user_id: user.user_id, user_email: user.email, owner_id: user.user_id })
             });
               
               if (!response.ok) {
@@ -251,7 +251,7 @@ const List = () => {
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ name: newCardName, username: user.name, user_id: user.id, user_email: user.email })
+                    body: JSON.stringify({ name: newCardName, username: user.name, user_id: user.id, user_email: user.email, owner_id: user.user_id })
                 });
                 if (!response.ok) {
                     throw new Error('Failed to create a new card');

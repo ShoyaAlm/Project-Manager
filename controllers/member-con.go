@@ -139,6 +139,7 @@ func CreateMember(w http.ResponseWriter, r *http.Request) {
 
 	var requestData struct {
 		Name string `json:"name"`
+		Email string `json:"email"`
 	}
 
 	err = json.Unmarshal(body, &requestData)
@@ -155,13 +156,14 @@ func CreateMember(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create a new card with non-null fields
-	newMember := &model.Member{
+	newMember := &model.User{
 		ID:   newMemberID,
 		Name: requestData.Name,
+		Email: requestData.Email,
 	}
 
-	err = db.QueryRow("INSERT INTO members (name, card_id) VALUES ($1, $2) RETURNING id",
-		newMember.Name, cardID).Scan(&newMemberID)
+	err = db.QueryRow("INSERT INTO members (name, email, card_id) VALUES ($1, $2, $3) RETURNING id",
+		newMember.Name,newMember.Email, cardID).Scan(&newMemberID)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to insert member, %s", err), http.StatusInternalServerError)
 		return

@@ -10,6 +10,7 @@ type Card struct {
 	Description string       `json:"description"`
 	Dates       []time.Time  `json:"dates"`
 	Checklists  []*Checklist `json:"checklists"`
-	Members     []*Member    `json:"members"`
+	Members     []*User      `json:"members"`
+	OwnerID     int          `json:"owner_id"`
 	Owner       *User        `json:"owner"`
 }

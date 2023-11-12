@@ -64,7 +64,7 @@ func GetAllCards(w http.ResponseWriter, r *http.Request) {
 			Name:        cardName,
 			Description: cardDescription,
 			Dates:       dates,
-			Members:     []*model.Member{},
+			Members:     []*model.User{},
 			Checklists:  []*model.Checklist{},
 		}
 
@@ -176,7 +176,7 @@ func GetAllCards(w http.ResponseWriter, r *http.Request) {
 
 		defer memberRows.Close()
 
-		var members []*model.Member
+		var members []*model.User
 
 		for memberRows.Next() {
 
@@ -192,10 +192,10 @@ func GetAllCards(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			member := &model.Member{
-				ID:   memberID,
-				Name: memberName,
-				Email: memberEmail,
+			member := &model.User{
+				ID:       memberID,     
+				Name:     memberName,
+				Email:    memberEmail,
 			}
 
 			members = append(members, member)
@@ -267,7 +267,7 @@ func GetACard(w http.ResponseWriter, r *http.Request) {
 		Name:        cardName,
 		Description: cardDescription,
 		Dates:       dates,
-		Members:     []*model.Member{},
+		Members:     []*model.User{},
 		Checklists:  []*model.Checklist{},
 	}
 
@@ -377,7 +377,7 @@ func GetACard(w http.ResponseWriter, r *http.Request) {
 
 	defer memberRows.Close()
 
-	var members []*model.Member
+	var members []*model.User
 
 	for memberRows.Next() {
 
@@ -393,7 +393,7 @@ func GetACard(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		member := &model.Member{
+		member := &model.User{
 			ID:   memberID,
 			Name: memberName,
 			Email: memberEmail,
@@ -505,7 +505,8 @@ func CreateCard(w http.ResponseWriter, r *http.Request) {
 		Dates       []Date             `json:"dates"`
 		Checklists  []*model.Checklist `json:"checklists"`
 		Members     []*model.Member    `json:"members"`
-		Owner 		  *model.User	   `json:"owner"`
+		OwnerID 	int 	    	   `json:"owner_id"`
+		Owner 		*model.User 	   `json:"owner"`
 	}
 
 	
@@ -515,7 +516,9 @@ func CreateCard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// log.Printf("userID : %v, username : %v, email : %v", requestData.UserID, requestData.Username, requestData.UserEmail)
+
+
+	log.Printf("userID : %v", requestData.OwnerID)
 
 	var newCardID, newChecklistID, newItemID, newMemberID int
 
@@ -537,7 +540,7 @@ func CreateCard(w http.ResponseWriter, r *http.Request) {
 		Items: []*model.Item{emptyItem},
 	}
 
-	emptyMember := &model.Member{
+	emptyMember := &model.User{
 		ID:   newMemberID,
 		Name: requestData.Username,
 		Email: requestData.UserEmail,
@@ -558,39 +561,51 @@ func CreateCard(w http.ResponseWriter, r *http.Request) {
 		Description: "توضیحات",
 		Dates:       dates,
 		Checklists:  []*model.Checklist{emptyChecklist},      // Initialize as empty slice
-		Members:     []*model.Member{emptyMember},
-		// Owner:       &model.User{ID: requestData.UserID},
+		Members:     []*model.User{emptyMember},
+		OwnerID: 	 requestData.OwnerID,
 		Owner:       &model.User{},
 	}
 
 
 	owner := &model.User{
-		ID: requestData.UserID,
+		ID: requestData.OwnerID,
 		Name: requestData.Username,
 		Email: requestData.UserEmail,
 	}
 
-	ownerRow := db.QueryRow("SELECT id, name, email FROM users WHERE id = $1", requestData.UserID)
-	err = ownerRow.Scan(&owner.ID, &owner.Name, &owner.Email)
+
+
+	// Query the database to fetch owner details based on UserID
+	ownerRow := db.QueryRow("SELECT id, name, email FROM users WHERE id = $1", requestData.OwnerID)
+	err = ownerRow.Scan(&owner.ID, &owner.Name, &owner.Email,)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			// Handle the case where no matching owner was found
-			log.Printf("Owner not found for UserID: %v", requestData.UserID)
-			// You can set a default owner or handle the situation as needed
-			// For example:
-			// owner = &model.User{ID: 0, Name: "Default Owner", Email: "default@example.com"}
-		} else {
-			log.Printf("Error fetching owner details: %v", err)
-			http.Error(w, "Failed to fetch owner details", http.StatusInternalServerError)
-			return
-		}
+		log.Printf("Error fetching owner details: %v", err)
+		http.Error(w, "Failed to fetch owner details", http.StatusInternalServerError)
+		return
 	}
+	// ownerRow := db.QueryRow("SELECT id, name, email FROM users WHERE id = $1", requestData.UserID)
+	// err = ownerRow.Scan(&owner.ID, &owner.Name, &owner.Email)
+	// if err != nil {
+	// 	if err == sql.ErrNoRows {
+	// 		// Handle the case where no matching owner was found
+	// 		log.Printf("Owner not found for UserID: %v", requestData.UserID)
+	// 		// You can set a default owner or handle the situation as needed
+	// 		// For example:
+	// 		// owner = &model.User{ID: 0, Name: "Default Owner", Email: "default@example.com"}
+	// 	} else {
+	// 		log.Printf("Error fetching owner details: %v", err)
+	// 		http.Error(w, "Failed to fetch owner details", http.StatusInternalServerError)
+	// 		return
+	// 	}
+	// }
 	
+	fmt.Printf("owner : %v", owner)
+
 	newCard.Owner = owner
 
 
-	err = db.QueryRow("INSERT INTO cards (name, description, dates, list_id) VALUES ($1, $2, $3, $4) RETURNING id",
-		newCard.Name, newCard.Description, pq.Array(dates), listID).Scan(&newCardID)
+	err = db.QueryRow("INSERT INTO cards (name, description, dates, owner_id, list_id) VALUES ($1, $2, $3, $4, $5) RETURNING id",
+		newCard.Name, newCard.Description, pq.Array(dates), newCard.OwnerID, listID).Scan(&newCardID)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to insert card, %s", err), http.StatusInternalServerError)
 		return

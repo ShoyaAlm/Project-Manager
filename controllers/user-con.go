@@ -124,15 +124,15 @@ func GetAllUsers(w http.ResponseWriter, r *http.Request){
 
 func GetUser(w http.ResponseWriter, r *http.Request){
 	
-	// vars := mux.Vars(r)
+	vars := mux.Vars(r)
 
-	// userID, err := strconv.Atoi(vars["userID"])
-	// if err != nil {
-	// 	http.Error(w, "Invalid user ID", http.StatusBadRequest)
-	// 	return
-	// }
+	userID, err := strconv.Atoi(vars["userID"])
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
 
-	userID := 1
+	// userID := 1
 
 	// Fetch list details
 	userRow := db.QueryRow("SELECT id, name, email, bio FROM users WHERE id = $1", userID)
@@ -142,7 +142,7 @@ func GetUser(w http.ResponseWriter, r *http.Request){
 		userBio sql.NullString
 	)
 
-	err := userRow.Scan(&userID, &userName, &userEmail, &userBio)
+	err = userRow.Scan(&userID, &userName, &userEmail, &userBio)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			http.Error(w, "user not found", http.StatusNotFound)
@@ -159,11 +159,11 @@ func GetUser(w http.ResponseWriter, r *http.Request){
 		// Bio: userBio,
 	}
 
-	if userBio.Valid { // Check if the bio column is not NULL
-		user.Bio = userBio.String
-	} else {
-		user.Bio = "" // Set to an empty string or handle it as needed
-	}
+	// if userBio.Valid { // Check if the bio column is not NULL
+	// 	user.Bio = userBio.String
+	// } else {
+	// 	user.Bio = "" // Set to an empty string or handle it as needed
+	// }
 
 
 
@@ -211,7 +211,7 @@ func GetUser(w http.ResponseWriter, r *http.Request){
 				Name: cardName,
 				Description: cardDescription,
 				Dates:       dates,
-				Members:     []*model.Member{},
+				Members:     []*model.User{},
 				Checklists:  []*model.Checklist{},
 			}
 
@@ -298,7 +298,7 @@ func GetUser(w http.ResponseWriter, r *http.Request){
 		card.Checklists = checklists
 
 		// Start looking for members inside every card
-		memberRows, err := db.Query(`SELECT m.id AS member_id, m.name AS member_name
+		memberRows, err := db.Query(`SELECT m.id AS member_id, m.name AS member_name, m.email AS member_email
 							FROM members m
 						WHERE m.card_id = $1`, cardID)
 
@@ -310,25 +310,27 @@ func GetUser(w http.ResponseWriter, r *http.Request){
 
 		defer memberRows.Close()
 
-		var members []*model.Member
+		var members []*model.User
 
 		for memberRows.Next() {
 
 			var (
 				memberID   int
 				memberName string
+				memberEmail string
 			)
 
-			err := memberRows.Scan(&memberID, &memberName)
+			err := memberRows.Scan(&memberID, &memberName, &memberEmail)
 
 			if err != nil {
 				http.Error(w, fmt.Sprintf("Error scanning memberRows, %s", err), http.StatusInternalServerError)
 				return
 			}
 
-			member := &model.Member{
+			member := &model.User{
 				ID:   memberID,
 				Name: memberName,
+				Email: memberEmail,
 			}
 
 			members = append(members, member)
@@ -338,16 +340,12 @@ func GetUser(w http.ResponseWriter, r *http.Request){
 		card.Members = members
 
 
-			
 
 		cards = append(cards, card)
 
 		}
 
 		user.Cards = cards
-
-
-
 
 
 
@@ -361,6 +359,68 @@ func GetUser(w http.ResponseWriter, r *http.Request){
 	w.Write(jsonData)
 
 }
+
+
+func GetUserByName(w http.ResponseWriter, r *http.Request) {
+    // Extract the name parameter from the URL
+    name := r.FormValue("name")
+
+	fmt.Printf("name : %v \n", name)
+
+    if name == "" {
+        http.Error(w, "Name parameter is required", http.StatusBadRequest)
+        return
+    }
+
+    // Fetch users based on the provided name
+	rows, err := db.Query("SELECT id, name, email FROM users WHERE name LIKE '%' || $1 || '%'", name)
+    if err != nil {
+        http.Error(w, fmt.Sprintf("Failed to fetch users data, %s", err), http.StatusInternalServerError)
+        return
+    }
+    defer rows.Close()
+
+    var users []*model.User
+
+    for rows.Next() {
+        var (
+            userID      int
+            userName    string
+            userEmail   string
+            // userBio     string
+        )
+
+        if err := rows.Scan(&userID, &userName, &userEmail); err != nil {
+            http.Error(w, fmt.Sprintf("Failed to scan user data, %s", err), http.StatusInternalServerError)
+            return
+        }
+
+        user := &model.User{
+            ID:    userID,
+            Name:  userName,
+            Email: userEmail,
+            // Bio:   userBio,
+        }
+
+        users = append(users, user)
+    }
+
+    if err := rows.Err(); err != nil {
+        http.Error(w, fmt.Sprintf("Error iterating over users data, %s", err), http.StatusInternalServerError)
+        return
+    }
+
+    // Respond with the list of matching users
+    jsonData, err := json.Marshal(users)
+    if err != nil {
+        http.Error(w, "Failed to marshal users data", http.StatusInternalServerError)
+        return
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    w.Write(jsonData)
+}
+
 
 
 func CreateUser(w http.ResponseWriter, r *http.Request){

@@ -10,6 +10,12 @@ import { getJwtFromCookie } from './App'
 import jwt_decode from 'jwt-decode'
 
 
+
+import SearchIcon from '@mui/icons-material/Search';
+import InputAdornment from '@mui/material/InputAdornment';
+import TextField from '@mui/material/TextField';
+
+
 const findUser = () => {
 
     try {
@@ -295,37 +301,71 @@ export const Card = ({card, list}) => {
     const AddMember = ({ card, list }) => {
 
         const [newMemberName, setNewMemberName] = useState('')
+        const [matchingUsers, setMatchingUsers] = useState([]);
+        const [selectedUser, setSelectedUser] = useState(null);
+
+        // useEffect(() => {
+
+        //     const fetchMembers = async () => {
+        //         try {
+        //             const response = await fetch(`http://localhost:8080/api/lists/${list.id}/cards/${card.id}/members`,{
+        //                 method: 'GET',
+        //                 headers: {
+        //                     'Content-Type': 'application/json'
+        //                 },
+        //             });
+        //             if (!response.ok){
+        //                 throw new Error('Error getting the member')
+        //             }
+            
+        //             const allMembers = await response.json();
+        //             setCardMembers(allMembers)
+                    
+        //         } catch (error) {
+        //             console.log('got error : ', error);
+        //         }
+        
+        //     }
+
+        //     if(isNewMemberAddedOrRemoved){
+        //         fetchMembers();
+        //         setIsNewMemberAddedOrRemoved(false)
+        //     }
+
+        // },[isNewMemberAddedOrRemoved])
+
+        console.log('newMemberName : ', newMemberName);
+        console.log("selected user : ", selectedUser);
 
         useEffect(() => {
-
-            const fetchMembers = async () => {
+            
+            // Fetch matching users based on the entered name
+            const fetchMatchingUsers = async () => {
                 try {
-                    const response = await fetch(`http://localhost:8080/api/lists/${list.id}/cards/${card.id}/members`,{
+                    const response = await fetch(`http://localhost:8080/api/users?name=${encodeURIComponent(newMemberName)}`, {
                         method: 'GET',
                         headers: {
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
                         },
                     });
-                    if (!response.ok){
-                        throw new Error('Error getting the member')
+    
+                    if (!response.ok) {
+                        throw new Error('Error getting matching users');
                     }
-            
-                    const allMembers = await response.json();
-                    setCardMembers(allMembers)
-                    
+    
+                    const users = await response.json();
+                    setMatchingUsers(users);
                 } catch (error) {
-                    console.log('got error : ', error);
+                    console.log('Error fetching matching users:', error);
                 }
-        
+            };
+    
+            if (newMemberName.trim() !== '') {
+                fetchMatchingUsers();
+            } else {
+                setMatchingUsers([]);
             }
-
-            if(isNewMemberAddedOrRemoved){
-                fetchMembers();
-                setIsNewMemberAddedOrRemoved(false)
-            }
-
-        },[isNewMemberAddedOrRemoved])
-        
+        }, [newMemberName]);
         
         const handleNewMember = async (newMemberName) => {
 
@@ -346,23 +386,23 @@ export const Card = ({card, list}) => {
             }
 
             // Second try-catch block: Send a new notification
-            try {
-                    const notifResponse = await fetch(`http://localhost:8080/api/notifs`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ message: `کاربر جدید بنام "${newMemberName}" به کارت "${card.name}" اضافه شد`, user_id: user.user_id }),
-                    });
-
-                    if (!notifResponse.ok) {
-                        throw new Error('Error making a new notification');
-                    }
-            } catch (error) {
-                console.log(error);
+            if(selectedUser){
+                try {
+                        const notifResponse = await fetch(`http://localhost:8080/api/notifs`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ message: `کاربر جدید بنام "${newMemberName}" به کارت "${card.name}" اضافه شد`, user_id: user.user_id }),
+                        });
+    
+                        if (!notifResponse.ok) {
+                            throw new Error('Error making a new notification');
+                        }
+                } catch (error) {
+                    console.log(error);
+                }
             }
-
-
 
 
 
@@ -372,7 +412,7 @@ export const Card = ({card, list}) => {
                     headers: {
                         'Content-type': 'application/json'
                     },
-                    body: JSON.stringify({name: newMemberName}),
+                    body: JSON.stringify({name: selectedUser.name, email: selectedUser.email}),
                 });
                 if(!response.ok){
                     throw new Error("Failed to create new member")
@@ -382,7 +422,7 @@ export const Card = ({card, list}) => {
                 console.log('new member: ', newMember);
 
                 setNewMemberName('')
-                setIsAddingMember(false)
+                // setIsAddingMember(false)
 
                 // setCardMembers([...cardMembers, newMember])
                 // setIsNewMemberAddedOrRemoved(true)
@@ -400,17 +440,79 @@ export const Card = ({card, list}) => {
 
         }
 
+
+
+        const [isListVisible, setListVisibility] = useState(true);
+
+        const handleUserClick = (user) => {
+            setNewMemberName(user.name);
+            setSelectedUser(user);
+            setListVisibility(false); // Hide the list when a user is selected
+        };
+
         return (
-            <div className='add-member' style={{marginLeft: '620px', marginRight:'auto'}}>
-                <button onClick={() => addNewMember()} style={{width:'50px', height:'40px', marginRight:'10px'}}>ذخیره</button>
-                <input
+            <div className="add-member" style={{ marginLeft: '620px', marginRight: 'auto', padding: '10px', position: 'relative' }}>
+                <button onClick={() => {
+                    if(memberCardID != ''){
+                        setIsAddingMember(false)
+                        addNewMember()
+                        setMemberCardID('')
+                    }
+                    }} style={{ width: '50px', height: '40px', marginRight: '10px' }}>
+                    ذخیره
+                </button>
+                <TextField
                     type="text"
                     value={newMemberName}
                     onChange={(e) => setNewMemberName(e.target.value)}
                     placeholder="Enter member name"
-                    style={{width:'150px', height: '40px', direction:'rtl'}}/>
+                    style={{ width: '150px', height: '40px', direction: 'rtl' }}
+                    InputProps={{
+                        startAdornment: (
+                            <InputAdornment position="start">
+                                <SearchIcon />
+                            </InputAdornment>
+                        ),
+                    }}
+                />
+                {isListVisible && (
+                    <ul
+                        style={{
+                            listStyleType: 'none',
+                            padding: 0,
+                            position: 'absolute',
+                            top: '100%', // Position the list below the input
+                            left: 0,
+                            width: '100%', // Make the list the same width as the input
+                            boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.1)', // Add a shadow for a visual effect
+                            backgroundColor: 'white', // Add a background color
+                            zIndex: 1, // Ensure the list is above other elements
+                            display: 'flex', // Ensure proper rendering of list items
+                            flexDirection: 'column', // Align items vertically
+                            textAlign: 'right',
+                        }}
+                    >
+                        {matchingUsers.map((user) => (
+                            <li
+                                key={user.id}
+                                onClick={() => handleUserClick(user)}
+                                className="listItem"
+                                style={{
+                                    cursor: 'pointer',
+                                    padding: '8px',
+                                    borderBottom: '1px solid #ddd',
+                                    borderRadius: '4px',
+                                    transition: 'background-color 0.3s',
+                                    color: '#333', // Set text color to something visible
+                                }}
+                            >
+                                {user.name}
+                            </li>
+                        ))}
+                    </ul>
+                )}
             </div>
-        );
+        );    
 
         
 

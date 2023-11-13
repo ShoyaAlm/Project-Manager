@@ -147,7 +147,7 @@ func GetAllLists(w http.ResponseWriter, r *http.Request) {
 				}
 
 				// Start looking for items inside every checklist of every card
-				itemRows, err := db.Query(`SELECT i.id AS item_id, i.name AS item_name, i.due_date AS item_due_date, i.assigned_to AS item_assigned_to
+				itemRows, err := db.Query(`SELECT i.id AS item_id, i.name AS item_name, i.start_date AS item_start_date, i.due_date AS item_due_date, i.done AS item_done
 					FROM items i
 					WHERE i.checklist_id = $1`, checklistID)
 
@@ -163,12 +163,14 @@ func GetAllLists(w http.ResponseWriter, r *http.Request) {
 
 				for itemRows.Next() {
 					var (
-						itemID                int
-						itemName, itemDueDate string
-						itemAssignedTo        pq.StringArray
+						itemID                		int
+						itemName 					string
+						itemStartDate, itemDueDate 	time.Time
+						itemDone 					bool
+						itemAssignedTo		        []*model.Member
 					)
 
-					err := itemRows.Scan(&itemID, &itemName, &itemDueDate, &itemAssignedTo)
+					err := itemRows.Scan(&itemID, &itemName, &itemStartDate, &itemDueDate, &itemDone)
 
 					if err != nil {
 						http.Error(w, fmt.Sprintf("Error scanning itemRows, %s", err), http.StatusInternalServerError)
@@ -178,7 +180,9 @@ func GetAllLists(w http.ResponseWriter, r *http.Request) {
 					item := &model.Item{
 						ID:         itemID,
 						Name:       itemName,
+						StartDate:  itemStartDate,
 						DueDate:    itemDueDate,
+						Done: 		itemDone,	
 						AssignedTo: itemAssignedTo,
 					}
 
@@ -367,7 +371,7 @@ func GetAList(w http.ResponseWriter, r *http.Request) {
 			}
 
 			// Start looking for items inside every checklist of every card
-			itemRows, err := db.Query(`SELECT i.id AS item_id, i.name AS item_name, i.due_date AS item_due_date, i.assigned_to AS item_assigned_to
+			itemRows, err := db.Query(`SELECT i.id AS item_id, i.name AS item_name, i.start_date AS item_start_date, i.due_date AS item_due_date, i.done AS item_done
 				FROM items i
 				WHERE i.checklist_id = $1`, checklistID)
 
@@ -383,12 +387,14 @@ func GetAList(w http.ResponseWriter, r *http.Request) {
 
 			for itemRows.Next() {
 				var (
-					itemID                int
-					itemName, itemDueDate string
-					itemAssignedTo        pq.StringArray
+					itemID                		int
+					itemName 					string
+					itemStartDate, itemDueDate 	time.Time
+					itemDone 					bool
+					itemAssignedTo		        []*model.Member
 				)
 
-				err := itemRows.Scan(&itemID, &itemName, &itemDueDate, &itemAssignedTo)
+				err := itemRows.Scan(&itemID, &itemName, &itemStartDate, &itemDueDate, &itemDone)
 
 				if err != nil {
 					http.Error(w, fmt.Sprintf("Error scanning itemRows, %s", err), http.StatusInternalServerError)
@@ -398,7 +404,9 @@ func GetAList(w http.ResponseWriter, r *http.Request) {
 				item := &model.Item{
 					ID:         itemID,
 					Name:       itemName,
+					StartDate:  itemStartDate,
 					DueDate:    itemDueDate,
+					Done: 		itemDone,	
 					AssignedTo: itemAssignedTo,
 				}
 
@@ -513,11 +521,17 @@ func CreateList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	currentDate := time.Now()
+	oneWeekLater := currentDate.AddDate(0, 0, 7)
+
+	// Create a new card with non-null fields
 	emptyItem := &model.Item{
 		ID:         newItemID,
-		Name:       "آیتم 1",
-		DueDate:    "2023-09-20T00:00:00Z",
-		AssignedTo: []string{"شخص 1", "شخص 2"},
+		Name:       requestData.Name,
+		StartDate: 	currentDate,
+		DueDate:    oneWeekLater,
+		Done: 		false,
+		AssignedTo: []*model.Member{},
 	}
 
 	emptyChecklist := &model.Checklist{
@@ -535,7 +549,7 @@ func CreateList(w http.ResponseWriter, r *http.Request) {
 
 
 	// Get the current time
-	currentDate := time.Now()
+	// currentDate := time.Now()
 
 	// Calculate one month later
 	oneMonthLater := currentDate.AddDate(0, 1, 0)
@@ -600,9 +614,9 @@ func CreateList(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Failed to insert checklists, %s", err), http.StatusInternalServerError)
 		return
 	}
-
-	err = db.QueryRow("INSERT INTO items (name, due_date, assigned_to, checklist_id) VALUES ($1, $2, $3, $4) RETURNING id",
-		emptyItem.Name, emptyItem.DueDate, pq.Array(emptyItem.AssignedTo), newChecklistID).Scan(&newItemID)
+	
+	err = db.QueryRow("INSERT INTO items (name, start_date, due_date, done, checklist_id) VALUES ($1, $2, $3, $4, $5) RETURNING id",
+	emptyItem.Name, emptyItem.StartDate, emptyItem.DueDate, emptyItem.Done, newChecklistID).Scan(&newItemID)
 	if err != nil {
 		log.Printf("Failed to insert items: %v", err)
 		http.Error(w, fmt.Sprintf("Failed to insert items, %s", err), http.StatusInternalServerError)

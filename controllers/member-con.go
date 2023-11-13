@@ -209,7 +209,7 @@ func CreateMember(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Fetch checklist items for each checklist
-		itemsRows, err := db.Query("SELECT id, name, due_date, assigned_to FROM items WHERE checklist_id = $1", checklist.ID)
+		itemsRows, err := db.Query("SELECT id, name, start_date due_date, done FROM items WHERE checklist_id = $1", checklist.ID)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Failed to fetch checklist items for checklist, %s", err), http.StatusInternalServerError)
 			return
@@ -218,14 +218,14 @@ func CreateMember(w http.ResponseWriter, r *http.Request) {
 
 		for itemsRows.Next() {
 			item := &model.Item{}
-			var assignedTo pq.StringArray
-			err := itemsRows.Scan(&item.ID, &item.Name, &item.DueDate, &assignedTo)
+			// var assignedTo pq.StringArray
+			err := itemsRows.Scan(&item.ID, &item.Name, &item.DueDate, &item.StartDate, &item.Done)
 			if err != nil {
 				http.Error(w, fmt.Sprintf("Failed to scan checklist item data, %s", err), http.StatusInternalServerError)
 				return
 			}
 
-			item.AssignedTo = []string(assignedTo)
+			// item.AssignedTo = []string(assignedTo)
 
 			// Append checklist item to checklist
 			checklist.Items = append(checklist.Items, item)

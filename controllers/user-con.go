@@ -266,12 +266,14 @@ func GetUser(w http.ResponseWriter, r *http.Request){
 
 			for itemRows.Next() {
 				var (
-					itemID                int
-					itemName, itemDueDate string
-					itemAssignedTo        pq.StringArray
+					itemID		                int
+					itemName			 		string
+					itemStartDate, itemDueDate 	time.Time
+					itemDone 					bool
+					itemAssignedTo        		[]*model.Member
 				)
 
-				err := itemRows.Scan(&itemID, &itemName, &itemDueDate, &itemAssignedTo)
+				err := itemRows.Scan(&itemID, &itemName,&itemStartDate, &itemDueDate, &itemDone)
 
 				if err != nil {
 					http.Error(w, fmt.Sprintf("Error scanning itemRows, %s", err), http.StatusInternalServerError)
@@ -281,7 +283,9 @@ func GetUser(w http.ResponseWriter, r *http.Request){
 				item := &model.Item{
 					ID:         itemID,
 					Name:       itemName,
+					StartDate:  itemStartDate,
 					DueDate:    itemDueDate,
+					Done: 		itemDone,	
 					AssignedTo: itemAssignedTo,
 				}
 
@@ -363,18 +367,19 @@ func GetUser(w http.ResponseWriter, r *http.Request){
 
 func GetUserByName(w http.ResponseWriter, r *http.Request) {
     // Extract the name parameter from the URL
-    name := r.FormValue("name")
+	name := r.URL.Query().Get("name")
 
-	fmt.Printf("name : %v \n", name)
+    fmt.Printf("name: %v\n", name)
 
-    if name == "" {
+	if name == "" {
         http.Error(w, "Name parameter is required", http.StatusBadRequest)
         return
     }
 
     // Fetch users based on the provided name
-	rows, err := db.Query("SELECT id, name, email FROM users WHERE name LIKE '%' || $1 || '%'", name)
-    if err != nil {
+	rows, err := db.Query("SELECT id, name, email FROM users WHERE name LIKE $1 || '%'", name)
+
+	if err != nil {
         http.Error(w, fmt.Sprintf("Failed to fetch users data, %s", err), http.StatusInternalServerError)
         return
     }

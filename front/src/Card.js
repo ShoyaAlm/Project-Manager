@@ -516,7 +516,6 @@ export const Card = ({card, list}) => {
 
         
 
-
     }
     
 

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	"project-manager/model"
 	"strconv"
@@ -36,12 +37,14 @@ func GetAllItems(w http.ResponseWriter, r *http.Request) {
 
 	for itemRows.Next() {
 		var (
-			itemID                int
-			itemName, itemDueDate string
-			itemAssignedTo        pq.StringArray
+			itemID                      int
+			itemName 			  		string
+			itemStartDate, itemDueDate  time.Time
+			itemDone					bool
+			// itemAssignedTo        		pq.StringArray
 		)
 
-		err := itemRows.Scan(&itemID, &itemName, &itemDueDate, &itemAssignedTo)
+		err := itemRows.Scan(&itemID, &itemName, &itemStartDate, &itemDueDate, &itemDone)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Error scanning rows, %s", err), http.StatusInternalServerError)
 			return
@@ -50,11 +53,13 @@ func GetAllItems(w http.ResponseWriter, r *http.Request) {
 		item := &model.Item{
 			ID:         itemID,
 			Name:       itemName,
+			StartDate: 	itemStartDate,
 			DueDate:    itemDueDate,
-			AssignedTo: itemAssignedTo,
+			Done: 		itemDone,
+			// AssignedTo: itemAssignedTo,
 		}
 
-		items = append(items, item)
+		items = append(items, item)	
 
 	}
 
@@ -86,14 +91,16 @@ func GetAItem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Fetch list details
-	itemRow := db.QueryRow("SELECT id, name, due_date, assigned_to FROM items WHERE id = $1 AND checklist_id = $2", itemID, checklistID)
+	itemRow := db.QueryRow("SELECT id, name, start_date due_date, done FROM items WHERE id = $1 AND checklist_id = $2", itemID, checklistID)
 
 	var (
-		itemName, itemDueDate string
-		itemAssignedTo        pq.StringArray
+		itemName					string
+		itemStartDate, itemDueDate 	time.Time 
+		itemDone 					bool
+		// itemAssignedTo        		[]*model.Member
 	)
 
-	err = itemRow.Scan(&itemID, &itemName, &itemDueDate, &itemAssignedTo)
+	err = itemRow.Scan(&itemID, &itemName, &itemStartDate, &itemDueDate, &itemDone)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			http.Error(w, "item not found", http.StatusNotFound)
@@ -107,7 +114,9 @@ func GetAItem(w http.ResponseWriter, r *http.Request) {
 		ID:         itemID,
 		Name:       itemName,
 		DueDate:    itemDueDate,
-		AssignedTo: itemAssignedTo,
+		StartDate: 	itemStartDate,
+		Done: 		itemDone,
+		// AssignedTo: itemAssignedTo,
 	}
 
 	jsonData, err := json.Marshal(item)
@@ -155,16 +164,22 @@ func CreateItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	currentDate := time.Now()
+	oneWeekLater := currentDate.AddDate(0, 0, 7)
+
+
 	// Create a new card with non-null fields
 	newItem := &model.Item{
 		ID:         newItemID,
 		Name:       requestData.Name,
-		DueDate:    "2023-09-20T00:00:00Z",
-		AssignedTo: []string{"شخص 1", "شخص 2"},
+		StartDate: 	currentDate,
+		DueDate:    oneWeekLater,
+		Done: 		false,
+		AssignedTo: []*model.Member{},
 	}
 
-	err = db.QueryRow("INSERT INTO items (name, due_date, assigned_to, checklist_id) VALUES ($1, $2, $3, $4) RETURNING id",
-		newItem.Name, newItem.DueDate, pq.Array(newItem.AssignedTo), checklistID).Scan(&newItemID)
+	err = db.QueryRow("INSERT INTO items (name, start_date, due_date, done, checklist_id) VALUES ($1, $2, $3, $4, $5) RETURNING id",
+		newItem.Name, newItem.StartDate, newItem.DueDate, newItem.Done, checklistID).Scan(&newItemID)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to insert items, %s", err), http.StatusInternalServerError)
 		return
@@ -218,9 +233,11 @@ func UpdateItem(w http.ResponseWriter, r *http.Request) {
 
 	// Parse the JSON request body
 	var requestData struct {
-		Name       string `json:"name"`
-		DueDate    string `json:"duedate"`
-		AssignedTo string `json:"assignedto"`
+		Name       string 		`json:"name"`
+		StartDate  time.Time 	`json:"startdate"`
+		DueDate    time.Time 	`json:"duedate"`
+		Done 	   bool			`json:"done"`
+		AssignedTo string 		`json:"assignedto"`
 	}
 
 	err = json.Unmarshal(body, &requestData)

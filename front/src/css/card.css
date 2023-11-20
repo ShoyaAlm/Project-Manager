@@ -194,6 +194,11 @@
 }
 
 
+
+/* .clock-date-container{
+    border-radius: 25%;
+} */
+
 .checklist-item input[type="checkbox"] {
     margin-right: 10px;
     text-align: right;
@@ -370,3 +375,52 @@
   
   /* Change the background color of the dropdown button when the dropdown content is shown */
   .dropdown:hover .dropbtn {background-color: #3e8e41;}
+
+
+
+
+
+
+
+  .options-toggle {
+    cursor: pointer;
+    position: relative;
+  }
+  
+  .circle {
+    width: 30px; /* Adjust the size as needed */
+    height: 30px;
+    background-color: #ccc;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .circle span {
+    font-size: 16px; /* Adjust the font size as needed */
+  }
+  
+  .options-dropdown {
+    position: absolute;
+    top: 30px; /* Adjust the top position as needed */
+    right: 0;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    z-index: 1;
+  }
+  
+  .option-button {
+    padding: 8px;
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
+  }
+  
+  .option-button:hover {
+    background-color: #eee;
+  }
+  

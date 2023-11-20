@@ -12,11 +12,67 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
-	"github.com/lib/pq"
+	_ "github.com/lib/pq"
 )
 
-func GetAllItems(w http.ResponseWriter, r *http.Request) {
+// func GetAllItems(w http.ResponseWriter, r *http.Request) {
 
+// 	vars := mux.Vars(r)
+
+// 	checklistID, err := strconv.Atoi(vars["checklistID"])
+// 	if err != nil {
+// 		http.Error(w, "Invalid checklist ID", http.StatusBadRequest)
+// 		return
+// 	}
+
+// 	itemRows, err := db.Query("SELECT id, name, start_date, due_date, done FROM items WHERE checklist_id = $1", checklistID)
+// 	if err != nil {
+// 		http.Error(w, fmt.Sprintf("Failed to fetch items, %s", err), http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	defer itemRows.Close()
+
+// 	var items []*model.Item
+
+// 	for itemRows.Next() {
+// 		var (
+// 			itemID                      int
+// 			itemName 			  		string
+// 			itemStartDate, itemDueDate  time.Time
+// 			itemDone					bool
+// 			// itemAssignedTo        		pq.StringArray
+// 		)
+
+// 		err := itemRows.Scan(&itemID, &itemName, &itemStartDate, &itemDueDate, &itemDone)
+// 		if err != nil {
+// 			http.Error(w, fmt.Sprintf("Error scanning rows, %s", err), http.StatusInternalServerError)
+// 			return
+// 		}
+
+// 		item := &model.Item{
+// 			ID:         itemID,
+// 			Name:       itemName,
+// 			StartDate: 	itemStartDate,
+// 			DueDate:    itemDueDate,
+// 			Done: 		itemDone,
+// 			// AssignedTo: itemAssignedTo,
+// 		}
+
+// 		items = append(items, item)
+
+// 	}
+
+// 	jsonData, err := json.Marshal(items)
+// 	if err != nil {
+// 		http.Error(w, "Failed to marshal cbecklists data", http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	w.Header().Set("Content-Type", "application/json")
+// 	w.Write(jsonData)
+// }
+func GetAllItems(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
 	checklistID, err := strconv.Atoi(vars["checklistID"])
@@ -25,7 +81,20 @@ func GetAllItems(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	itemRows, err := db.Query("SELECT id, name, due_date, assigned_to FROM items WHERE checklist_id = $1", checklistID)
+	// itemID, err := strconv.Atoi(vars["itemID"])
+	// if err != nil {
+	// 	http.Error(w, "Invalid item ID", http.StatusBadRequest)
+	// 	return
+	// }
+
+
+	itemRows, err := db.Query(`
+		SELECT i.id, i.name, i.start_date, i.due_date, i.done, m.id as member_id, m.name as member_name
+		FROM items i
+		LEFT JOIN item_members im ON i.id = im.item_id
+		LEFT JOIN members m ON im.member_id = m.id
+		WHERE i.checklist_id = $1
+	`, checklistID)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to fetch items, %s", err), http.StatusInternalServerError)
 		return
@@ -37,14 +106,15 @@ func GetAllItems(w http.ResponseWriter, r *http.Request) {
 
 	for itemRows.Next() {
 		var (
-			itemID                      int
-			itemName 			  		string
-			itemStartDate, itemDueDate  time.Time
-			itemDone					bool
-			// itemAssignedTo        		pq.StringArray
+			itemID       int
+			itemName     string
+			itemStartDate, itemDueDate time.Time
+			itemDone     bool
+			memberID     sql.NullInt64  // Use sql.NullInt64 to handle NULL values
+			memberName   sql.NullString // Use sql.NullString to handle NULL values
 		)
 
-		err := itemRows.Scan(&itemID, &itemName, &itemStartDate, &itemDueDate, &itemDone)
+		err := itemRows.Scan(&itemID, &itemName, &itemStartDate, &itemDueDate, &itemDone, &memberID, &memberName)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Error scanning rows, %s", err), http.StatusInternalServerError)
 			return
@@ -53,26 +123,36 @@ func GetAllItems(w http.ResponseWriter, r *http.Request) {
 		item := &model.Item{
 			ID:         itemID,
 			Name:       itemName,
-			StartDate: 	itemStartDate,
+			StartDate:  itemStartDate,
 			DueDate:    itemDueDate,
-			Done: 		itemDone,
-			// AssignedTo: itemAssignedTo,
+			Done:       itemDone,
 		}
 
-		items = append(items, item)	
+		// Check if the item is assigned to a member
+		if memberID.Valid && memberName.Valid {
+			assignedMember := &model.Member{
+				ID:   int(memberID.Int64),
+				Name: memberName.String,
+			}
+			item.AssignedTo = append(item.AssignedTo, assignedMember)
+		}
 
+		items = append(items, item)
 	}
 
 	jsonData, err := json.Marshal(items)
 	if err != nil {
-		http.Error(w, "Failed to marshal cbecklists data", http.StatusInternalServerError)
+		http.Error(w, "Failed to marshal checklists data", http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonData)
-
 }
+
+
+
+
 
 func GetAItem(w http.ResponseWriter, r *http.Request) {
 
@@ -146,9 +226,11 @@ func CreateItem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var requestData struct {
-		Name       string         `json:"name"`
-		DueDate    string         `json:"duedate"`
-		AssignedTo pq.StringArray `json:"assignedto"`
+		Name       				string         	`json:"name"`
+		// DueDate			    	time.Time		`json:"duedate"`
+		// StartDate    			time.Time		`json:"duedate"`
+		// Done 					bool			`json:"done"`
+		// AssignedTo 				[]*model.Member `json:"assignedto"`
 	}
 
 	err = json.Unmarshal(body, &requestData)
@@ -209,8 +291,65 @@ func CreateItem(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func UpdateItem(w http.ResponseWriter, r *http.Request) {
 
+// func UpdateItem(w http.ResponseWriter, r *http.Request) {
+
+// 	vars := mux.Vars(r)
+// 	_, err := strconv.Atoi(vars["checklistID"])
+// 	if err != nil {
+// 		http.Error(w, "Invalid checklist ID", http.StatusBadRequest)
+// 		return
+// 	}
+
+// 	itemID, err := strconv.Atoi(vars["itemID"])
+// 	if err != nil {
+// 		http.Error(w, "Invalid item ID", http.StatusBadRequest)
+// 		return
+// 	}
+
+// 	// Read the request body
+// 	body, err := ioutil.ReadAll(r.Body)
+// 	if err != nil {
+// 		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	// Parse the JSON request body
+// 	var requestData struct {
+// 		Name       string `json:"name"`
+// 		Done       *bool   `json:"done"`
+// 		AssignedTo *[]model.Member `json:"assignedto"`
+// 	}
+
+// 	err = json.Unmarshal(body, &requestData)
+// 	if err != nil {
+// 		http.Error(w, "Failed to parse JSON data", http.StatusBadRequest)
+// 		return
+// 	}
+
+// 	if requestData.Name != "" {
+// 		// Update the item's name in the database
+// 		_, err := db.Exec("UPDATE items SET name = $1 WHERE id = $2", requestData.Name, itemID)
+// 		if err != nil {
+// 			http.Error(w, fmt.Sprintf("Failed to update item name, %s", err), http.StatusInternalServerError)
+// 			return
+// 		}
+// 	} else if requestData.Done != nil {
+// 		// Update the item's done attribute in the database
+// 		_, err := db.Exec("UPDATE items SET done = $1 WHERE id = $2", requestData.Done, itemID)
+// 		if err != nil {
+// 			http.Error(w, fmt.Sprintf("Failed to update item done attribute, %s", err), http.StatusInternalServerError)
+// 			return
+// 		}
+// 	} else {
+// 		http.Error(w, "No valid fields provided for update", http.StatusBadRequest)
+// 		return
+// 	}
+
+// 	w.WriteHeader(http.StatusCreated)
+// }
+
+func UpdateItem(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	_, err := strconv.Atoi(vars["checklistID"])
 	if err != nil {
@@ -233,11 +372,9 @@ func UpdateItem(w http.ResponseWriter, r *http.Request) {
 
 	// Parse the JSON request body
 	var requestData struct {
-		Name       string 		`json:"name"`
-		StartDate  time.Time 	`json:"startdate"`
-		DueDate    time.Time 	`json:"duedate"`
-		Done 	   bool			`json:"done"`
-		AssignedTo string 		`json:"assignedto"`
+		Name       *string           `json:"name"`
+		Done       *bool            `json:"done"`
+		AssignedTo *model.Member    `json:"assignedto"`
 	}
 
 	err = json.Unmarshal(body, &requestData)
@@ -246,16 +383,84 @@ func UpdateItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Update the list's name in the database
-	_, err = db.Exec("UPDATE items SET name = $1 WHERE id = $2", requestData.Name, itemID)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to update item, %s", err), http.StatusInternalServerError)
+	if requestData.Name != nil {
+		// Update the item's name in the database
+		_, err := db.Exec("UPDATE items SET name = $1 WHERE id = $2", requestData.Name, itemID)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Failed to update item name, %s", err), http.StatusInternalServerError)
+			return
+		}
+	} else if requestData.Done != nil {
+		// Update the item's done attribute in the database
+		_, err := db.Exec("UPDATE items SET done = $1 WHERE id = $2", requestData.Done, itemID)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Failed to update item done attribute, %s", err), http.StatusInternalServerError)
+			return
+		}
+	} else if requestData.AssignedTo != nil {
+		// Add the new member to the item's AssignedTo array
+		_, err := db.Exec("INSERT INTO item_members (item_id, member_id) VALUES ($1, $2)", itemID, requestData.AssignedTo.ID)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Failed to add member to item, %s", err), http.StatusInternalServerError)
+			return
+		}
+	} else {
+		http.Error(w, "No valid fields provided for update", http.StatusBadRequest)
 		return
 	}
 
 	w.WriteHeader(http.StatusCreated)
-
 }
+
+
+
+// func UpdateItem(w http.ResponseWriter, r *http.Request) {
+
+// 	vars := mux.Vars(r)
+// 	_, err := strconv.Atoi(vars["checklistID"])
+// 	if err != nil {
+// 		http.Error(w, "Invalid checklist ID", http.StatusBadRequest)
+// 		return
+// 	}
+
+// 	itemID, err := strconv.Atoi(vars["itemID"])
+// 	if err != nil {
+// 		http.Error(w, "Invalid item ID", http.StatusBadRequest)
+// 		return
+// 	}
+
+// 	// Read the request body
+// 	body, err := ioutil.ReadAll(r.Body)
+// 	if err != nil {
+// 		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	// Parse the JSON request body
+// 	var requestData struct {
+// 		Name       string 		`json:"name"`
+// 		// StartDate  time.Time 	`json:"startdate"`
+// 		// DueDate    time.Time 	`json:"duedate"`
+// 		Done 	   bool			`json:"done"`
+// 		AssignedTo string 		`json:"assignedto"`
+// 	}
+
+// 	err = json.Unmarshal(body, &requestData)
+// 	if err != nil {
+// 		http.Error(w, "Failed to parse JSON data", http.StatusBadRequest)
+// 		return
+// 	}
+
+// 	// Update the list's name in the database
+// 	_, err = db.Exec("UPDATE items SET name = $1 WHERE id = $2", requestData.Name, itemID)
+// 	if err != nil {
+// 		http.Error(w, fmt.Sprintf("Failed to update item, %s", err), http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	w.WriteHeader(http.StatusCreated)
+
+// }
 
 func DeleteItem(w http.ResponseWriter, r *http.Request) {
 
@@ -273,5 +478,14 @@ func DeleteItem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusAccepted)
+
+}
+
+
+func AssignMemberToItem(w http.ResponseWriter, r *http.Request){
+
+
+
+
 
 }

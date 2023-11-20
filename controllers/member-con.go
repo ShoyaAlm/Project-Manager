@@ -3,6 +3,7 @@ package controllers
 import (
 	"database/sql"
 	"project-manager/model"
+	"strings"
 	"time"
 
 	"encoding/json"
@@ -250,6 +251,82 @@ func CreateMember(w http.ResponseWriter, r *http.Request) {
 
 }
 
+
+
+
+
+func GetMemberByName(w http.ResponseWriter, r *http.Request) {
+
+	
+	vars := mux.Vars(r)
+
+	cardID, err := strconv.Atoi(vars["cardID"])
+	if err != nil {
+		http.Error(w, "Invalid card ID", http.StatusBadRequest)
+		return
+	}
+    // Extract the name parameter from the URL
+	name := r.URL.Query().Get("name")
+
+    fmt.Printf("name: %v\n", name)
+
+	if name == "" {
+        http.Error(w, "Name parameter is required", http.StatusBadRequest)
+        return
+    }
+
+    // Fetch members based on the provided name
+	rows, err := db.Query("SELECT id, name, email FROM members WHERE name LIKE $1 || '%' AND card_id = $2", name, cardID)
+
+	if err != nil {
+        http.Error(w, fmt.Sprintf("Failed to fetch members data, %s", err), http.StatusInternalServerError)
+        return
+    }
+    defer rows.Close()
+
+    var members []*model.Member
+
+    for rows.Next() {
+        var (
+            memberID      int
+            memberName    string
+            memberEmail   string
+            // memberBio     string
+        )
+
+        if err := rows.Scan(&memberID, &memberName, &memberEmail); err != nil {
+            http.Error(w, fmt.Sprintf("Failed to scan member data, %s", err), http.StatusInternalServerError)
+            return
+        }
+
+        member := &model.Member{
+            ID:    memberID,
+            Name:  memberName,
+            Email: memberEmail,
+            // Bio:   memberBio,
+        }
+
+        members = append(members, member)
+    }
+
+    if err := rows.Err(); err != nil {
+        http.Error(w, fmt.Sprintf("Error iterating over members data, %s", err), http.StatusInternalServerError)
+        return
+    }
+
+    // Respond with the list of matching members
+    jsonData, err := json.Marshal(members)
+    if err != nil {
+        http.Error(w, "Failed to marshal members data", http.StatusInternalServerError)
+        return
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    w.Write(jsonData)
+}
+
+
+
 func UpdateMember(w http.ResponseWriter, r *http.Request) {
 
 	vars := mux.Vars(r)
@@ -311,4 +388,72 @@ func DeleteMember(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusAccepted)
 
+}
+
+
+
+func SearchMember(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	cardID, err := strconv.Atoi(vars["cardID"])
+	if err != nil {
+		http.Error(w, "Invalid card ID", http.StatusBadRequest)
+		return
+	}
+
+	// Fetch all members of the specific card
+	rows, err := db.Query("SELECT id, name FROM members WHERE card_id = $1", cardID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to fetch members data, %s", err), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var members []*model.Member
+
+	for rows.Next() {
+		var (
+			memberID   int
+			memberName string
+		)
+
+		if err := rows.Scan(&memberID, &memberName); err != nil {
+			http.Error(w, fmt.Sprintf("Failed to scan member data, %s", err), http.StatusInternalServerError)
+			return
+		}
+
+		member := &model.Member{
+			ID:   memberID,
+			Name: memberName,
+		}
+
+		members = append(members, member)
+	}
+
+	if err := rows.Err(); err != nil {
+		http.Error(w, fmt.Sprintf("Error iterating over members data, %s", err), http.StatusInternalServerError)
+		return
+	}
+
+	// Extract the search query from the URL
+	searchQuery := r.URL.Query().Get("name")
+
+	// Filter members based on the search query
+	var searchResults []*model.Member
+
+	for _, member := range members {
+		if strings.Contains(strings.ToLower(member.Name), strings.ToLower(searchQuery)) {
+			searchResults = append(searchResults, member)
+		}
+	}
+
+	// Respond with the list of matching members
+	jsonData, err := json.Marshal(searchResults)
+	if err != nil {
+		http.Error(w, "Failed to marshal members data", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonData)
 }

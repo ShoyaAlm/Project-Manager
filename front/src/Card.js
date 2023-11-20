@@ -60,7 +60,8 @@ export const Card = ({card, list}) => {
     const [isAddingChecklist, setIsAddingChecklist] = useState(false)
     const [checklistCardID, setChecklistCardID] = useState('')
     const [cardChecklists, setCardChecklists] = useState(checklists)
-    
+    const [checklist, setChecklist] = useState([])
+
     const AddChecklist = ({ card, list }) => {
         const [newChecklistName, setNewChecklistName] = useState('');
 
@@ -386,23 +387,23 @@ export const Card = ({card, list}) => {
             }
 
             // Second try-catch block: Send a new notification
-            if(selectedUser){
-                try {
-                        const notifResponse = await fetch(`http://localhost:8080/api/notifs`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({ message: `کاربر جدید بنام "${newMemberName}" به کارت "${card.name}" اضافه شد`, user_id: user.user_id }),
-                        });
+            // if(selectedUser){
+            //     try {
+            //             const notifResponse = await fetch(`http://localhost:8080/api/notifs`, {
+            //                 method: 'POST',
+            //                 headers: {
+            //                     'Content-Type': 'application/json',
+            //                 },
+            //                 body: JSON.stringify({ message: `کاربر جدید بنام "${newMemberName}" به کارت "${card.name}" اضافه شد`, user_id: user.user_id }),
+            //             });
     
-                        if (!notifResponse.ok) {
-                            throw new Error('Error making a new notification');
-                        }
-                } catch (error) {
-                    console.log(error);
-                }
-            }
+            //             if (!notifResponse.ok) {
+            //                 throw new Error('Error making a new notification');
+            //             }
+            //     } catch (error) {
+            //         console.log(error);
+            //     }
+            // }
 
 
 
@@ -717,6 +718,254 @@ export const Card = ({card, list}) => {
             
     }
 
+    
+    const [isAssignItemModalOpen, setAssignItemModalOpen] = useState(false);
+    
+
+    const AssignItem = ({ listID, cardID, checklistID, itemID }) => {
+        // const [isAssignItemModalOpen, setAssignItemModalOpen] = useState(false);
+        const [searchQuery, setSearchQuery] = useState('');
+        const [searchResults, setSearchResults] = useState([]);
+      
+        useEffect(() => {
+            const fetchSearchResults = async () => {
+              if(searchQuery != ''){
+                  try {
+                    const response = await fetch(`http://localhost:8080/api/lists/${listID}/cards/${cardID}/members?name=${searchQuery}`, {
+                      method: 'GET',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                    });
+                    const data = await response.json();
+                    setSearchResults(data);
+                  } catch (error) {
+                    console.error('Error fetching search results:', error);
+                  }
+                };
+              }
+        
+            if (isAssignItemModalOpen) {
+              fetchSearchResults();
+            }
+          }, [isAssignItemModalOpen, searchQuery, listID, cardID]);
+        
+
+          
+        const handleMemberSelect = async (selectedMember) => {
+          // assign that item to the member
+          const requestBody = {
+            assignedto: selectedMember,
+          };
+          try {
+            const response = await fetch(`http://localhost:8080/api/lists/${listID}/cards/${cardID}/checklists/${checklistID}/items/${itemID}`, {
+              method: 'PATCH',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(requestBody),
+            });
+            if (!response.ok) {
+              console.error('Failed to update item assignedto array on the backend');
+            }
+          } catch (error) {
+            console.log(error);
+          }
+      
+          // Close the modal and clear search results
+          setAssignItemModalOpen(false);
+          setSearchResults([]);
+        };
+      
+        return (
+          <div>
+            {isAssignItemModalOpen && (
+              <div className="assignment-modal" style={{ marginLeft: '20px', marginRight: '20px', padding: '10px', position:'relative'}}>
+                <button
+                  onClick={() => {
+                    // Add any additional conditions or actions before closing the modal
+                    setAssignItemModalOpen(false);
+                    setSearchResults([]);
+                  }}
+                  style={{ width: '50px', height: '40px', marginRight: '10px' }}
+                >
+                  Save
+                </button>
+                <TextField
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search for a member"
+                  style={{ width: '100px', height: '25px', direction: 'rtl' }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+                
+                {searchResults.length > 0 && (
+                    <div
+                    style={{
+                        listStyleType: 'none',
+                        padding: 0,
+                        position: 'absolute',
+                        top: '100%', // Position the list below the input
+                        left: 0,
+                        width: '100%', // Make the list the same width as the input
+                        boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.1)', // Add a shadow for a visual effect
+                        backgroundColor: 'white', // Add a background color
+                        zIndex: 1, // Ensure the list is above other elements
+                        display: 'flex', // Ensure proper rendering of list items
+                        flexDirection: 'column', // Align items vertically
+                        textAlign: 'right',
+                    }}
+                    >
+                    {searchResults.map((member) => (
+                        <div
+                        key={member.id}
+                        onClick={() => handleMemberSelect(member)}
+                        className="listItem"
+                        style={{
+                            cursor: 'pointer',
+                            padding: '8px',
+                            borderBottom: '1px solid #ddd',
+                            borderRadius: '4px',
+                            transition: 'background-color 0.3s',
+                            color: '#333', // Set text color to something visible
+                        }}
+                        >
+                        {member.name}
+                        </div>
+                    ))}
+                    </div>
+                )}
+
+
+              </div>
+            )}
+          </div>
+        );
+      };
+      
+
+    // const AssignItem = ({ listID, cardID, checklistID, itemID }) => {
+    //     const [searchQuery, setSearchQuery] = useState('');
+    //     const [searchResults, setSearchResults] = useState([]);
+      
+        // useEffect(() => {
+        //   const fetchSearchResults = async () => {
+        //     if(searchQuery != ''){
+        //         try {
+        //           const response = await fetch(`http://localhost:8080/api/lists/${listID}/cards/${cardID}/members?name=${searchQuery}`, {
+        //             method: 'GET',
+        //             headers: {
+        //               'Content-Type': 'application/json',
+        //             },
+        //           });
+        //           const data = await response.json();
+        //           setSearchResults(data);
+        //         } catch (error) {
+        //           console.error('Error fetching search results:', error);
+        //         }
+        //       };
+        //     }
+      
+        //   if (isAssignItemModalOpen) {
+        //     fetchSearchResults();
+        //   }
+        // }, [isAssignItemModalOpen, searchQuery, listID, cardID]);
+      
+    //     const handleMemberSelect = async (selectedMember) => {
+    //       // assign that item to the member
+    //       console.log('selectedMember : ', selectedMember);
+    //       const requestBody = {
+    //         assignedto: selectedMember,
+    //       };
+    //       try {
+    //         const response = await fetch(`http://localhost:8080/api/lists/${listID}/cards/${cardID}/checklists/${checklistID}/items/${itemID}`, {
+    //           method: 'PATCH',
+    //           headers: {
+    //             'Content-Type': 'application/json',
+    //           },
+    //           body: JSON.stringify(requestBody),
+    //         });
+    //         if (!response.ok) {
+    //           console.error('Failed to update item assignedto array on the backend');
+    //         }
+    //       } catch (error) {
+    //         console.log(error);
+    //       }
+      
+    //       // Close the modal and clear search results
+    //       setAssignItemModalOpen(false);
+    //       setSearchResults([]);
+    //     };
+      
+    //     return (
+    //       <div>
+    //         {isAssignItemModalOpen && (
+    //           <div className="assignment-modal">
+    //             <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search" />
+    //             <ul>
+    //               {searchResults.map((member) => (
+    //                 <li key={member.id} onClick={() => handleMemberSelect(member)}>
+    //                   {member.name}
+    //                 </li>
+    //               ))}
+    //             </ul>
+    //           </div>
+    //         )}
+    //       </div>
+    //     );
+    //   };
+      
+
+    const handleCheckboxChange = async (checklist, checklistId, itemId, currentDoneValue) => {
+        // Update the 'done' attribute on the front-end
+        const updatedItems = checklist.items.map(item =>
+            item.id === itemId ? { ...item, done: !currentDoneValue } : item
+        );
+    
+        // Update the state or dispatch an action to update the items in your state management system
+    
+        setChecklist(prevChecklist => ({
+            ...prevChecklist,
+            items: updatedItems,
+        }));
+        // Call the changeItem function with the appropriate argument
+        // changeItem('checkbox')   ;
+    
+        try {
+            // Send a PATCH request to the backend
+            const response = await fetch(`http://localhost:8080/api/lists/${newList.id}/cards/${newCard.id}/checklists/${checklistId}/items/${itemId}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    done: !currentDoneValue,
+                }),
+            });
+    
+            if (!response.ok) {
+                // Handle error
+                console.error('Failed to update item on the backend');
+            }
+        } catch (error) {
+            console.error('Error during PATCH request:', error);
+        }
+    };
+    
+
+
+    const [showOptions, setShowOptions] = useState(false);
+
+    const handleToggleOptions = () => {
+        setShowOptions(!showOptions);
+    };
 
     return (
         
@@ -740,7 +989,7 @@ export const Card = ({card, list}) => {
                         {cardMembers && cardMembers.length > 0 ? (
                             cardMembers.map((member, index) => (
                                 <span key={index} style={{ marginRight: '8px', textAlign: 'right' }}>
-                                , {member.name}
+                                 {member.name}
                                 </span>
                             ))
                             ) : (
@@ -808,15 +1057,80 @@ export const Card = ({card, list}) => {
                                 <h2 className='checklist-title'><img src={require('./icons/checklist.png')} alt="" style={{width:'25px', height:'25px', marginBottom:'-5px', marginLeft:'-30px', marginRight:'10px'}}/>
                                 {checklist.name}</h2>
                                 {checklist.items && checklist.items.length > 0 ? (
-                                checklist.items.map((item, itemIndex) => (
+                                checklist.items.map((item) => {
+                                    // Parse the due date string into a Date object
+                                    const dueDate = new Date(item.duedate);
+                                
+                                    // Extract the month and day from the Date object
+                                    const month = dueDate.getMonth() + 1; // Months are zero-based, so add 1
+                                    const day = dueDate.getDate();
+                                
+                                  
+
+                                    return (
+                                        <div className="checklist-item" key={item.id}>
+                                          <div className="options-container">
+                                            <div className="options-toggle" onClick={handleToggleOptions}>
+                                              {/* Circular div for 3-dots icon */}
+                                              <div className="circle">
+                                                <span>...</span>
+                                              </div>
+                                            </div>
+                                            {showOptions && (
+                                              <div className="options-dropdown">
+                                                <button className="option-button" onClick={() => removeItem(checklist.id, item.id)}>حذف</button>
+                                                <button className="option-button" onClick={() => console.log('add date')}>تاریخ</button>
+                                              </div>
+                                            )}
+                                          </div>
                                     
-                                        <div className="checklist-item" key={itemIndex}>
-                                            <button className='remove-item-button' onClick={() => removeItem(checklist.id, item.id)}>حذف</button>
-                                            <label htmlFor="item">{item.name}</label>
-                                            <input type="checkbox" id="item"/>
+                                          <div className="clock-date-container">
+                                            <div className="month-day" style={{ fontSize: '12px', marginLeft:'18px' }}>
+                                              <img src={require('./icons/clock-date.png')} alt="" style={{ width: '14px', height: '14px' }} />
+                                              {month}/{day}
+                                            </div>
+                                          </div>
+
+
+
+                                          {isAssignItemModalOpen && (
+                                            <AssignItem listID={newList.id} cardID={newCard.id} checklistID={checklist.id} itemID={item.id} />
+                                            )}
+                                            <div className='item-assigned-to'>
+                                                <div className='assigned-to' onClick={() => setAssignItemModalOpen(true)} style={{marginLeft:'18px'}}>
+                                                    <img
+                                                    src={require('./icons/assignedto.png')}
+                                                    alt=""
+                                                    style={{ width: '14px', height: '14px', cursor: 'pointer' }}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                    
+
+
+
+                                          <label htmlFor="item">{item.name}</label>
+                                    
+                                          <input
+                                            type="checkbox"
+                                            id="item"
+                                            checked={item.done}
+                                            onChange={() => {
+                                              handleCheckboxChange(checklist, checklist.id, item.id, item.done);
+                                              item.done = !item.done;
+                                            }}
+                                          />
                                         </div>
-   
-                                ))
+                                      );
+
+
+
+
+
+                                })
+                                
+                                
                                 
                                 ) : (
                                     <span>بدون آیتم</span>

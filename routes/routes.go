@@ -43,6 +43,8 @@ func SetMemberRoutes(r *mux.Router) {
 	r.HandleFunc("/api/lists/{id:[0-9]+}/cards/{cardID:[0-9]+}/members", controllers.GetAllMembers).Methods("GET")
 	r.HandleFunc("/api/lists/{id:[0-9]+}/cards/{cardID:[0-9]+}/members/{memberID:[0-9]+}", controllers.GetAMember).Methods("GET")
 	r.HandleFunc("/api/lists/{id:[0-9]+}/cards/{cardID:[0-9]+}/members", controllers.CreateMember).Methods("POST")
+	r.HandleFunc("/api/lists/{id:[0-9]+}/cards/{name:[0-9]+}/members", controllers.GetMemberByName).Methods("GET").Queries("name", "{name:[\\p{L}]+}")
+	// r.HandleFunc("/api/lists/{id:[0-9]+}/cards/{name:[0-9]+}/members", controllers.SearchMember).Methods("GET").Queries("name", "{name:[\\p{L}]+}")
 	r.HandleFunc("/api/lists/{id:[0-9]+}/cards/{cardID:[0-9]+}/members/{memberID:[0-9]+}", controllers.UpdateMember).Methods("PATCH")
 	r.HandleFunc("/api/lists/{id:[0-9]+}/cards/{cardID:[0-9]+}/members/{memberID:[0-9]+}", controllers.DeleteMember).Methods("DELETE")
 

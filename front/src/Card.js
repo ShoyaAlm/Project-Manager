@@ -967,6 +967,61 @@ export const Card = ({card, list}) => {
         setShowOptions(!showOptions);
     };
 
+
+
+    const [isLabelOpen, setIsLabelOpen] = useState(false);
+    const LabelDropdown = ({}) => {
+      
+        const labels = ['green', 'yellow', 'orange', 'red', 'purple', 'blue'];
+
+        const url = `http://localhost:8080/api/lists/${newList.id}/cards/${newCard.id}`
+        const handleLabelClick = async (label) => {
+            try {
+              const response = await fetch(url, {
+                method: 'PATCH',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ label }),
+              });
+        
+              if (response.ok) {
+                console.log('adding label has ok response');
+              } else {
+                console.error('Failed to update label');
+              }
+            } catch (error) {
+              console.error('Error updating label:', error);
+            }
+          };
+      
+        return (
+          <div>
+            {isLabelOpen && (
+              <div className='dropdown-content'>
+                <p>: برچسب فعلی</p>
+                {newCard.label && (
+                    <div className={`label-color ${newCard.label}`}>
+                    </div>
+                )}
+
+                
+                <p>: انتخاب برچسب</p>
+                <div className='label-colors'>
+                  {labels.map((label) => (
+                    <div
+                      key={label}
+                      className={`label-color ${label}`}
+                      onClick={() => handleLabelClick(label)}
+                    ></div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      };
+
     return (
         
         <div>
@@ -1226,10 +1281,11 @@ export const Card = ({card, list}) => {
                             )}
                             </div>
                         </div>
-
+                        
                         <div className='dropdown'>
-                        <button className='dropbtn'>برچسب</button>
+                        <button className='dropbtn' onClick={() => setIsLabelOpen(!isLabelOpen)}>برچسب</button>
                             <div className='dropdown-content'>
+                                {isLabelOpen && <LabelDropdown />}
                             </div>
                         </div>
 

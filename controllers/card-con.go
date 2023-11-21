@@ -682,7 +682,6 @@ func CreateCard(w http.ResponseWriter, r *http.Request) {
 }
 
 
-
 func UpdateCard(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	_, err := strconv.Atoi(vars["id"])
@@ -706,43 +705,50 @@ func UpdateCard(w http.ResponseWriter, r *http.Request) {
 
 	// Parse the JSON request body
 	var requestData struct {
-		Name 		*string 		`json:"name"`
-		Description *string 		`json:"description"`
-		Dates		[]time.Time 	`json:"dates"` 
+		Name        *string       `json:"name"`
+		Description *string       `json:"description"`
+		Dates       []time.Time   `json:"dates"`
+		Label       *string       `json:"label"` // Added label field
 	}
 	err = json.Unmarshal(body, &requestData)
 	if err != nil {
 		http.Error(w, "Failed to parse JSON data", http.StatusBadRequest)
 		return
 	}
-	
+
 	fmt.Printf("requestData : %v", requestData)
 
 	var query string
 	var args []interface{}
 
-	if requestData.Name != nil && requestData.Description != nil && len(requestData.Dates) > 0 {
-		query = "UPDATE cards SET name = $1, description = $2, dates = $3 WHERE id = $4"
-		args = []interface{}{*requestData.Name, *requestData.Description, pq.Array(requestData.Dates), cardID}
-	} else if requestData.Name != nil && requestData.Description != nil {
-		query = "UPDATE cards SET name = $1, description = $2 WHERE id = $3"
-		args = []interface{}{*requestData.Name, *requestData.Description, cardID}
-	} else if len(requestData.Dates) > 0 {
-		query = "UPDATE cards SET dates = $1 WHERE id = $2"
-		args = []interface{}{pq.Array(requestData.Dates), cardID}
-	} else if requestData.Name != nil {
-		query = "UPDATE cards SET name = $1 WHERE id = $2"
-		args = []interface{}{*requestData.Name, cardID}
-	} else if requestData.Description != nil {
-		query = "UPDATE cards SET description = $1 WHERE id = $2"
-		args = []interface{}{*requestData.Description, cardID}
+	// Check for label in requestData
+	if requestData.Label != nil {
+		query = "UPDATE cards SET label = $1 WHERE id = $2"
+		args = []interface{}{*requestData.Label, cardID}
 	} else {
-		http.Error(w, "No update data provided", http.StatusBadRequest)
-		return
+		// Handle other update scenarios (name, description, dates) as before
+		if requestData.Name != nil && requestData.Description != nil && len(requestData.Dates) > 0 {
+			query = "UPDATE cards SET name = $1, description = $2, dates = $3 WHERE id = $4"
+			args = []interface{}{*requestData.Name, *requestData.Description, pq.Array(requestData.Dates), cardID}
+		} else if requestData.Name != nil && requestData.Description != nil {
+			query = "UPDATE cards SET name = $1, description = $2 WHERE id = $3"
+			args = []interface{}{*requestData.Name, *requestData.Description, cardID}
+		} else if len(requestData.Dates) > 0 {
+			query = "UPDATE cards SET dates = $1 WHERE id = $2"
+			args = []interface{}{pq.Array(requestData.Dates), cardID}
+		} else if requestData.Name != nil {
+			query = "UPDATE cards SET name = $1 WHERE id = $2"
+			args = []interface{}{*requestData.Name, cardID}
+		} else if requestData.Description != nil {
+			query = "UPDATE cards SET description = $1 WHERE id = $2"
+			args = []interface{}{*requestData.Description, cardID}
+		} else {
+			http.Error(w, "No update data provided", http.StatusBadRequest)
+			return
+		}
 	}
 
-
-	// Update the list's name in the database
+	// Update the card in the database
 	_, err = db.Exec(query, args...)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to update card, %s", err), http.StatusInternalServerError)
@@ -751,6 +757,77 @@ func UpdateCard(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 }
+
+
+
+// func UpdateCard(w http.ResponseWriter, r *http.Request) {
+// 	vars := mux.Vars(r)
+// 	_, err := strconv.Atoi(vars["id"])
+// 	if err != nil {
+// 		http.Error(w, "Invalid list ID", http.StatusBadRequest)
+// 		return
+// 	}
+
+// 	cardID, err := strconv.Atoi(vars["cardID"])
+// 	if err != nil {
+// 		http.Error(w, "Invalid card ID", http.StatusBadRequest)
+// 		return
+// 	}
+
+// 	// Read the request body
+// 	body, err := ioutil.ReadAll(r.Body)
+// 	if err != nil {
+// 		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	// Parse the JSON request body
+// 	var requestData struct {
+// 		Name 		*string 		`json:"name"`
+// 		Description *string 		`json:"description"`
+// 		Dates		[]time.Time 	`json:"dates"` 
+// 	}
+// 	err = json.Unmarshal(body, &requestData)
+// 	if err != nil {
+// 		http.Error(w, "Failed to parse JSON data", http.StatusBadRequest)
+// 		return
+// 	}
+	
+// 	fmt.Printf("requestData : %v", requestData)
+
+// 	var query string
+// 	var args []interface{}
+
+// 	if requestData.Name != nil && requestData.Description != nil && len(requestData.Dates) > 0 {
+// 		query = "UPDATE cards SET name = $1, description = $2, dates = $3 WHERE id = $4"
+// 		args = []interface{}{*requestData.Name, *requestData.Description, pq.Array(requestData.Dates), cardID}
+// 	} else if requestData.Name != nil && requestData.Description != nil {
+// 		query = "UPDATE cards SET name = $1, description = $2 WHERE id = $3"
+// 		args = []interface{}{*requestData.Name, *requestData.Description, cardID}
+// 	} else if len(requestData.Dates) > 0 {
+// 		query = "UPDATE cards SET dates = $1 WHERE id = $2"
+// 		args = []interface{}{pq.Array(requestData.Dates), cardID}
+// 	} else if requestData.Name != nil {
+// 		query = "UPDATE cards SET name = $1 WHERE id = $2"
+// 		args = []interface{}{*requestData.Name, cardID}
+// 	} else if requestData.Description != nil {
+// 		query = "UPDATE cards SET description = $1 WHERE id = $2"
+// 		args = []interface{}{*requestData.Description, cardID}
+// 	} else {
+// 		http.Error(w, "No update data provided", http.StatusBadRequest)
+// 		return
+// 	}
+
+
+// 	// Update the list's name in the database
+// 	_, err = db.Exec(query, args...)
+// 	if err != nil {
+// 		http.Error(w, fmt.Sprintf("Failed to update card, %s", err), http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	w.WriteHeader(http.StatusCreated)
+// }
 
 
 // func UpdateCard(w http.ResponseWriter, r *http.Request) {

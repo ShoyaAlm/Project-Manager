@@ -378,6 +378,49 @@
 
 
 
+/* Label colors */
+.label-colors {
+    display: flex;
+    flex-wrap: wrap; /* Allow wrapping to the next line */
+    margin-top: 10px;
+  }
+  
+  .label-color {
+    width: 100%; /* Set the width to 100% to take up the full width */
+    height: 30px; /* Adjust the height as needed */
+    margin-bottom: 5px; /* Adjust the margin between colors and the next line */
+    border-radius: 5px; /* Add some border radius for a rectangular shape */
+    cursor: pointer;
+  }
+  
+  
+  .green {
+    background-color: #90EE90;
+  }
+  
+  .yellow {
+    background-color:  #e6e600;
+  }
+  
+  .orange {
+    background-color: #FFA500;
+  }
+  
+  .red {
+    background-color: #FF6347;
+  }
+  
+  .purple {
+    background-color: #800080;
+  }
+  
+  .blue {
+    background-color: #6A5ACD;
+  }
+
+
+
+
 
 
 

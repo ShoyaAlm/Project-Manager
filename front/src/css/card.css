@@ -160,10 +160,74 @@
 
 .showcase-checklists {
     margin-top: 40px;
-    margin-left: 60%;
+    /* margin-left: 60%; */
+    display: flex;
 }
 
 
+.activity {
+  width: 40%; /* Adjust the width as needed */
+  background: linear-gradient(to bottom, #B2CFDC, #91CFE8); /* Adjust colors as needed */
+  margin: 20px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  text-align: right;
+}
+
+
+.activity-input-container {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.activity-input {
+  flex: 1;
+  margin-right: 5px;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  direction: rtl;
+}
+
+.submit-button {
+  background-color: #4caf50;
+  color: white;
+  padding: 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.submit-button:hover {
+  background-color: #45a049;
+}
+
+
+.activity-list {
+  list-style-type: none;
+  padding: 0;
+}
+
+.activity-message {
+  background-color: #f9f9f9;
+  margin: 5px 0;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+
+.checklist {
+  width: 45%; /* Adjust the width as needed */
+  background: linear-gradient(to bottom, #DCB2CF, #E891CF);
+  margin: 20px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  text-align: right;
+}
 
 .checklist-title {
     font-size: 16px;
@@ -219,14 +283,7 @@
 }
 
 
-.checklist {
-    background: linear-gradient(to bottom, #DCB2CF,#E891CF);
-    margin: 20px;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    text-align: right;
-}
+
 
 
 

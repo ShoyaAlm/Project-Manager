@@ -30,6 +30,7 @@ func main() {
 	routes.SetMemberRoutes(r)
 	routes.SetSignInUpRoutes(r)
 	routes.SetNotifRoutes(r)
+	routes.SetActivityRoutes(r)
 
 	
 	http.Handle("/", cors(r))

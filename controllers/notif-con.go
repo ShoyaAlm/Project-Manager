@@ -12,7 +12,7 @@ import (
 )
 
 func CreateNotif(w http.ResponseWriter, r *http.Request) {
-	// Parse the JSON request
+
 	var requestData struct {
 		Message string `json:"message"`
 		UserID  int `json:"user_id"`
@@ -27,7 +27,6 @@ func CreateNotif(w http.ResponseWriter, r *http.Request) {
 
 	var newNotifID int
 
-	// Create a new notification
 	createdAt := time.Now()
 	newNotif := model.Notification{
 		Message:   requestData.Message,
@@ -36,8 +35,6 @@ func CreateNotif(w http.ResponseWriter, r *http.Request) {
 		Read:      false,
 	}
 
-	// Insert the new notification into your database (you'll need to implement this part)
-	// For example, you can use your database's SQL query or ORM to insert the notification.
 
 	
 	err = db.QueryRow("INSERT INTO notifications (user_id, message, created_at, read) VALUES ($1, $2, $3, $4) RETURNING id",
@@ -104,7 +101,6 @@ func GetAllNotifs(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonData)
-
 }
 
 

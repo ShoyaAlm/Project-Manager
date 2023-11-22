@@ -31,7 +31,7 @@ const findUser = () => {
     }
 }
 
-let user = findUser();
+// let user = findUser();
 
 
 
@@ -41,6 +41,8 @@ export const Card = ({card, list}) => {
     
     const newCard = card
     const newList = list
+
+    const user = findUser()
     
     const {name, description, members, checklists} = newCard
     const [cardName, setCardName] = useState(name)
@@ -1022,6 +1024,91 @@ export const Card = ({card, list}) => {
         );
       };
 
+
+
+
+    const [activityInput, setActivityInput] = useState('');
+
+    const CardActivity = ({ list, card, user }) => {
+        // const [activityInput, setActivityInput] = useState('');
+        const [cardActivities, setCardActivities] = useState([]);
+      
+        console.log(user);
+        const message = ` ${user.name} : ${activityInput}`
+        const submitActivity = async () => {
+            try {
+              const response = await fetch(`http://localhost:8080/api/lists/${list.id}/cards/${card.id}/activity`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ message: message }),
+              });
+          
+              if (!response.ok) {
+                throw new Error("Failed to create the activity");
+              }
+          
+              // Fetch card activities after successful submission
+              const updatedActivities = await response.json();
+              setCardActivities(updatedActivities);
+          
+              // Clear the input field after successful submission
+              setActivityInput('');
+            } catch (error) {
+              console.error('Error submitting activity:', error);
+            }
+          };
+          
+
+
+      
+        useEffect(() => {
+          // Fetch card activities when the component mounts
+          fetch(`http://localhost:8080/api/lists/${list.id}/cards/${card.id}/activity`)
+            .then(response => response.json())
+            .then(data => {
+              setCardActivities(data);
+            })
+            .catch(error => {
+              console.error('Error fetching activities:', error);
+            });
+        }, []); // Use card.id as the dependency instead of cardActivities
+      
+        return (
+            <>
+              <div className="activity-input-container">
+                <input
+                  type="text"
+                  placeholder="Comment"
+                  value={activityInput}
+                  onChange={(e) => setActivityInput(e.target.value)}
+                  style={{ direction: 'rtl' }}
+                  className="activity-input"
+                />
+                <button onClick={submitActivity} className="submit-button">
+                  نظر بدهید
+                </button>
+              </div>
+              {cardActivities && cardActivities.length > 0 && (
+                <div className="existing-activities">
+                  {/* <h4>Existing Activities:</h4> */}
+                  <ul className="activity-list">
+                  {cardActivities.map((activity, index) => (
+                    <li key={index} className="activity-message">
+                        {activity.message}
+                    </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </>
+          );
+          
+      
+      };
+    
+
     return (
         
         <div>
@@ -1102,10 +1189,17 @@ export const Card = ({card, list}) => {
 
                     <div className='showcase-checklists' style={{marginRight:'auto'}}>
                         
+                    <div className='activity'>
+                        <h3 style={{textAlign:'center'}}>فعالیت</h3>
+                        <CardActivity list={newList} card={newCard} user={user}/>
+
+                    </div>
+
                         {cardChecklists && cardChecklists.length > 0 ? (
                         
                         cardChecklists.map((checklist, index) => (
 
+                            <>
                             <div className='checklist' key={index}>
                                 
                                 
@@ -1213,17 +1307,9 @@ export const Card = ({card, list}) => {
 
                             </div>
                             
-                        ))
 
-                        
-                            
-                        ) : (
-                            <span>بدون چکلیست</span>
-                        )}
-                        
-
-                            {/* here we add the new checklists */}
-                            <div className='add-checklist'>
+                                {/* put the 'add-checklist' functionality inside the add-to-cards */}
+                            {/* <div className='add-checklist'>
                             
                             {checklistCardID === newCard.id && isAddingChecklist && <AddChecklist card={newCard} list={newList}/>}
                         
@@ -1239,7 +1325,21 @@ export const Card = ({card, list}) => {
                                     }}>اضافه کردن چکلیست</button>
                                         
 
-                            </div>
+                            </div> */}
+
+                            </>
+
+
+
+                        ))
+
+                        
+                            
+                        ) : (
+                            <span>بدون چکلیست</span>
+                        )}
+                        
+
                         
                     </div>
 

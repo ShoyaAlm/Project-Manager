@@ -67,3 +67,10 @@ func SetNotifRoutes(r *mux.Router) {
 	r.HandleFunc("/api/notifs/{userID:[0-9]+}", controllers.GetUserNotifs).Methods("GET")
 	r.HandleFunc("/api/notifs/{userID:[0-9]+}", controllers.MarkAsReadNotifs).Methods("PATCH")
 }
+
+
+
+func SetActivityRoutes(r *mux.Router) {
+	r.HandleFunc("/api/lists/{id:[0-9]+}/cards/{cardID:[0-9]+}/activity", controllers.CreateActivity).Methods("POST")
+	r.HandleFunc("/api/lists/{id:[0-9]+}/cards/{cardID:[0-9]+}/activity", controllers.GetAllActivities).Methods("GET")
+}

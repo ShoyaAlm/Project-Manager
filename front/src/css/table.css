@@ -1,0 +1,33 @@
+/* Add this to your CSS file or use a styling solution like styled-components */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  background-color: white; /* Set the background color of the entire table */
+}
+
+th, td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+th {
+  background-color: #f2f2f2;
+}
+
+/* Customize the styles for card and list names */
+td:nth-child(2), /* Second column for Card Name */
+th:nth-child(2) {
+  color: #007BFF; /* Customize the font color for Card Name */
+  font-weight: bold; /* Make the font bold for Card Name */
+}
+
+td:nth-child(1), /* First column for List Name */
+th:nth-child(1) {
+  color: #000; /* Customize the font color for List Name */
+  font-family: 'YourPreferredFont', sans-serif; /* Set the font family for List Name */
+}
+
+/* Add more styles as needed */

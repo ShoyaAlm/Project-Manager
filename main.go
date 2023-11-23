@@ -31,7 +31,7 @@ func main() {
 	routes.SetSignInUpRoutes(r)
 	routes.SetNotifRoutes(r)
 	routes.SetActivityRoutes(r)
-
+	routes.SetTableRoutes(r)
 	
 	http.Handle("/", cors(r))
 

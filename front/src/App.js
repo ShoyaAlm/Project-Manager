@@ -15,6 +15,7 @@ import { Card } from './Card'
 import Profile from './Profile'
 import jwt_decode from 'jwt-decode'
 
+import Table from './Table'
 
 export const getJwtFromCookie = () => {
   // Get all cookies as a string
@@ -40,6 +41,7 @@ export const getJwtFromCookie = () => {
 const App = () => {
 
     const [user, setUser] = useState(null)
+    const [view, setView] = useState('board');
 
     useEffect(() => {
         // Check if a JWT is stored (in this example, we assume it's stored in a cookie)
@@ -70,6 +72,10 @@ const App = () => {
     return (
         <div>
 
+
+
+            
+
             <Router>
 
            <Link to="/" style={{textDecoration:'none', fontFamily:'bardiya', color:'black'}}><h1 style={{textAlign:'center'}}>مدیریت پروژه</h1></Link> <br />
@@ -99,19 +105,50 @@ const App = () => {
             )}
 
 
-                <Switch>
-                    <Route exact path='/'> <AllLists/> </Route>
-                    
-                    <Route path='/lists/:listId/cards/:cardId'> <Card/> </Route>
-                    
-                    <Route path='/signup'> <HandleSignupLogin/> </Route>
+            <div style={{ textAlign: 'right', marginBottom: '10px', padding: '10px', borderBottom: '1px solid #ddd' }}>
+              <span
+                style={{
+                  cursor: 'pointer',
+                  marginRight: '20px',
+                  color: view === 'board' ? '#007BFF' : '#000',
+                  fontWeight: view === 'board' ? 'bold' : 'normal',
+                }}
+                onClick={() => setView('board')}
+              >
+                Board
+              </span>
+              |
+              <span
+                style={{
+                  cursor: 'pointer',
+                  marginLeft: '20px',
+                  color: view === 'table' ? '#007BFF' : '#000',
+                  fontWeight: view === 'table' ? 'bold' : 'normal',
+                }}
+                onClick={() => setView('table')}
+              >
+                Table
+              </span>
+            </div>
 
-                    <Route path='/profile'> <Profile/> </Route>
-
-                    {/* <Route path='/notif'> <NotificationDropdown/> </Route> */}
 
 
-                </Switch>
+
+
+              <Switch>
+                <Route exact path='/'>
+                  {view === 'board' ? <AllLists /> : <Table />}
+                </Route>
+                <Route path='/lists/:listId/cards/:cardId'>
+                  <Card />
+                </Route>
+                <Route path='/signup'>
+                  <HandleSignupLogin />
+                </Route>
+                <Route path='/profile'>
+                  <Profile />
+                </Route>
+              </Switch>
 
         
 

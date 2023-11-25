@@ -16,6 +16,7 @@ import Profile from './Profile'
 import jwt_decode from 'jwt-decode'
 
 import Table from './Table'
+import Timeline from './Timeline'
 
 export const getJwtFromCookie = () => {
   // Get all cookies as a string
@@ -105,7 +106,7 @@ const App = () => {
             )}
 
 
-            <div style={{ textAlign: 'right', marginBottom: '10px', padding: '10px', borderBottom: '1px solid #ddd' }}>
+            <div style={{ textAlign: 'left', marginBottom: '10px', padding: '10px', borderBottom: '1px solid #ddd' }}>
               <span
                 style={{
                   cursor: 'pointer',
@@ -129,6 +130,18 @@ const App = () => {
               >
                 Table
               </span>
+              |
+              <span
+                style={{
+                  cursor: 'pointer',
+                  marginLeft: '20px',
+                  color: view === 'timeline' ? '#007BFF' : '#000',
+                  fontWeight: view === 'timeline' ? 'bold' : 'normal',
+                }}
+                onClick={() => setView('timeline')}
+              >
+                timeline
+              </span>
             </div>
 
 
@@ -136,9 +149,9 @@ const App = () => {
 
 
               <Switch>
-                <Route exact path='/'>
-                  {view === 'board' ? <AllLists /> : <Table />}
-                </Route>
+              <Route exact path='/'>
+                {view === 'board' ? <AllLists /> : (view === 'table' ? <Table /> : <Timeline />)}
+              </Route>
                 <Route path='/lists/:listId/cards/:cardId'>
                   <Card />
                 </Route>

@@ -63,6 +63,7 @@ export const Card = ({card, list}) => {
     const [checklistCardID, setChecklistCardID] = useState('')
     const [cardChecklists, setCardChecklists] = useState(checklists)
     const [checklist, setChecklist] = useState([])
+    const [showAddChecklist, setShowAddChecklist] = useState(false); // Track whether to show the checklist input
 
     const AddChecklist = ({ card, list }) => {
         const [newChecklistName, setNewChecklistName] = useState('');
@@ -136,17 +137,24 @@ export const Card = ({card, list}) => {
             }
         }
         
+
+
         return (
-            <div>
-                <button onClick={() => addNewChecklist()} style={{width:'auto', height:'auto', marginRight: '45px'}} type="button">ذخیره</button>
-                <input
-                    type="text"
-                    value={newChecklistName}
-                    onChange={(e) => setNewChecklistName(e.target.value)}
-                    style={{width:'200px', height: '60px', marginRight: '45px', direction:'rtl'}}/>
+            <div className="add-checklist-container">
+              <h3 className="add-checklist-title">نام چکلیست جدید</h3>
+              <input
+                className="add-checklist-input"
+                type="text"
+                value={newChecklistName}
+                onChange={(e) => setNewChecklistName(e.target.value)}
+                placeholder="نام چکلیست جدید"
+              />
+              <button className="add-checklist-button" onClick={() => addNewChecklist()} type="button">
+                ذخیره
+              </button>
             </div>
-        );
-        
+          );
+          
 
         
     }
@@ -371,42 +379,6 @@ export const Card = ({card, list}) => {
         }, [newMemberName]);
         
         const handleNewMember = async (newMemberName) => {
-
-            // notification when a new member gets added to a card
-       
-            let user = null; // Define user variable here
-
-            // First try-catch block: Get user info from JWT
-            try {
-                const jwt = getJwtFromCookie();
-                if (jwt) {
-                    const decoded = jwt_decode(jwt);
-                    user = decoded; // Update user data from the JWT
-                    console.log(user);
-                }
-            } catch (error) {
-                console.log(error);
-            }
-
-            // Second try-catch block: Send a new notification
-            // if(selectedUser){
-            //     try {
-            //             const notifResponse = await fetch(`http://localhost:8080/api/notifs`, {
-            //                 method: 'POST',
-            //                 headers: {
-            //                     'Content-Type': 'application/json',
-            //                 },
-            //                 body: JSON.stringify({ message: `کاربر جدید بنام "${newMemberName}" به کارت "${card.name}" اضافه شد`, user_id: user.user_id }),
-            //             });
-    
-            //             if (!notifResponse.ok) {
-            //                 throw new Error('Error making a new notification');
-            //             }
-            //     } catch (error) {
-            //         console.log(error);
-            //     }
-            // }
-
 
 
             try {
@@ -853,78 +825,6 @@ export const Card = ({card, list}) => {
       };
       
 
-    // const AssignItem = ({ listID, cardID, checklistID, itemID }) => {
-    //     const [searchQuery, setSearchQuery] = useState('');
-    //     const [searchResults, setSearchResults] = useState([]);
-      
-        // useEffect(() => {
-        //   const fetchSearchResults = async () => {
-        //     if(searchQuery != ''){
-        //         try {
-        //           const response = await fetch(`http://localhost:8080/api/lists/${listID}/cards/${cardID}/members?name=${searchQuery}`, {
-        //             method: 'GET',
-        //             headers: {
-        //               'Content-Type': 'application/json',
-        //             },
-        //           });
-        //           const data = await response.json();
-        //           setSearchResults(data);
-        //         } catch (error) {
-        //           console.error('Error fetching search results:', error);
-        //         }
-        //       };
-        //     }
-      
-        //   if (isAssignItemModalOpen) {
-        //     fetchSearchResults();
-        //   }
-        // }, [isAssignItemModalOpen, searchQuery, listID, cardID]);
-      
-    //     const handleMemberSelect = async (selectedMember) => {
-    //       // assign that item to the member
-    //       console.log('selectedMember : ', selectedMember);
-    //       const requestBody = {
-    //         assignedto: selectedMember,
-    //       };
-    //       try {
-    //         const response = await fetch(`http://localhost:8080/api/lists/${listID}/cards/${cardID}/checklists/${checklistID}/items/${itemID}`, {
-    //           method: 'PATCH',
-    //           headers: {
-    //             'Content-Type': 'application/json',
-    //           },
-    //           body: JSON.stringify(requestBody),
-    //         });
-    //         if (!response.ok) {
-    //           console.error('Failed to update item assignedto array on the backend');
-    //         }
-    //       } catch (error) {
-    //         console.log(error);
-    //       }
-      
-    //       // Close the modal and clear search results
-    //       setAssignItemModalOpen(false);
-    //       setSearchResults([]);
-    //     };
-      
-    //     return (
-    //       <div>
-    //         {isAssignItemModalOpen && (
-    //           <div className="assignment-modal">
-    //             <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search" />
-    //             <ul>
-    //               {searchResults.map((member) => (
-    //                 <li key={member.id} onClick={() => handleMemberSelect(member)}>
-    //                   {member.name}
-    //                 </li>
-    //               ))}
-    //             </ul>
-    //           </div>
-    //         )}
-    //       </div>
-    //     );
-    //   };
-      
-
     const handleCheckboxChange = async (checklist, checklistId, itemId, currentDoneValue) => {
         // Update the 'done' attribute on the front-end
         const updatedItems = checklist.items.map(item =>
@@ -1307,26 +1207,6 @@ export const Card = ({card, list}) => {
 
                             </div>
                             
-
-                                {/* put the 'add-checklist' functionality inside the add-to-cards */}
-                            {/* <div className='add-checklist'>
-                            
-                            {checklistCardID === newCard.id && isAddingChecklist && <AddChecklist card={newCard} list={newList}/>}
-                        
-                            <button type='button' className='add-checklist-button' onClick={() => {
-                                        if(checklistCardID === ''){
-                                            setIsAddingChecklist(true)
-                                            setChecklistCardID(card.id)
-                                        } else {
-                                            setIsAddingChecklist(false)
-                                            setChecklistCardID('')
-                                        } 
-                                        
-                                    }}>اضافه کردن چکلیست</button>
-                                        
-
-                            </div> */}
-
                             </>
 
 
@@ -1364,24 +1244,50 @@ export const Card = ({card, list}) => {
                             </div>
                         </div>
 
-                        <div className='dropdown'>
-                        <button className='dropbtn'>چکلیست</button>
-                            <div className='dropdown-content'>
-                            {cardChecklists && cardChecklists.length > 0 ? (
-                                cardChecklists.map((checklist, index) => {
-                                    return (
-                                    <div key={index}>
-                                         <a href="#">{checklist.name}</a>
-                                    </div>
-                                    )
-                                })
 
-                            ) : (
-                                <span>No Checklist</span>
-                            )}
+                        <div className='dropdown'>
+                            <button
+                                className='dropbtn'
+                                onClick={() => setShowAddChecklist(true)} // Show the checklist input when the button is clicked
+                            >
+                                چکلیست
+                            </button>
+                            <div className='dropdown-content'>
+                                {showAddChecklist && (
+                                    <AddChecklist
+                                        card={newCard}
+                                        list={newList}
+                                        onChecklistAdded={() => {
+                                            setIsNewChecklistAddedOrRemoved(true);
+                                            setShowAddChecklist(false); // Hide the checklist input after adding
+                                        }}
+                                    />
+                                )}
+                                {/* {cardChecklists && cardChecklists.length > 0 ? (
+                                    cardChecklists.map((checklist, index) => (
+                                        <div key={index}>
+                                            <a href="#">{checklist.name}</a>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <span>No Checklist</span>
+                                )} */}
                             </div>
                         </div>
-                        
+
+
+                        {/* <div className='dropdown'>
+                            <button className='dropbtn'>چکلیست</button>
+                            <div className='dropdown-content'>
+                                <AddChecklist card={newCard} list={newList} />
+
+                            </div>
+                        </div> */}
+
+
+
+
+
                         <div className='dropdown'>
                         <button className='dropbtn' onClick={() => setIsLabelOpen(!isLabelOpen)}>برچسب</button>
                             <div className='dropdown-content'>

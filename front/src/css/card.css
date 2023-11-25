@@ -159,15 +159,14 @@
 
 
 .showcase-checklists {
-    margin-top: 40px;
-    /* margin-left: 60%; */
-    display: flex;
+  margin-top: 40px;
+  display: flex;
+  justify-content: space-between; /* Keep 'activity' and 'checklist' sections apart */
 }
-
 
 .activity {
   width: 40%; /* Adjust the width as needed */
-  background: linear-gradient(to bottom, #B2CFDC, #91CFE8); /* Adjust colors as needed */
+  background: linear-gradient(to bottom, #B2CFDC, #91CFE8);
   margin: 20px;
   padding: 10px;
   border: 1px solid #ccc;
@@ -220,7 +219,7 @@
 
 
 .checklist {
-  width: 45%; /* Adjust the width as needed */
+  width: 40%; /* Adjust the width as needed */
   background: linear-gradient(to bottom, #DCB2CF, #E891CF);
   margin: 20px;
   padding: 10px;
@@ -230,16 +229,17 @@
 }
 
 .checklist-title {
-    font-size: 16px;
-    margin: 10px 0;
+  font-size: 16px;
+  margin: 10px 0;
 }
 
 .checklist-item {
-    display: flex;
-    align-items: right;
-    text-align: right;
-    margin-bottom: 8px;
+  display: flex;
+  align-items: right;
+  text-align: right;
+  margin-bottom: 8px;
 }
+
 
 
 .remove-item-button{
@@ -298,22 +298,42 @@
     background-color: grey;
 }
 
-
-.add-checklist-button{
-    margin: 10px 5px;
-    padding: 5px 10px;
-    border: none;
-    background-color:darkviolet;
-    color: white;
-    cursor: pointer;
-    border-radius: 4px;
-    display: flex;
-    justify-content: left;
-    margin-right: auto;
-    margin-left: auto;
+.add-checklist-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-right: 45px;
 }
-.add-checklist-button:hover{
-    background-color: grey;
+
+.add-checklist-title {
+  text-align: right;
+  font-size: 16px;
+  margin-bottom: 5px;
+}
+
+.add-checklist-input {
+  width: 200px;
+  height: 40px;
+  margin-bottom: 10px;
+  padding: 8px;
+  direction: rtl;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  outline: none;
+}
+
+.add-checklist-button {
+  background-color: #3498db;
+  color: #fff;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* Optional: Style the button on hover */
+.add-checklist-button:hover {
+  background-color: #2980b9;
 }
 
 

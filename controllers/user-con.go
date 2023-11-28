@@ -377,7 +377,8 @@ func GetUserByName(w http.ResponseWriter, r *http.Request) {
     }
 
     // Fetch users based on the provided name
-	rows, err := db.Query("SELECT id, name, email FROM users WHERE name LIKE $1 || '%'", name)
+	rows, err := db.Query("SELECT id, name, email FROM users WHERE name LIKE '%' || $1 || '%'", name)
+
 
 	if err != nil {
         http.Error(w, fmt.Sprintf("Failed to fetch users data, %s", err), http.StatusInternalServerError)

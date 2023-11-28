@@ -9,6 +9,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 import { getJwtFromCookie } from './App'
 import jwt_decode from 'jwt-decode'
 
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
 
 import SearchIcon from '@mui/icons-material/Search';
@@ -381,6 +382,7 @@ export const Card = ({card, list}) => {
         const handleNewMember = async (newMemberName) => {
 
 
+            console.log('newMemberName in handleNewMember ', newMemberName);
             try {
                 const response = await fetch(`http://localhost:8080/api/lists/${list.id}/cards/${card.id}/members`, {
                     method: 'POST',
@@ -1007,7 +1009,69 @@ export const Card = ({card, list}) => {
           
       
       };
-    
+
+
+
+
+
+    // drag and drop items  
+    const [checklistItems, setChecklistItems] = useState([])
+    // drag and drop items in a checklist
+    const onChecklistDragEnd = (result,  listID, cardID, checklist) => {
+        if (!result.destination) {
+          return;
+        }
+
+        // the checklist we get in here is in the form like this [{id, name, items}]
+        console.log(checklist[0]);
+      
+        const updatedItems = [...checklist[0].items];
+        const [movedItem] = updatedItems.splice(result.source.index, 1);
+        updatedItems.splice(result.destination.index, 0, movedItem);
+      
+        // Update the position property based on the new order
+        const updatedItemsWithPosition = updatedItems.map((item, index) => ({
+          ...item,
+          position: index,
+        }));
+      
+        // Assuming you have a function to update the checklist items order
+        // You might need to update the state for the entire checklist, including items
+        setCardChecklists((prevChecklists) => {
+          return prevChecklists.map((prevChecklist) =>
+            prevChecklist.id === checklist.id
+              ? { ...prevChecklist, items: updatedItemsWithPosition }
+              : prevChecklist
+          );
+        });
+      
+        // Prepare data to update the order on the backend
+        const updatedOrder = updatedItemsWithPosition.map((item) => item.id);
+      
+        // Make an API call to update the item order on the server
+        fetch(`http://localhost:8080/api/lists/${listID}/cards/${cardID}/checklists/${checklist[0].id}/update-items-order`, {
+          method: 'PUT', // Assuming you are using the PUT method to update the order
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            checklistId: checklist.id, // Assuming you pass the checklist ID to identify the checklist
+            itemOrder: updatedOrder,
+          }),
+        })
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error('Failed to update item order on the server');
+            }
+            // Handle a successful response as needed
+          })
+          .catch((error) => {
+            console.error('Error updating item order on the server:', error);
+            // You can handle the error, show a message, or retry the operation
+          });
+      };
+      
+
 
     return (
         
@@ -1089,102 +1153,98 @@ export const Card = ({card, list}) => {
 
                     <div className='showcase-checklists' style={{marginRight:'auto'}}>
                         
-                    <div className='activity'>
-                        <h3 style={{textAlign:'center'}}>فعالیت</h3>
-                        <CardActivity list={newList} card={newCard} user={user}/>
+                        <div className='activity'>
+                            <h3 style={{textAlign:'center'}}>فعالیت</h3>
+                            <CardActivity list={newList} card={newCard} user={user}/>
 
-                    </div>
+                    
+                        </div>
 
                         {cardChecklists && cardChecklists.length > 0 ? (
-                        
-                        cardChecklists.map((checklist, index) => (
-
                             <>
-                            <div className='checklist' key={index}>
-                                
-                                
-                                <h2 className='checklist-title'><img src={require('./icons/checklist.png')} alt="" style={{width:'25px', height:'25px', marginBottom:'-5px', marginLeft:'-30px', marginRight:'10px'}}/>
-                                {checklist.name}</h2>
+                            {cardChecklists.map((checklist, index) => (
+                            <DragDropContext onDragEnd={(result) => onChecklistDragEnd(result, newList.id, newCard.id, cardChecklists)}>
+                                <div className='checklist' key={index}>
+                                <h2 className='checklist-title'>
+                                    <img src={require('./icons/checklist.png')} alt="" style={{ width: '25px', height: '25px', marginBottom: '-5px', marginLeft: '-30px', marginRight: '10px' }} />
+                                    {checklist.name}
+                                </h2>
                                 {checklist.items && checklist.items.length > 0 ? (
-                                checklist.items.map((item) => {
-                                    // Parse the due date string into a Date object
-                                    const dueDate = new Date(item.duedate);
-                                
-                                    // Extract the month and day from the Date object
-                                    const month = dueDate.getMonth() + 1; // Months are zero-based, so add 1
-                                    const day = dueDate.getDate();
-                                
-                                  
-
-                                    return (
-                                        <div className="checklist-item" key={item.id}>
-                                          <div className="options-container">
-                                            <div className="options-toggle" onClick={handleToggleOptions}>
-                                              {/* Circular div for 3-dots icon */}
-                                              <div className="circle">
-                                                <span>...</span>
-                                              </div>
-                                            </div>
-                                            {showOptions && (
-                                              <div className="options-dropdown">
-                                                <button className="option-button" onClick={() => removeItem(checklist.id, item.id)}>حذف</button>
-                                                <button className="option-button" onClick={() => console.log('add date')}>تاریخ</button>
-                                              </div>
-                                            )}
-                                          </div>
-                                    
-                                          <div className="clock-date-container">
-                                            <div className="month-day" style={{ fontSize: '12px', marginLeft:'18px' }}>
-                                              <img src={require('./icons/clock-date.png')} alt="" style={{ width: '14px', height: '14px' }} />
-                                              {month}/{day}
-                                            </div>
-                                          </div>
-
-
-
-                                          {isAssignItemModalOpen && (
-                                            <AssignItem listID={newList.id} cardID={newCard.id} checklistID={checklist.id} itemID={item.id} />
-                                            )}
-                                            <div className='item-assigned-to'>
-                                                <div className='assigned-to' onClick={() => setAssignItemModalOpen(true)} style={{marginLeft:'18px'}}>
-                                                    <img
-                                                    src={require('./icons/assignedto.png')}
-                                                    alt=""
-                                                    style={{ width: '14px', height: '14px', cursor: 'pointer' }}
-                                                    />
+                                    <Droppable droppableId={`checklist-${checklist.id}`} type={`checklist-${checklist.id}`}>
+                                    {(provided) => (
+                                        <div ref={provided.innerRef} {...provided.droppableProps}>
+                                        {checklist.items.map((item, itemIndex) => (
+                                            <Draggable key={item.id.toString()} draggableId={item.id.toString()} index={itemIndex}>
+                                            {(provided) => (
+                                                <div
+                                                ref={provided.innerRef}
+                                                {...provided.draggableProps}
+                                                {...provided.dragHandleProps}
+                                                className="checklist-item"
+                                                >
+                                                <div className="options-container">
+                                                    <div className="options-toggle" onClick={handleToggleOptions}>
+                                                    <div className="circle">
+                                                        <span>...</span>
+                                                    </div>
+                                                    </div>
+                                                    {showOptions && (
+                                                    <div className="options-dropdown">
+                                                        <button className="option-button" onClick={() => removeItem(checklist.id, item.id)}>حذف</button>
+                                                        <button className="option-button" onClick={() => console.log('add date')}>تاریخ</button>
+                                                    </div>
+                                                    )}
                                                 </div>
-                                            </div>
+
+                                                <div className="clock-date-container">
+                                                    <div className="month-day" style={{ fontSize: '12px', marginLeft: '18px' }}>
+                                                    <img src={require('./icons/clock-date.png')} alt="" style={{ width: '14px', height: '14px' }} />
+                                                    {item.dueDate} {/* Assuming item has a dueDate property */}
+                                                    </div>
+                                                </div>
+
+                                                {/* Rest of your existing code */}
+
+
+                                                
+                                                {isAssignItemModalOpen && (
+                                                    <AssignItem listID={newList.id} cardID={newCard.id} checklistID={checklist.id} itemID={item.id} />
+                                                    )}
+                                                    <div className='item-assigned-to'>
+                                                        <div className='assigned-to' onClick={() => setAssignItemModalOpen(true)} style={{marginLeft:'18px'}}>
+                                                            <img
+                                                            src={require('./icons/assignedto.png')}
+                                                            alt=""
+                                                            style={{ width: '14px', height: '14px', cursor: 'pointer' }}
+                                                            />
+                                                        </div>
+                                                    </div>
 
                                     
 
 
-
-                                          <label htmlFor="item">{item.name}</label>
-                                    
-                                          <input
-                                            type="checkbox"
-                                            id="item"
-                                            checked={item.done}
-                                            onChange={() => {
-                                              handleCheckboxChange(checklist, checklist.id, item.id, item.done);
-                                              item.done = !item.done;
-                                            }}
-                                          />
+                                                <label htmlFor="item">{item.name}</label>
+                                                <input
+                                                    type="checkbox"
+                                                    id="item"
+                                                    checked={item.done}
+                                                    onChange={() => {
+                                                    handleCheckboxChange(checklist, checklist.id, item.id, item.done);
+                                                    // item.done = !item.done; // Don't mutate state directly
+                                                    }}
+                                                />
+                                                </div>
+                                            )}
+                                            </Draggable>
+                                        ))}
+                                        {provided.placeholder}
                                         </div>
-                                      );
-
-
-
-
-
-                                })
-                                
-                                
-                                
+                                    )}
+                                    </Droppable>
                                 ) : (
                                     <span>بدون آیتم</span>
                                 )}
-
+                                {/* ... (your existing code) */}
 
                                 {itemChecklistID === checklist.id && isAddingItem && <AddItem checklist={checklist}/> }
 
@@ -1205,23 +1265,22 @@ export const Card = ({card, list}) => {
                                 <button type='submit' className='remove-checklist-button' onClick={() => removeChecklist(checklist.id)}>پاک کردن</button>
                             
 
-                            </div>
-                            
+
+                                </div>
+                            </DragDropContext>
+                            ))}
                             </>
-
-
-
-                        ))
-
-                        
-                            
                         ) : (
                             <span>بدون چکلیست</span>
                         )}
-                        
 
-                        
+
+
                     </div>
+
+
+
+
 
                     <div className='add-to-card' style={{width:'200px', height:'auto'}}>
                         

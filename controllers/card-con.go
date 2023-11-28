@@ -760,134 +760,131 @@ func UpdateCard(w http.ResponseWriter, r *http.Request) {
 
 
 
-// func UpdateCard(w http.ResponseWriter, r *http.Request) {
-// 	vars := mux.Vars(r)
-// 	_, err := strconv.Atoi(vars["id"])
-// 	if err != nil {
-// 		http.Error(w, "Invalid list ID", http.StatusBadRequest)
-// 		return
-// 	}
 
-// 	cardID, err := strconv.Atoi(vars["cardID"])
-// 	if err != nil {
-// 		http.Error(w, "Invalid card ID", http.StatusBadRequest)
-// 		return
-// 	}
+                    //     {cardChecklists && cardChecklists.length > 0 ? (
+                        
+                    //     cardChecklists.map((checklist, index) => (
 
-// 	// Read the request body
-// 	body, err := ioutil.ReadAll(r.Body)
-// 	if err != nil {
-// 		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
-// 		return
-// 	}
+                    //         <>
+                    //         <div className='checklist' key={index}>
+                                
+                                
+                    //             <h2 className='checklist-title'><img src={require('./icons/checklist.png')} alt="" style={{width:'25px', height:'25px', marginBottom:'-5px', marginLeft:'-30px', marginRight:'10px'}}/>
+                    //             {checklist.name}</h2>
+                    //             {checklist.items && checklist.items.length > 0 ? (
+                    //             checklist.items.map((item) => {
+                    //                 // Parse the due date string into a Date object
+                    //                 const dueDate = new Date(item.duedate);
+                                
+                    //                 // Extract the month and day from the Date object
+                    //                 const month = dueDate.getMonth() + 1; // Months are zero-based, so add 1
+                    //                 const day = dueDate.getDate();
+                                
+                                  
 
-// 	// Parse the JSON request body
-// 	var requestData struct {
-// 		Name 		*string 		`json:"name"`
-// 		Description *string 		`json:"description"`
-// 		Dates		[]time.Time 	`json:"dates"` 
-// 	}
-// 	err = json.Unmarshal(body, &requestData)
-// 	if err != nil {
-// 		http.Error(w, "Failed to parse JSON data", http.StatusBadRequest)
-// 		return
-// 	}
-	
-// 	fmt.Printf("requestData : %v", requestData)
-
-// 	var query string
-// 	var args []interface{}
-
-// 	if requestData.Name != nil && requestData.Description != nil && len(requestData.Dates) > 0 {
-// 		query = "UPDATE cards SET name = $1, description = $2, dates = $3 WHERE id = $4"
-// 		args = []interface{}{*requestData.Name, *requestData.Description, pq.Array(requestData.Dates), cardID}
-// 	} else if requestData.Name != nil && requestData.Description != nil {
-// 		query = "UPDATE cards SET name = $1, description = $2 WHERE id = $3"
-// 		args = []interface{}{*requestData.Name, *requestData.Description, cardID}
-// 	} else if len(requestData.Dates) > 0 {
-// 		query = "UPDATE cards SET dates = $1 WHERE id = $2"
-// 		args = []interface{}{pq.Array(requestData.Dates), cardID}
-// 	} else if requestData.Name != nil {
-// 		query = "UPDATE cards SET name = $1 WHERE id = $2"
-// 		args = []interface{}{*requestData.Name, cardID}
-// 	} else if requestData.Description != nil {
-// 		query = "UPDATE cards SET description = $1 WHERE id = $2"
-// 		args = []interface{}{*requestData.Description, cardID}
-// 	} else {
-// 		http.Error(w, "No update data provided", http.StatusBadRequest)
-// 		return
-// 	}
+                    //                 return (
+                    //                     <div className="checklist-item" key={item.id}>
+                    //                       <div className="options-container">
+                    //                         <div className="options-toggle" onClick={handleToggleOptions}>
+                    //                           {/* Circular div for 3-dots icon */}
+                    //                           <div className="circle">
+                    //                             <span>...</span>
+                    //                           </div>
+                    //                         </div>
+                    //                         {showOptions && (
+                    //                           <div className="options-dropdown">
+                    //                             <button className="option-button" onClick={() => removeItem(checklist.id, item.id)}>حذف</button>
+                    //                             <button className="option-button" onClick={() => console.log('add date')}>تاریخ</button>
+                    //                           </div>
+                    //                         )}
+                    //                       </div>
+                                    
+                    //                       <div className="clock-date-container">
+                    //                         <div className="month-day" style={{ fontSize: '12px', marginLeft:'18px' }}>
+                    //                           <img src={require('./icons/clock-date.png')} alt="" style={{ width: '14px', height: '14px' }} />
+                    //                           {month}/{day}
+                    //                         </div>
+                    //                       </div>
 
 
-// 	// Update the list's name in the database
-// 	_, err = db.Exec(query, args...)
-// 	if err != nil {
-// 		http.Error(w, fmt.Sprintf("Failed to update card, %s", err), http.StatusInternalServerError)
-// 		return
-// 	}
 
-// 	w.WriteHeader(http.StatusCreated)
-// }
+                    //                       {isAssignItemModalOpen && (
+                    //                         <AssignItem listID={newList.id} cardID={newCard.id} checklistID={checklist.id} itemID={item.id} />
+                    //                         )}
+                    //                         <div className='item-assigned-to'>
+                    //                             <div className='assigned-to' onClick={() => setAssignItemModalOpen(true)} style={{marginLeft:'18px'}}>
+                    //                                 <img
+                    //                                 src={require('./icons/assignedto.png')}
+                    //                                 alt=""
+                    //                                 style={{ width: '14px', height: '14px', cursor: 'pointer' }}
+                    //                                 />
+                    //                             </div>
+                    //                         </div>
 
-
-// func UpdateCard(w http.ResponseWriter, r *http.Request) {
-// 	vars := mux.Vars(r)
-// 	_, err := strconv.Atoi(vars["id"])
-// 	if err != nil {
-// 		http.Error(w, "Invalid list ID", http.StatusBadRequest)
-// 		return
-// 	}
-
-// 	cardID, err := strconv.Atoi(vars["cardID"])
-// 	if err != nil {
-// 		http.Error(w, "Invalid card ID", http.StatusBadRequest)
-// 		return
-// 	}
-
-// 	// Read the request body
-// 	body, err := ioutil.ReadAll(r.Body)
-// 	if err != nil {
-// 		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
-// 		return
-// 	}
-
-// 	// Parse the JSON request body
-// 	var requestData struct {
-// 		Name *string `json:"name"`
-// 		Description *string `json:"description"`
-// 	}
-
-// 	err = json.Unmarshal(body, &requestData)
-// 	if err != nil {
-// 		http.Error(w, "Failed to parse JSON data", http.StatusBadRequest)
-// 		return
-// 	}
+                                    
 
 
-// 	var query string
-// 	var args []interface{}
 
-// 	if requestData.Name != nil  && requestData.Description != nil {
-// 		query = "UPDATE cards SET name = $1, description = $2 WHERE id = $3"
-// 		args = []interface{}{*requestData.Name, *requestData.Description, cardID}
-// 	} else if requestData.Name != nil {
-// 		query = "UPDATE cards SET name = $1 WHERE id = $2"
-// 		args = []interface{}{*requestData.Name, cardID}
-// 	} else if requestData.Description != nil {
-// 		query = "UPDATE cards SET description = $1 WHERE id = $2"
-// 		args = []interface{}{*requestData.Description, cardID}
-// 	} else {
-// 		http.Error(w, "No update data provided", http.StatusBadRequest)
-// 		return
-// 	}
+                    //                       <label htmlFor="item">{item.name}</label>
+                                    
+                    //                       <input
+                    //                         type="checkbox"
+                    //                         id="item"
+                    //                         checked={item.done}
+                    //                         onChange={() => {
+                    //                           handleCheckboxChange(checklist, checklist.id, item.id, item.done);
+                    //                           item.done = !item.done;
+                    //                         }}
+                    //                       />
+                    //                     </div>
+                    //                   );
 
 
-// 	// Update the list's name in the database
-// 	_, err = db.Exec(query, args...)
-// 	if err != nil {
-// 		http.Error(w, fmt.Sprintf("Failed to update card, %s", err), http.StatusInternalServerError)
-// 		return
-// 	}
 
-// 	w.WriteHeader(http.StatusCreated)
-// }
+
+
+                    //             })
+                                
+                                
+                                
+                    //             ) : (
+                    //                 <span>بدون آیتم</span>
+                    //             )}
+
+
+                    //             {itemChecklistID === checklist.id && isAddingItem && <AddItem checklist={checklist}/> }
+
+
+                    //             <button type='button' className='add-item-button' onClick={() => {
+                    //                 if(itemChecklistID === ''){
+                    //                     setIsAddingItem(true)
+                    //                     setItemChecklistID(checklist.id)
+                    //                 } else {
+                    //                     setIsAddingItem(false)
+                    //                     setItemChecklistID('')
+                    //                 } 
+                                    
+                    //             }}>اضافه کردن آیتم</button>
+                                
+
+                    //             <br />
+                    //             <button type='submit' className='remove-checklist-button' onClick={() => removeChecklist(checklist.id)}>پاک کردن</button>
+                            
+
+                    //         </div>
+                            
+                    //         </>
+
+
+
+                    //     ))
+
+                        
+                            
+                    //     ) : (
+                    //         <span>بدون چکلیست</span>
+                    //     )}
+                        
+
+                        
+                    // </div>

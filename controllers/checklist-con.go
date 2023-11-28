@@ -390,3 +390,55 @@ func DeleteChecklist(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusAccepted)
 
 }
+
+
+
+
+func UpdateItemOrder(w http.ResponseWriter, r *http.Request) {
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+	  http.Error(w, "Failed to read request body", http.StatusInternalServerError)
+	  return
+	}
+
+
+	type UpdateItemOrderRequest struct {
+		ChecklistID int   `json:"checklistId"`
+		ItemOrder   []int `json:"itemOrder"`
+	  }
+  
+	var requestData UpdateItemOrderRequest
+	err = json.Unmarshal(body, &requestData)
+	if err != nil {
+	  http.Error(w, "Failed to parse JSON data", http.StatusBadRequest)
+	  return
+	}
+  
+	if len(requestData.ItemOrder) > 0 {
+	  tx, err := db.Begin()
+	  if err != nil {
+		http.Error(w, "Failed to begin transaction", http.StatusInternalServerError)
+		return
+	  }
+	  defer tx.Rollback()
+  
+	  for i, itemID := range requestData.ItemOrder {
+		_, err := tx.Exec("UPDATE items SET position = $1 WHERE id = $2", i, itemID)
+		if err != nil {
+			fmt.Printf("error: %v", err)
+			http.Error(w, "Failed to update item order", http.StatusInternalServerError)
+		//   fmt.Printf("error: %v", err)
+		  return
+		}
+	  }
+  
+	  err = tx.Commit()
+	  if err != nil {
+		http.Error(w, "Failed to commit transaction", http.StatusInternalServerError)
+		return
+	  }
+	}
+  
+	w.WriteHeader(http.StatusOK)
+  }
+  

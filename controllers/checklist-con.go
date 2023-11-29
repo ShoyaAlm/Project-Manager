@@ -216,7 +216,6 @@ func GetAChecklist(w http.ResponseWriter, r *http.Request) {
 }
 
 func CreateChecklist(w http.ResponseWriter, r *http.Request) {
-
 	vars := mux.Vars(r)
 	cardID, err := strconv.Atoi(vars["cardID"])
 	if err != nil {
@@ -231,8 +230,7 @@ func CreateChecklist(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var requestData struct {
-		Name  string        `json:"name"`
-		Items []*model.Item `json:"items"`
+		Name string `json:"name"`
 	}
 
 	err = json.Unmarshal(body, &requestData)
@@ -241,49 +239,40 @@ func CreateChecklist(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var newChecklistID, newItemID int
+	var newChecklistID int
 
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to create checklist, %s", err), http.StatusInternalServerError)
 		return
 	}
-	currentDate := time.Now()
-	oneWeekLater := currentDate.AddDate(0, 0, 7)
 
-
-	// Create a new card with non-null fields
-	emptyItem := &model.Item{
-		ID:         newItemID,
-		Name:       requestData.Name,
-		StartDate: 	currentDate,
-		DueDate:    oneWeekLater,
-		Done: 		false,
-		AssignedTo: []*model.Member{},
+	// Fetch the maximum position value from the checklists table for the given card
+	var maxChecklistPosition int
+	err = db.QueryRow("SELECT COALESCE(MAX(position), 0) FROM checklists WHERE card_id = $1", cardID).Scan(&maxChecklistPosition)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to fetch maximum checklist position, %s", err), http.StatusInternalServerError)
+		return
 	}
 
+	// Increment the position value for the new checklist
+	newChecklistPosition := maxChecklistPosition + 1
 
-	// Create a new card with non-null fields
+	// Create a new checklist with non-null fields
 	newChecklist := &model.Checklist{
-		ID:    newChecklistID,
-		Name:  requestData.Name,
-		Items: []*model.Item{emptyItem},
+		ID:       newChecklistID,
+		Name:     requestData.Name,
+		Items:    []*model.Item{}, // No items for now
+		// Position: newChecklistPosition,
 	}
 
-	err = db.QueryRow("INSERT INTO checklists (name, card_id) VALUES ($1, $2) RETURNING id",
-		newChecklist.Name, cardID).Scan(&newChecklistID)
+	err = db.QueryRow("INSERT INTO checklists (name, card_id, position) VALUES ($1, $2, $3) RETURNING id",
+		newChecklist.Name, cardID, newChecklistPosition).Scan(&newChecklistID)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to insert checklist, %s", err), http.StatusInternalServerError)
 		return
 	}
 
-	err = db.QueryRow("INSERT INTO items (name, start_date, due_date, done, checklist_id) VALUES ($1, $2, $3, $4, $5) RETURNING id",
-		emptyItem.Name, emptyItem.StartDate, emptyItem.DueDate, emptyItem.Done, newChecklistID).Scan(&newItemID)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to insert item into checklist, %s", err), http.StatusInternalServerError)
-		return
-	}
-
-	// Fetch the associated list
+	// Fetch the associated card
 	cardRow := db.QueryRow("SELECT id, name, description, dates FROM cards WHERE id = $1", cardID)
 	card := &model.Card{}
 	var datesArray pq.StringArray
@@ -293,7 +282,6 @@ func CreateChecklist(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	
 	var dates []time.Time
 
 	for _, dateString := range datesArray {
@@ -304,23 +292,129 @@ func CreateChecklist(w http.ResponseWriter, r *http.Request) {
 		dates = append(dates, date)
 	}
 
-
 	card.Dates = dates
 
-	// Append the new card to the list's cards slice
+	// Append the new checklist to the card's checklists slice
 	card.Checklists = append(card.Checklists, newChecklist)
 
 	jsonData, err := json.Marshal(card)
 	if err != nil {
-		http.Error(w, "Failed to marshal list data", http.StatusInternalServerError)
+		http.Error(w, "Failed to marshal card data", http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	w.Write(jsonData)
-
 }
+
+
+// func CreateChecklist(w http.ResponseWriter, r *http.Request) {
+
+// 	vars := mux.Vars(r)
+// 	cardID, err := strconv.Atoi(vars["cardID"])
+// 	if err != nil {
+// 		http.Error(w, "Invalid card ID", http.StatusBadRequest)
+// 		return
+// 	}
+
+// 	body, err := ioutil.ReadAll(r.Body)
+// 	if err != nil {
+// 		http.Error(w, fmt.Sprintf("Failed to read request body, %s", err), http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	var requestData struct {
+// 		Name  string        `json:"name"`
+// 		Items []*model.Item `json:"items"`
+// 	}
+
+// 	err = json.Unmarshal(body, &requestData)
+// 	if err != nil {
+// 		http.Error(w, fmt.Sprintf("Failed to parse JSON data, %s", err), http.StatusBadRequest)
+// 		return
+// 	}
+
+// 	var newChecklistID, newItemID int
+
+// 	if err != nil {
+// 		http.Error(w, fmt.Sprintf("Failed to create checklist, %s", err), http.StatusInternalServerError)
+// 		return
+// 	}
+// 	currentDate := time.Now()
+// 	oneWeekLater := currentDate.AddDate(0, 0, 7)
+
+
+// 	// Create a new card with non-null fields
+// 	emptyItem := &model.Item{
+// 		ID:         newItemID,
+// 		Name:       requestData.Name,
+// 		StartDate: 	currentDate,
+// 		DueDate:    oneWeekLater,
+// 		Done: 		false,
+// 		AssignedTo: []*model.Member{},
+// 	}
+
+
+// 	// Create a new card with non-null fields
+// 	newChecklist := &model.Checklist{
+// 		ID:    newChecklistID,
+// 		Name:  requestData.Name,
+// 		Items: []*model.Item{emptyItem},
+// 	}
+
+// 	err = db.QueryRow("INSERT INTO checklists (name, card_id) VALUES ($1, $2) RETURNING id",
+// 		newChecklist.Name, cardID).Scan(&newChecklistID)
+// 	if err != nil {
+// 		http.Error(w, fmt.Sprintf("Failed to insert checklist, %s", err), http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	err = db.QueryRow("INSERT INTO items (name, start_date, due_date, done, checklist_id) VALUES ($1, $2, $3, $4, $5) RETURNING id",
+// 		emptyItem.Name, emptyItem.StartDate, emptyItem.DueDate, emptyItem.Done, newChecklistID).Scan(&newItemID)
+// 	if err != nil {
+// 		http.Error(w, fmt.Sprintf("Failed to insert item into checklist, %s", err), http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	// Fetch the associated list
+// 	cardRow := db.QueryRow("SELECT id, name, description, dates FROM cards WHERE id = $1", cardID)
+// 	card := &model.Card{}
+// 	var datesArray pq.StringArray
+// 	err = cardRow.Scan(&card.ID, &card.Name, &card.Description, &datesArray)
+// 	if err != nil {
+// 		http.Error(w, fmt.Sprintf("Failed to fetch card data, %s", err), http.StatusInternalServerError)
+// 		return
+// 	}
+
+	
+// 	var dates []time.Time
+
+// 	for _, dateString := range datesArray {
+// 		date, err := time.Parse("2006-01-02", dateString)
+// 		if err != nil {
+// 			// Handle the error, e.g., log it or return an error response
+// 		}
+// 		dates = append(dates, date)
+// 	}
+
+
+// 	card.Dates = dates
+
+// 	// Append the new card to the list's cards slice
+// 	card.Checklists = append(card.Checklists, newChecklist)
+
+// 	jsonData, err := json.Marshal(card)
+// 	if err != nil {
+// 		http.Error(w, "Failed to marshal list data", http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	w.Header().Set("Content-Type", "application/json")
+// 	w.WriteHeader(http.StatusCreated)
+// 	w.Write(jsonData)
+
+// }
 
 func UpdateChecklist(w http.ResponseWriter, r *http.Request) {
 

@@ -1015,7 +1015,7 @@ export const Card = ({card, list}) => {
 
 
     // drag and drop items  
-    const [checklistItems, setChecklistItems] = useState([])
+    // const [checklistItems, setChecklistItems] = useState([])
     // drag and drop items in a checklist
     const onChecklistDragEnd = (result,  listID, cardID, checklist) => {
         if (!result.destination) {

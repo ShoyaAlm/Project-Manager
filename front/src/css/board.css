@@ -15,7 +15,9 @@ body {
     /* background-color: #CC3399; */
 }
 
-
+.list-being-dragged {
+    box-shadow: none;
+  }
 
 
 .list {
@@ -28,6 +30,7 @@ body {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     
 }
+
 
 .list-link {
     text-decoration: none;

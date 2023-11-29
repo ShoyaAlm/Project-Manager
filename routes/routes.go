@@ -11,6 +11,7 @@ func SetListRoutes(r *mux.Router) {
 	r.HandleFunc("/api/lists/{id:[0-9]+}", controllers.GetAList).Methods("GET")
 	r.HandleFunc("/api/lists", controllers.CreateList).Methods("POST")
 	r.HandleFunc("/api/lists/{id:[0-9]+}", controllers.UpdateAList).Methods("PATCH")
+	r.HandleFunc("/api/lists/update-lists-order", controllers.UpdateListOrder).Methods("PUT")
 	r.HandleFunc("/api/lists/{id:[0-9]+}/update-cards-order", controllers.UpdateCardOrder).Methods("PUT")
 	r.HandleFunc("/api/lists/{id:[0-9]+}", controllers.DeleteAList).Methods("DELETE")
 }

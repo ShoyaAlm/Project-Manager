@@ -26,7 +26,8 @@ func GetAllCards(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cardRows, err := db.Query("SELECT id, name, description, dates FROM cards WHERE list_id = $1", listID)
+	cardRows, err := db.Query("SELECT id, name, description, dates FROM cards WHERE list_id = $1 ORDER BY position ASC", listID)
+
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to fetch cards, %s", err), http.StatusInternalServerError)
 		return
@@ -508,141 +509,89 @@ func CreateCard(w http.ResponseWriter, r *http.Request) {
 
 	var requestData struct {
 		Name        string             `json:"name"`
-		UserID 		int			   	   `json:"user_id"`
-		Username 	string			   `json:"username"`
-		UserEmail 	string			   `json:"user_email"`
+		UserID      int                `json:"user_id"`
+		Username    string             `json:"username"`
+		UserEmail   string             `json:"user_email"`
 		Description string             `json:"description"`
 		Dates       []Date             `json:"dates"`
-		Checklists  []*model.Checklist `json:"checklists"`
-		Members     []*model.Member    `json:"members"`
-		OwnerID 	int 	    	   `json:"owner_id"`
-		Owner 		*model.User 	   `json:"owner"`
+		Members     []*model.User    `json:"members"`
+		OwnerID     int                `json:"owner_id"`
+		Owner       *model.User        `json:"owner"`
 	}
 
-	
 	err = json.Unmarshal(body, &requestData)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to parse JSON data, %s", err), http.StatusBadRequest)
 		return
 	}
 
+	log.Printf("userID: %v", requestData.OwnerID)
 
-
-	log.Printf("userID : %v", requestData.OwnerID)
-
-	var newCardID, newChecklistID, newItemID, newMemberID int
+	var newCardID, newMemberID int
 
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to create card, %s", err), http.StatusInternalServerError)
 		return
 	}
 
-
 	// Get the current time
 	currentDate := time.Now()
-	oneWeekLater := currentDate.AddDate(0, 0, 7)
 
-	emptyItem := &model.Item{
-		ID:         newItemID,
-		Name:       "آیتم 1",
-		StartDate:  currentDate,
-		DueDate:    oneWeekLater,
-		AssignedTo: []*model.Member{},
-		Done: 		false,	
+	// Fetch the maximum position value from the cards table for the given list
+	var maxCardPosition int
+	err = db.QueryRow("SELECT COALESCE(MAX(position), 0) FROM cards WHERE list_id = $1", listID).Scan(&maxCardPosition)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to fetch maximum card position, %s", err), http.StatusInternalServerError)
+		return
 	}
 
-	emptyChecklist := &model.Checklist{
-		ID:    newChecklistID,
-		Name:  "چکلیست جدید",
-		Items: []*model.Item{emptyItem},
-	}
-
-	emptyMember := &model.User{
-		ID:   newMemberID,
-		Name: requestData.Username,
-		Email: requestData.UserEmail,
-	}
-
-
+	// Increment the position value for the new card
+	newCardPosition := maxCardPosition + 1
 
 	// Calculate one month later
 	oneMonthLater := currentDate.AddDate(0, 1, 0)
 
 	dates := []time.Time{currentDate, oneMonthLater}
+
 	// Create a new card with non-null fields
 	newCard := &model.Card{
 		ID:          newCardID,
 		Name:        requestData.Name,
-		Description: "توضیحات",
+		Description: requestData.Description,
 		Dates:       dates,
-		Checklists:  []*model.Checklist{emptyChecklist},      // Initialize as empty slice
-		Members:     []*model.User{emptyMember},
-		OwnerID: 	 requestData.OwnerID,
-		Owner:       &model.User{},
+		Members:     requestData.Members,
+		OwnerID:     requestData.OwnerID,
+		Owner:       requestData.Owner,
 	}
 
-
 	owner := &model.User{
-		ID: requestData.OwnerID,
-		Name: requestData.Username,
+		ID:    requestData.OwnerID,
+		Name:  requestData.Username,
 		Email: requestData.UserEmail,
 	}
 
-
-
 	// Query the database to fetch owner details based on UserID
 	ownerRow := db.QueryRow("SELECT id, name, email FROM users WHERE id = $1", requestData.OwnerID)
-	err = ownerRow.Scan(&owner.ID, &owner.Name, &owner.Email,)
+	err = ownerRow.Scan(&owner.ID, &owner.Name, &owner.Email)
 	if err != nil {
 		log.Printf("Error fetching owner details: %v", err)
 		http.Error(w, "Failed to fetch owner details", http.StatusInternalServerError)
 		return
 	}
-	// ownerRow := db.QueryRow("SELECT id, name, email FROM users WHERE id = $1", requestData.UserID)
-	// err = ownerRow.Scan(&owner.ID, &owner.Name, &owner.Email)
-	// if err != nil {
-	// 	if err == sql.ErrNoRows {
-	// 		// Handle the case where no matching owner was found
-	// 		log.Printf("Owner not found for UserID: %v", requestData.UserID)
-	// 		// You can set a default owner or handle the situation as needed
-	// 		// For example:
-	// 		// owner = &model.User{ID: 0, Name: "Default Owner", Email: "default@example.com"}
-	// 	} else {
-	// 		log.Printf("Error fetching owner details: %v", err)
-	// 		http.Error(w, "Failed to fetch owner details", http.StatusInternalServerError)
-	// 		return
-	// 	}
-	// }
-	
-	fmt.Printf("owner : %v", owner)
+
+	fmt.Printf("owner: %v", owner)
 
 	newCard.Owner = owner
 
-
-	err = db.QueryRow("INSERT INTO cards (name, description, dates, owner_id, list_id) VALUES ($1, $2, $3, $4, $5) RETURNING id",
-		newCard.Name, newCard.Description, pq.Array(dates), newCard.OwnerID, listID).Scan(&newCardID)
+	err = db.QueryRow("INSERT INTO cards (name, description, dates, owner_id, list_id, position) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
+		newCard.Name, newCard.Description, pq.Array(dates), newCard.OwnerID, listID, newCardPosition).Scan(&newCardID)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to insert card, %s", err), http.StatusInternalServerError)
 		return
 	}
 
-	err = db.QueryRow("INSERT INTO checklists (name, card_id) VALUES ($1, $2) RETURNING id",
-		emptyChecklist.Name, newCardID).Scan(&newChecklistID)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to insert checklists, %s", err), http.StatusInternalServerError)
-		return
-	}
-
-	err = db.QueryRow("INSERT INTO items (name, start_date, due_date, done, checklist_id) VALUES ($1, $2, $3, $4, $5) RETURNING id",
-		emptyItem.Name, emptyItem.StartDate, emptyItem.DueDate, emptyItem.Done, newChecklistID).Scan(&newItemID)
-	if err != nil {
-		log.Printf("Failed to insert items: %v", err)
-		http.Error(w, fmt.Sprintf("Failed to insert items, %s", err), http.StatusInternalServerError)
-		return
-	}
-
 	err = db.QueryRow("INSERT INTO members (card_id, name, email) VALUES ($1, $2, $3) RETURNING id",
-	newCardID, emptyMember.Name, emptyMember.Email).Scan(&newMemberID)
+		newCardID, owner.Name, owner.Email).Scan(&newMemberID)
 	if err != nil {
 		log.Printf("Failed to insert members: %v", err)
 		http.Error(w, fmt.Sprintf("Failed to insert members, %s", err), http.StatusInternalServerError)
@@ -660,15 +609,13 @@ func CreateCard(w http.ResponseWriter, r *http.Request) {
 
 	_, err = db.Exec("INSERT INTO user_cards (user_id, card_id) VALUES ($1, $2)", 1, newCardID)
 	if err != nil {
-        log.Printf("Failed to insert user_card: %v", err)
-        http.Error(w, "Failed to insert user_card", http.StatusInternalServerError)
-        return
-    }
+		log.Printf("Failed to insert user_card: %v", err)
+		http.Error(w, "Failed to insert user_card", http.StatusInternalServerError)
+		return
+	}
 
 	// Append the new card to the list's cards slice
 	list.Cards = append(list.Cards, newCard)
-
-
 
 	jsonData, err := json.Marshal(list)
 	if err != nil {

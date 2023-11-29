@@ -94,26 +94,26 @@ const List = () => {
 
         // console.log(user);
 
-        const handleNotif = async () => {
-            try{
-                const response = await fetch(`http://localhost:8080/api/notifs/${user.user_id}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ message: `شما لیست "${newListName}" را ساختید `, 
-                    user_id: user.user_id, })
-                });
-                // console.log(user);
-                if (!response.ok) {
-                    throw new Error('Failed to create a new card');
-                  } 
+        // const handleNotif = async () => {
+        //     try{
+        //         const response = await fetch(`http://localhost:8080/api/notifs/${user.user_id}`, {
+        //             method: 'POST',
+        //             headers: {
+        //                 'Content-Type': 'application/json'
+        //             },
+        //             body: JSON.stringify({ message: `شما لیست "${newListName}" را ساختید `, 
+        //             user_id: user.user_id, })
+        //         });
+        //         // console.log(user);
+        //         if (!response.ok) {
+        //             throw new Error('Failed to create a new card');
+        //           } 
                   
-                }
-                catch (error) {
-                console.log('error : ' , error);
-            }
-        }
+        //         }
+        //         catch (error) {
+        //         console.log('error : ' , error);
+        //     }
+        // }
 
 
 
@@ -144,7 +144,7 @@ const List = () => {
         
         const addNewList = () => {
             if (newListName.trim() !== '') {
-                handleNotif()
+                // handleNotif()
                 handleSaveList(newListName)
                 setNewListName('');
                 setIsAddingList(false)
@@ -168,24 +168,24 @@ const List = () => {
 
 
         
-            try{
-                const response = await fetch(`http://localhost:8080/api/notifs/${user.user_id}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ message: `شما لیست "${lst.name}" را حذف کردید `, 
-                    user_id: user.user_id, })
-                });
+            // try{
+            //     const response = await fetch(`http://localhost:8080/api/notifs/${user.user_id}`, {
+            //         method: 'POST',
+            //         headers: {
+            //             'Content-Type': 'application/json'
+            //         },
+            //         body: JSON.stringify({ message: `شما لیست "${lst.name}" را حذف کردید `, 
+            //         user_id: user.user_id, })
+            //     });
 
-                if (!response.ok) {
-                    throw new Error('Failed to create a new card');
-                  } 
+            //     if (!response.ok) {
+            //         throw new Error('Failed to create a new card');
+            //       } 
                   
-                }
-                catch (error) {
-                console.log('error : ' , error);
-            }
+            //     }
+            //     catch (error) {
+            //     console.log('error : ' , error);
+            // }
         
 
             // console.log(id);
@@ -220,25 +220,25 @@ const List = () => {
 
 
 
-        const handleNotif = async () => {
-            try{
-                const response = await fetch(`http://localhost:8080/api/notifs/${user.user_id}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ message: `شما کارت "${newCardName}" را ساختید `, 
-                    user_id: user.user_id })
-                });
-                if (!response.ok) {
-                    throw new Error('Failed to create a new card');
-                  } 
+        // const handleNotif = async () => {
+        //     try{
+        //         const response = await fetch(`http://localhost:8080/api/notifs/${user.user_id}`, {
+        //             method: 'POST',
+        //             headers: {
+        //                 'Content-Type': 'application/json'
+        //             },
+        //             body: JSON.stringify({ message: `شما کارت "${newCardName}" را ساختید `, 
+        //             user_id: user.user_id })
+        //         });
+        //         if (!response.ok) {
+        //             throw new Error('Failed to create a new card');
+        //           } 
                   
-                }
-                catch (error) {
-                console.log('error : ' , error);
-            }
-        }
+        //         }
+        //         catch (error) {
+        //         console.log('error : ' , error);
+        //     }
+        // }
 
 
 
@@ -281,7 +281,7 @@ const List = () => {
         
         const addNewCard = () => {
             if (newCardName.trim() !== '') {
-                handleNotif()
+                // handleNotif()
                 handleSaveCard(newCardName)
                 setIsNewListAddedOrRemoved(true);
                 setNewCardName('');
@@ -525,3 +525,93 @@ const ShowCards = ({ list }) => {
 
 
 Modal.setAppElement("#root")
+
+
+
+
+
+
+// const onDragEnd = (result) => {
+//   if (!result.destination) {
+//     return;
+//   }
+
+//   const updatedLists = Array.from(lsts);
+//   const [movedList] = updatedLists.splice(result.source.index, 1);
+//   updatedLists.splice(result.destination.index, 0, movedList);
+
+//   setLsts(updatedLists);
+
+//   // Send a fetch request to update the list positions on the backend
+//   // Replace 'YOUR_BACKEND_API_ENDPOINT' with the actual endpoint
+//   fetch('http://localhost:8080/api/lists/update-lists-order', {
+//     method: 'PUT',
+//     headers: {
+//       'Content-Type': 'application/json',
+//     },
+//     body: JSON.stringify({
+//       listOrder: updatedLists.map((list) => list.id),
+//     }),
+//   })
+//     .then((response) => {
+//       if (!response.ok) {
+//         throw new Error('Failed to update list order');
+//       }
+//     })
+//     .catch((error) => {
+//       console.error('Error updating list order:', error);
+//     });
+// };
+
+// return (
+//   <DragDropContext onDragEnd={onDragEnd}>
+//   <Droppable droppableId="list">
+//   {(provided) => (
+//       <div
+//       ref={provided.innerRef}
+//       {...provided.droppableProps}
+//       className="list-container"
+//       >
+//       {lsts.map((list, index) => (
+//           <Draggable key={list.id} draggableId={list.id.toString()} index={index}>
+//           {(provided) => (
+//               <div
+//               ref={provided.innerRef}
+//               {...provided.draggableProps}
+//               {...provided.dragHandleProps}
+//               className="list"
+//               >
+//                   <h3>{list.name}</h3>
+//                   <ShowCards list={list} />
+//                   <input
+//                     type="text"
+//                     placeholder="add item"
+//                     onFocus={() => setIsAddingCard(list.id)}
+//                     className={isAddingCard === list.id ? 'add-card-active' : 'add-card'}
+//                     onChange={(e) => setNewCardName(e.target.value)}
+//                     style={{
+//                       margin: '10px',
+//                       padding: '10px',
+//                       width: '200px',
+//                       height: 'auto',
+//                       border: '2px solid #ccc',
+//                       borderRadius: '20px',
+//                     }}
+//                   />
+
+//                   {isAddingCard === list.id && <AddCard id={list.id} />}
+
+//                   <br />
+//                   <button onClick={() => handleDeleteList(list)} className="remove-button">
+//                     پاک کردن
+//                   </button>
+//                   </div>
+//               )}
+//               </Draggable>
+//           ))}
+//           {provided.placeholder}
+//           </div>
+//       )}
+//       </Droppable>
+//   </DragDropContext>
+// );

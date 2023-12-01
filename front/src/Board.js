@@ -510,7 +510,7 @@ const ShowCards = ({ list }) => {
                     </Draggable>
                   ))
                 ) : (
-                  <span>بدون کارت</span>
+                  <span></span>
                 )}
                 {provided.placeholder} {/* Add this line as a placeholder */}
 

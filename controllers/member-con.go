@@ -276,7 +276,7 @@ func GetMemberByName(w http.ResponseWriter, r *http.Request) {
     }
 
     // Fetch members based on the provided name
-	rows, err := db.Query("SELECT id, name, email FROM members WHERE name LIKE $1 || '%' AND card_id = $2", name, cardID)
+    rows, err := db.Query("SELECT id, name, email FROM members WHERE name LIKE $1 || '%' AND card_id = $2 LIMIT 2", name, cardID)
 
 	if err != nil {
         http.Error(w, fmt.Sprintf("Failed to fetch members data, %s", err), http.StatusInternalServerError)

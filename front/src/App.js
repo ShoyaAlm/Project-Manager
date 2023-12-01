@@ -70,6 +70,26 @@ const App = () => {
         window.location.href = '/signup'; // You can also use react-router's history for this.
       };
 
+
+      const styles = {
+        container: {
+          textAlign: 'left',
+          marginBottom: '10px',
+          padding: '10px',
+          borderBottom: '1px solid #ddd',
+          backgroundColor: '#f4f4f4', // Add your desired background color
+          border: '1px solid #ccc', // Add your desired border style
+          borderRadius: '5px', // Optional: Add border radius for rounded corners
+        },
+        link: (currentView) => ({
+          cursor: 'pointer',
+          marginLeft: '20px',
+          color: view === currentView ? '#007BFF' : '#000',
+          fontWeight: view === currentView ? 'bold' : 'normal',
+        }),
+      };
+      
+
     return (
         <div>
 
@@ -106,41 +126,15 @@ const App = () => {
             )}
 
 
-            <div style={{ textAlign: 'left', marginBottom: '10px', padding: '10px', borderBottom: '1px solid #ddd' }}>
-              <span
-                style={{
-                  cursor: 'pointer',
-                  marginRight: '20px',
-                  color: view === 'board' ? '#007BFF' : '#000',
-                  fontWeight: view === 'board' ? 'bold' : 'normal',
-                }}
-                onClick={() => setView('board')}
-              >
+            <div style={styles.container}>
+              <span style={styles.link('board')} onClick={() => setView('board')}>
                 Board
               </span>
-              |
-              <span
-                style={{
-                  cursor: 'pointer',
-                  marginLeft: '20px',
-                  color: view === 'table' ? '#007BFF' : '#000',
-                  fontWeight: view === 'table' ? 'bold' : 'normal',
-                }}
-                onClick={() => setView('table')}
-              >
+              <span style={styles.link('table')} onClick={() => setView('table')}>
                 Table
               </span>
-              |
-              <span
-                style={{
-                  cursor: 'pointer',
-                  marginLeft: '20px',
-                  color: view === 'timeline' ? '#007BFF' : '#000',
-                  fontWeight: view === 'timeline' ? 'bold' : 'normal',
-                }}
-                onClick={() => setView('timeline')}
-              >
-                timeline
+              <span style={styles.link('timeline')} onClick={() => setView('timeline')}>
+                Timeline
               </span>
             </div>
 

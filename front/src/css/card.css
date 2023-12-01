@@ -242,6 +242,48 @@
 
 
 
+
+
+.button-and-search-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+.button-and-search-container {
+  display: flex;
+  align-items: center;
+}
+
+.custom-button {
+  width: 50px;
+  height: 40px;
+  margin-right: 10px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.custom-button:hover {
+  background-color: #45a049;
+}
+
+.custom-textfield {
+  width: 100px;
+  height: 25px;
+  margin: 0;
+  direction: rtl;
+}
+
+.custom-textfield input {
+  padding: 8px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
 .remove-item-button{
     background-color: #ff3333; /* Red background color */
     color: white; /* White text color */
@@ -354,6 +396,42 @@
 }
 
 
+.custom-button {
+  width: 50px;
+  height: 40px;
+  margin-right: 10px;
+  background-color: #4CAF50; /* Button background color */
+  color: white; /* Button text color */
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease; /* Add a smooth transition effect */
+}
+
+.custom-button:hover {
+  background-color: #45a049; /* Change the color on hover */
+}
+
+
+.custom-textfield {
+  width: 150px;
+  height: 40px;
+  direction: rtl;
+  margin: 10px; /* Add margin as needed */
+}
+
+.custom-textfield input {
+  padding: 8px; /* Adjust padding for input field */
+  font-size: 14px; /* Adjust font size as needed */
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.custom-textfield .MuiInputAdornment-root {
+  color: #555; /* Adjust color for the search icon */
+}
+
+
 
 
 .add-member-button {
@@ -444,6 +522,57 @@
     
   }
   
+  .start-date {
+    color: #ff5733; /* Change the color to your preference */
+    font-weight: bold; /* Add other styles as needed */
+  }
+  
+  .due-date {
+    color: #3366ff; /* Change the color to your preference */
+    font-weight: bold; /* Add other styles as needed */
+  }
+
+
+
+
+  /* Styles for the date picker labels */
+.date-picker-label {
+  margin-top: 10px;
+  font-weight: bold;
+  color: #333;
+}
+
+/* Styles for the date picker input fields */
+.date-picker-input {
+  padding: 8px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 100%;
+}
+
+/* Styles for the "انتخاب تاریخ شروع" and "انتخاب تاریخ پایان" paragraphs */
+.date-picker-text {
+  margin-top: 10px;
+  font-weight: bold;
+  color: #333;
+}
+
+/* Styles for the date picker buttons (if applicable) */
+.date-picker-button {
+  background-color: #4CAF50;
+  color: white;
+  padding: 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.date-picker-button:hover {
+  background-color: #45a049;
+}
+
+
   /* Change color of dropdown links on hover */
   .dropdown-content a:hover {background-color: #ddd;}
   

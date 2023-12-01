@@ -366,7 +366,7 @@ export const Card = ({card, list}) => {
                     }
     
                     const users = await response.json();
-                    setMatchingUsers(users);
+                    setMatchingUsers(users.slice(0, 4));
                 } catch (error) {
                     console.log('Error fetching matching users:', error);
                 }
@@ -429,29 +429,33 @@ export const Card = ({card, list}) => {
 
         return (
             <div className="add-member" style={{ marginLeft: '620px', marginRight: 'auto', padding: '10px', position: 'relative' }}>
-                <button onClick={() => {
-                    if(memberCardID != ''){
-                        setIsAddingMember(false)
-                        addNewMember()
-                        setMemberCardID('')
-                    }
-                    }} style={{ width: '50px', height: '40px', marginRight: '10px' }}>
+                <button
+                    onClick={() => {
+                        if (memberCardID !== '') {
+                        setIsAddingMember(false);
+                        addNewMember();
+                        setMemberCardID('');
+                        }
+                    }}
+                    className="custom-button" // Add this class name for styling
+                    >
                     ذخیره
                 </button>
+
                 <TextField
                     type="text"
                     value={newMemberName}
                     onChange={(e) => setNewMemberName(e.target.value)}
-                    placeholder="Enter member name"
-                    style={{ width: '150px', height: '40px', direction: 'rtl' }}
+                    placeholder="نام را وارد کنید"
+                    className="custom-textfield" // Add this class name for styling
                     InputProps={{
                         startAdornment: (
-                            <InputAdornment position="start">
-                                <SearchIcon />
-                            </InputAdornment>
+                        <InputAdornment position="start">
+                            <SearchIcon />
+                        </InputAdornment>
                         ),
                     }}
-                />
+                    />
                 {isListVisible && (
                     <ul
                         style={{
@@ -694,6 +698,13 @@ export const Card = ({card, list}) => {
             
     }
 
+    const formatDate = (dateString) => {
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        const formattedDate = new Date(dateString).toLocaleDateString('fa-IR', options);
+        return formattedDate;
+      };
+      
+
     
     const [isAssignItemModalOpen, setAssignItemModalOpen] = useState(false);
     
@@ -756,31 +767,36 @@ export const Card = ({card, list}) => {
         return (
           <div>
             {isAssignItemModalOpen && (
-              <div className="assignment-modal" style={{ marginLeft: '20px', marginRight: '20px', padding: '10px', position:'relative'}}>
+              <div className="assignment-modal" style={{ marginLeft: '5px', marginRight: '5px', padding: '10px', position:'relative'}}>
+
+                <div className="button-and-search-container">
                 <button
-                  onClick={() => {
+                    onClick={() => {
                     // Add any additional conditions or actions before closing the modal
                     setAssignItemModalOpen(false);
                     setSearchResults([]);
-                  }}
-                  style={{ width: '50px', height: '40px', marginRight: '10px' }}
+                    }}
+                    className="custom-button"
                 >
-                  Save
+                    ذخیره
                 </button>
                 <TextField
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search for a member"
-                  style={{ width: '100px', height: '25px', direction: 'rtl' }}
-                  InputProps={{
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="نام کاربر را وارد کنید"
+                    className="custom-textfield"
+                    InputProps={{
                     startAdornment: (
-                      <InputAdornment position="start">
+                        <InputAdornment position="start">
                         <SearchIcon />
-                      </InputAdornment>
+                        </InputAdornment>
                     ),
-                  }}
+                    }}
                 />
+                </div>
+
+
                 
                 {searchResults.length > 0 && (
                     <div
@@ -900,17 +916,20 @@ export const Card = ({card, list}) => {
           };
       
         return (
-          <div>
+            <div>
             {isLabelOpen && (
               <div className='dropdown-content'>
-                <p>: برچسب فعلی</p>
-                {newCard.label && (
-                    <div className={`label-color ${newCard.label}`}>
-                    </div>
+                {newCard.label ? (
+                  <>
+                    <p>: برچسب فعلی</p>
+                    <div className={`label-color ${newCard.label}`}></div>
+                  </>
+                ) : (
+                  <p>: انتخاب برچسب</p>
                 )}
-
-                
-                <p>: انتخاب برچسب</p>
+                {console.log("Label:", newCard.label)} {/* Log the label value */}
+                {console.log("Is Label Open?", isLabelOpen)} {/* Log the isLabelOpen value */}
+          
                 <div className='label-colors'>
                   {labels.map((label) => (
                     <div
@@ -923,6 +942,7 @@ export const Card = ({card, list}) => {
               </div>
             )}
           </div>
+          
         );
       };
 
@@ -1362,29 +1382,31 @@ export const Card = ({card, list}) => {
                         <div className='dropdown'>
                             <button className='dropbtn'>تاریخ</button>
                             <div className='dropdown-content'>
-                                <a href="#">{newCard.dates[0]} : شروع</a>
-                                <a href="#">{newCard.dates[1]} : پایان</a>
+                            <a href="#" className="start-date">  شروع : {formatDate(newCard.dates[0])}</a>
+                            <a href="#" className="due-date">  پایان : {formatDate(newCard.dates[1])}</a>
 
                                 {/* Button to open the date picker for the start date */} 
                                 {/* <button onClick={() => document.getElementById('start-date-picker').click()}>انتخاب تاریخ شروع</button> */}
-                                <p>انتخاب تاریخ شروع</p>
+                                {/* Date picker for the start date */}
+                                <p className="date-picker-text">انتخاب تاریخ شروع</p>
                                 <DatePicker
                                 id="start-date-picker"
                                 selected={editedDates.start}
                                 onChange={(date) => handleDateChange(date, 'start')}
                                 dateFormat="yyyy-MM-dd"
                                 showYearDropdown
+                                className="date-picker-input"
                                 />
 
-                                {/* Button to open the date picker for the end date */}
-                                {/* <button onClick={() => document.getElementById('end-date-picker').click()}>انتخاب تاریخ پایان</button> */}
-                                <p>انتخاب تاریخ پایان</p>
+                                {/* Date picker for the end date */}
+                                <p className="date-picker-text">انتخاب تاریخ پایان</p>
                                 <DatePicker
                                 id="end-date-picker"
                                 selected={editedDates.end}
                                 onChange={(date) => handleDateChange(date, 'end')}
                                 dateFormat="yyyy-MM-dd"
                                 showYearDropdown
+                                className="date-picker-input"
                                 />
 
                                 {/* Button to save the edited dates to the backend */}

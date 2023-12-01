@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
-import './css/table.css'
+import './css/table.css';
+
 const Table = () => {
   const [lists, setLists] = useState([]);
 
@@ -32,25 +33,46 @@ const Table = () => {
     <table>
       <thead>
         <tr>
-          <th>List</th>
-          <th>Card Name</th>
-          <th>Label</th>
-          <th>Members</th>
-          <th>Due Date</th>
+          <th>نام لیست</th>
+          <th>نام کارت</th>
+          <th>برچسب</th>
+          <th>اعضا</th>
+          <th>موعد مقرر</th>
         </tr>
       </thead>
       <tbody>
-        {lists.map((list) =>
-          list.cards.map((card) => (
-            <tr key={card.id}>
-              <td>{list.name}</td>
-              <td>{card.name}</td>
-              <td>{card.label || 'N/A'}</td>
-              <td>{card.members.map((member) => member.name).join(', ')}</td>
-              <td>{card.dueDate ? new Date(card.dueDate).toLocaleDateString() : 'N/A'}</td>
-            </tr>
-          ))
-        )}
+        {lists.map((list) => (
+          <React.Fragment key={list.name}>
+            {list.cards && list.cards.length !== 0 ? (
+              list.cards.map((card, index) => (
+                <tr key={card.id}>
+                  {index === 0 ? <td rowSpan={list.cards.length}>{list.name}</td> : null}
+                  <td>{card.name}</td>
+                  <td>
+                    {card.label && (
+                      <div
+                        style={{
+                          width: '20px',
+                          height: '20px',
+                          backgroundColor: card.label.toLowerCase(),
+                          display: 'inline-block',
+                          marginRight: '5px',
+                        }}
+                      ></div>
+                    )}
+                  </td>
+                  <td>{card.members.map((member) => member.name).join(', ')}</td>
+                  <td>{card.dueDate ? new Date(card.dueDate).toLocaleDateString() : 'ندارد'}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td>{list.name}</td>
+                <td colSpan={4}>هیچ کارتی در این لیست وجود ندارد</td>
+              </tr>
+            )}
+          </React.Fragment>
+        ))}
       </tbody>
     </table>
   );

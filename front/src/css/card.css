@@ -167,6 +167,9 @@
 .activity {
   width: 40%; /* Adjust the width as needed */
   background: linear-gradient(to bottom, #B2CFDC, #91CFE8);
+  max-height: 400px;
+  height: 150px;
+  /*overflow-y: auto; /* Add scroll if content exceeds the max-height, makes my content blurry */
   margin: 20px;
   padding: 10px;
   border: 1px solid #ccc;
@@ -219,7 +222,8 @@
 
 
 .checklist {
-  width: 40%; /* Adjust the width as needed */
+  width: 80%; /* Adjust the width as needed */
+  max-width: 320px; /* Set a maximum width */
   background: linear-gradient(to bottom, #DCB2CF, #E891CF);
   margin: 20px;
   padding: 10px;
@@ -227,7 +231,6 @@
   border-radius: 8px;
   text-align: right;
 }
-
 .checklist-title {
   font-size: 16px;
   margin: 10px 0;

@@ -1034,10 +1034,55 @@ export const Card = ({card, list}) => {
 
 
 
+    const onChecklistDragEnd = (result, listID, cardID, cardChecklists) => {
+    if (!result.destination) {
+        return;
+    }
+
+    const updatedChecklists = [...cardChecklists];
+    const [movedChecklist] = updatedChecklists.splice(result.source.index, 1);
+    updatedChecklists.splice(result.destination.index, 0, movedChecklist);
+
+    // Update the position property based on the new order
+    const updatedChecklistsWithPosition = updatedChecklists.map((checklist, index) => ({
+        ...checklist,
+        position: index,
+    }));
+
+    // Assuming you have a function to update the card checklists order
+    // You might need to update the state for the entire card, including checklists
+    setCardChecklists(updatedChecklistsWithPosition);
+
+    // Prepare data to update the order on the backend
+    const updatedOrder = updatedChecklistsWithPosition.map((checklist) => checklist.id);
+
+    // Make an API call to update the checklist order on the server
+    fetch(`http://localhost:8080/api/lists/${listID}/cards/${cardID}/update-checklists-order`, {
+        method: 'PUT', // Assuming you are using the PUT method to update the order
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            checklistOrder: updatedOrder,
+        }),
+    })
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error('Failed to update checklist order on the server');
+            }
+            // Handle a successful response as needed
+        })
+        .catch((error) => {
+            console.error('Error updating checklist order on the server:', error);
+            // You can handle the error, show a message, or retry the operation
+        });
+        };
+
+
     // drag and drop items  
     // const [checklistItems, setChecklistItems] = useState([])
     // drag and drop items in a checklist
-    const onChecklistDragEnd = (result,  listID, cardID, checklist) => {
+    const onChecklistItemsDragEnd = (result,  listID, cardID, checklist) => {
         if (!result.destination) {
           return;
         }
@@ -1171,29 +1216,46 @@ export const Card = ({card, list}) => {
 
 
 
-                    <div className='showcase-checklists' style={{marginRight:'auto'}}>
-                        
+
+{/* ##################################### */}
+
+{/* ##################################### */}
+
+{/* ##################################### */}
+
+{/* ##################################### */}
+
+{/* ##################################### */}
+
+
+
+                    <div className='showcase-checklists' style={{ marginRight: 'auto', maxWidth: '1200px' }}>
                         <div className='activity'>
                             <h3 style={{textAlign:'center'}}>فعالیت</h3>
                             <CardActivity list={newList} card={newCard} user={user}/>
-
-                    
                         </div>
 
                         {cardChecklists && cardChecklists.length > 0 ? (
-                            <>
-                            {cardChecklists.map((checklist, index) => (
                             <DragDropContext onDragEnd={(result) => onChecklistDragEnd(result, newList.id, newCard.id, cardChecklists)}>
-                                <div className='checklist' key={index}>
-                                <h2 className='checklist-title'>
-                                    <img src={require('./icons/checklist.png')} alt="" style={{ width: '25px', height: '25px', marginBottom: '-5px', marginLeft: '-30px', marginRight: '10px' }} />
-                                    {checklist.name}
-                                </h2>
-                                {checklist.items && checklist.items.length > 0 ? (
-                                    <Droppable droppableId={`checklist-${checklist.id}`} type={`checklist-${checklist.id}`}>
+                                <Droppable droppableId="checklist-container" type="checklist">
                                     {(provided) => (
-                                        <div ref={provided.innerRef} {...provided.droppableProps}>
-                                        {checklist.items.map((item, itemIndex) => (
+                                        <div ref={provided.innerRef} {...provided.droppableProps} className="checklists" style={{ display: 'flex', flexDirection: 'column', flex: '1', marginLeft:'100px' }}>
+                                            {cardChecklists.map((checklist, index) => (
+                                                <Draggable key={checklist.id.toString()} draggableId={`checklist-draggable-${checklist.id}`} index={index}>
+                                                    {(provided) => (
+                                                    <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
+                                                        <div className='checklist'>
+                                                            <h2 className='checklist-title'>
+                                                                <img src={require('./icons/checklist.png')} alt="" style={{ width: '25px', height: '25px', marginBottom: '-5px', marginLeft: '-30px', marginRight: '10px' }} />
+                                                                {checklist.name}
+                                                            </h2>
+                                                                {/* ... (existing code for items) */}
+
+                                            {checklist.items && checklist.items.length > 0 ? (
+                                            <Droppable droppableId={`checklist-${checklist.id}`} type={`checklist-${checklist.id}`}>
+                                            {(provided) => (
+                                            <div ref={provided.innerRef} {...provided.droppableProps}>
+                                            {checklist.items.map((item, itemIndex) => (
                                             <Draggable key={item.id.toString()} draggableId={item.id.toString()} index={itemIndex}>
                                             {(provided) => (
                                                 <div
@@ -1284,19 +1346,24 @@ export const Card = ({card, list}) => {
                                 <br />
                                 <button type='submit' className='remove-checklist-button' onClick={() => removeChecklist(checklist.id)}>پاک کردن</button>
                             
-
-
-                                </div>
+                                                                
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </Draggable>
+                                            ))}
+                                            {provided.placeholder}
+                                        </div>
+                                    )}
+                                </Droppable>
                             </DragDropContext>
-                            ))}
-                            </>
                         ) : (
                             <span>بدون چکلیست</span>
                         )}
-
-
-
                     </div>
+
+
+
 
 
 
@@ -1431,3 +1498,82 @@ export const Card = ({card, list}) => {
     
 }    
 
+
+
+
+
+
+{/* <div className='showcase-checklists' style={{ marginRight: 'auto' }}>
+<div className='activity'>
+    <h3 style={{ textAlign: 'center' }}>فعالیت</h3>
+    <CardActivity list={newList} card={newCard} user={user} />
+</div>
+
+<DragDropContext onDragEnd={(result) => onDragEnd(result, newList.id, newCard.id, cardChecklists, setCardChecklists)}>
+    {cardChecklists && cardChecklists.length > 0 ? (
+        cardChecklists.map((checklist, index) => (
+            <Droppable key={index} droppableId={`checklist-${checklist.id}`} type={`checklist-${checklist.id}`}>
+                {(provided) => (
+                    <div ref={provided.innerRef} {...provided.droppableProps}>
+                        <Draggable draggableId={`checklist-draggable-${checklist.id}`} index={index}>
+                            {(provided) => (
+                                <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
+                                    <div className='checklist'>
+                                        <h2 className='checklist-title'>
+                                            <img src={require('./icons/checklist.png')} alt="" style={{ width: '25px', height: '25px', marginBottom: '-5px', marginLeft: '-30px', marginRight: '10px' }} />
+                                            {checklist.name}
+                                        </h2>
+                                        {checklist.items && checklist.items.length > 0 ? (
+                                            <div>
+                                                {checklist.items.map((item, itemIndex) => (
+                                                    <Draggable key={item.id.toString()} draggableId={item.id.toString()} index={itemIndex}>
+                                                        {(provided) => (
+                                                            <div
+                                                                ref={provided.innerRef}
+                                                                {...provided.draggableProps}
+                                                                {...provided.dragHandleProps}
+                                                                className="checklist-item"
+                                                            >
+                                                                {/* ... (existing code for checklist items) */}
+//                                                             </div>
+//                                                         )}
+//                                                     </Draggable>
+//                                                 ))}
+//                                             </div>
+//                                         ) : (
+//                                             <span>بدون آیتم</span>
+//                                         )}
+//                                         {/* ... (existing code for adding items, buttons, etc.) */}
+                                    
+//                                         {itemChecklistID === checklist.id && isAddingItem && <AddItem checklist={checklist}/> }
+
+
+//                                         <button type='button' className='add-item-button' onClick={() => {
+//                                             if(itemChecklistID === ''){
+//                                                 setIsAddingItem(true)
+//                                                 setItemChecklistID(checklist.id)
+//                                             } else {
+//                                                 setIsAddingItem(false)
+//                                                 setItemChecklistID('')
+//                                             } 
+                                            
+//                                         }}>اضافه کردن آیتم</button>
+
+
+//                                         <br />
+//                                         <button type='submit' className='remove-checklist-button' onClick={() => removeChecklist(checklist.id)}>پاک کردن</button>
+
+//                                     </div>
+//                                 </div>
+//                             )}
+//                         </Draggable>
+//                         {provided.placeholder}
+//                     </div>
+//                 )}
+//             </Droppable>
+//         ))
+//     ) : (
+//             <span>بدون چکلیست</span>
+//         )}
+// </DragDropContext>
+// </div> */}

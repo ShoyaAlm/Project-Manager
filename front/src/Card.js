@@ -316,36 +316,7 @@ export const Card = ({card, list}) => {
         const [matchingUsers, setMatchingUsers] = useState([]);
         const [selectedUser, setSelectedUser] = useState(null);
 
-        // useEffect(() => {
-
-        //     const fetchMembers = async () => {
-        //         try {
-        //             const response = await fetch(`http://localhost:8080/api/lists/${list.id}/cards/${card.id}/members`,{
-        //                 method: 'GET',
-        //                 headers: {
-        //                     'Content-Type': 'application/json'
-        //                 },
-        //             });
-        //             if (!response.ok){
-        //                 throw new Error('Error getting the member')
-        //             }
-            
-        //             const allMembers = await response.json();
-        //             setCardMembers(allMembers)
-                    
-        //         } catch (error) {
-        //             console.log('got error : ', error);
-        //         }
         
-        //     }
-
-        //     if(isNewMemberAddedOrRemoved){
-        //         fetchMembers();
-        //         setIsNewMemberAddedOrRemoved(false)
-        //     }
-
-        // },[isNewMemberAddedOrRemoved])
-
         console.log('newMemberName : ', newMemberName);
         console.log("selected user : ", selectedUser);
 
@@ -366,7 +337,18 @@ export const Card = ({card, list}) => {
                     }
     
                     const users = await response.json();
-                    setMatchingUsers(users.slice(0, 4));
+                    setMatchingUsers(() => {
+                        const similarUsers = users.filter(user => {
+                            // You can use any string matching algorithm here.
+                            // For example, here we're using a simple case-insensitive substring match.
+                            const lowerCaseName = user.name.toLowerCase();
+                            const lowerCaseNewMemberName = newMemberName.toLowerCase();
+                            return lowerCaseName.includes(lowerCaseNewMemberName);
+                        });
+                    
+                        // Update state with the filtered users (up to 4)
+                        return similarUsers.slice(0, 4);
+                    });
                 } catch (error) {
                     console.log('Error fetching matching users:', error);
                 }
@@ -724,8 +706,19 @@ export const Card = ({card, list}) => {
                         'Content-Type': 'application/json',
                       },
                     });
-                    const data = await response.json();
-                    setSearchResults(data);
+                    const members = await response.json();
+                    setSearchResults(() => {
+                        const similarUsers = members.filter(member => {
+                            // You can use any string matching algorithm here.
+                            // For example, here we're using a simple case-insensitive substring match.
+                            const lowerCaseName = member.name.toLowerCase();
+                            const lowerCaseSearchQuery = searchQuery.toLowerCase();
+                            return lowerCaseName.includes(lowerCaseSearchQuery);
+                        });
+                    
+                        // Update state with the filtered users (up to 4)
+                        return similarUsers.slice(0, 4);
+                    });
                   } catch (error) {
                     console.error('Error fetching search results:', error);
                   }
@@ -1214,18 +1207,6 @@ export const Card = ({card, list}) => {
                     </div>
                             
 
-
-
-
-{/* ##################################### */}
-
-{/* ##################################### */}
-
-{/* ##################################### */}
-
-{/* ##################################### */}
-
-{/* ##################################### */}
 
 
 

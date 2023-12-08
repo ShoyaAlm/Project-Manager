@@ -92,30 +92,7 @@ const List = () => {
 
     const AddList = () => {
 
-        // console.log(user);
-
-        // const handleNotif = async () => {
-        //     try{
-        //         const response = await fetch(`http://localhost:8080/api/notifs/${user.user_id}`, {
-        //             method: 'POST',
-        //             headers: {
-        //                 'Content-Type': 'application/json'
-        //             },
-        //             body: JSON.stringify({ message: `شما لیست "${newListName}" را ساختید `, 
-        //             user_id: user.user_id, })
-        //         });
-        //         // console.log(user);
-        //         if (!response.ok) {
-        //             throw new Error('Failed to create a new card');
-        //           } 
-                  
-        //         }
-        //         catch (error) {
-        //         console.log('error : ' , error);
-        //     }
-        // }
-
-
+       
 
         const handleSaveList = async (newListName) => {
             
@@ -220,27 +197,6 @@ const List = () => {
 
 
 
-        // const handleNotif = async () => {
-        //     try{
-        //         const response = await fetch(`http://localhost:8080/api/notifs/${user.user_id}`, {
-        //             method: 'POST',
-        //             headers: {
-        //                 'Content-Type': 'application/json'
-        //             },
-        //             body: JSON.stringify({ message: `شما کارت "${newCardName}" را ساختید `, 
-        //             user_id: user.user_id })
-        //         });
-        //         if (!response.ok) {
-        //             throw new Error('Failed to create a new card');
-        //           } 
-                  
-        //         }
-        //         catch (error) {
-        //         console.log('error : ' , error);
-        //     }
-        // }
-
-
 
 
         const handleSaveCard = async (newCardName) => {
@@ -301,51 +257,101 @@ const List = () => {
 
     }
     
-   
+
+    
+    const handleDragEnd = (result) => {
+      if (!result.destination) {
+        return;
+      }
+
+      const updatedLists = Array.from(lsts);
+      const [movedList] = updatedLists.splice(result.source.index, 1);
+      updatedLists.splice(result.destination.index, 0, movedList);
+
+      setLsts(updatedLists);
+
+      // Send a fetch request to update the list positions on the backend
+      // Replace 'YOUR_BACKEND_API_ENDPOINT' with the actual endpoint
+      fetch('http://localhost:8080/api/lists/update-lists-order', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          listOrder: updatedLists.map((list) => list.id),
+        }),
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error('Failed to update list order');
+          }
+        })
+        .catch((error) => {
+          console.error('Error updating list order:', error);
+        });
+    };
+      
 
 
-    return (
-        <div className="list-container">
-            {lsts.map((lst) => (
-                <div key={lst.id} className="list">
-                <h3>{lst.name}</h3>
-                <ShowCards list={lst} />
-                    <input
-                        type="text"
-                        placeholder='add item'
-                        onFocus={() => setIsAddingCard(lst.id)}
-                        className={isAddingCard === lst.id ? 'add-card-active' : 'add-card'}
-                        onChange={(e) => setNewCardName(e.target.value)}
-                        style={{margin: '10px', padding: '10px', 
-                        width: '200px', height: 'auto', 
-                        border: '2px solid #ccc', borderRadius: '20px'}}/>
-                    
-                    
-                    {isAddingCard === lst.id && <AddCard id={lst.id}/>}
-                    
+      return (
+        <DragDropContext onDragEnd={handleDragEnd}>
+            <Droppable droppableId="list-container" direction='horizontal'>
+                {(provided) => (
+                    <div
+                        {...provided.droppableProps}
+                        ref={provided.innerRef}
+                        style={{display:'flex'}}
+                    >
+                        {lsts.map((lst, index) => (
+                            <Draggable key={lst.id} draggableId={lst.id.toString()} index={index}>
+                                {(provided) => (
+                                    <div
+                                        {...provided.draggableProps}
+                                        {...provided.dragHandleProps}
+                                        ref={provided.innerRef}
+                                    >
+                                        <div className="list">
+                                            {/* Your existing list content */}
 
-                    <br />
-                    <button onClick={() => handleDeleteList(lst)} className="remove-button">
-                        پاک کردن
-                    </button>
-                </div>
-            ))}
+                                      
+                                      <h3>{lst.name}</h3>
+                                      <ShowCards list={lst} />
+                                          <input
+                                              type="text"
+                                              placeholder='add item'
+                                              onFocus={() => setIsAddingCard(lst.id)}
+                                              className={isAddingCard === lst.id ? 'add-card-active' : 'add-card'}
+                                              onChange={(e) => setNewCardName(e.target.value)}
+                                              style={{margin: '10px', padding: '10px', 
+                                              width: '200px', height: 'auto', 
+                                              border: '2px solid #ccc', borderRadius: '20px'}}/>
+                                          
+                                          
+                                          {isAddingCard === lst.id && <AddCard id={lst.id}/>}
+                                          
 
-            <div className="add-list-container">
-                <input
-                    type="text"
-                    placeholder="+ add a list"
-                    className="add-list"
-                    onFocus={() => setIsAddingList(true)}
-                    onChange={(e) => setNewListName(e.target.value)}
-                />
-                {isAddingList === true &&  <AddList/>}
-            </div>
+                                          <br />
+                                          <button onClick={() => handleDeleteList(lst)} className="remove-button">
+                                              پاک کردن
+                                          </button>
 
-
-        </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </Draggable>
+                        ))}
+                        {provided.placeholder}
+                    </div>
+                )}
+            </Droppable>
+        </DragDropContext>
     );
-};
+
+
+
+    
+
+  };
 
 
 
@@ -531,87 +537,45 @@ Modal.setAppElement("#root")
 
 
 
-// const onDragEnd = (result) => {
-//   if (!result.destination) {
-//     return;
-//   }
-
-//   const updatedLists = Array.from(lsts);
-//   const [movedList] = updatedLists.splice(result.source.index, 1);
-//   updatedLists.splice(result.destination.index, 0, movedList);
-
-//   setLsts(updatedLists);
-
-//   // Send a fetch request to update the list positions on the backend
-//   // Replace 'YOUR_BACKEND_API_ENDPOINT' with the actual endpoint
-//   fetch('http://localhost:8080/api/lists/update-lists-order', {
-//     method: 'PUT',
-//     headers: {
-//       'Content-Type': 'application/json',
-//     },
-//     body: JSON.stringify({
-//       listOrder: updatedLists.map((list) => list.id),
-//     }),
-//   })
-//     .then((response) => {
-//       if (!response.ok) {
-//         throw new Error('Failed to update list order');
-//       }
-//     })
-//     .catch((error) => {
-//       console.error('Error updating list order:', error);
-//     });
-// };
-
+// original list return section
 // return (
-//   <DragDropContext onDragEnd={onDragEnd}>
-//   <Droppable droppableId="list">
-//   {(provided) => (
-//       <div
-//       ref={provided.innerRef}
-//       {...provided.droppableProps}
-//       className="list-container"
-//       >
-//       {lsts.map((list, index) => (
-//           <Draggable key={list.id} draggableId={list.id.toString()} index={index}>
-//           {(provided) => (
-//               <div
-//               ref={provided.innerRef}
-//               {...provided.draggableProps}
-//               {...provided.dragHandleProps}
-//               className="list"
-//               >
-//                   <h3>{list.name}</h3>
-//                   <ShowCards list={list} />
-//                   <input
-//                     type="text"
-//                     placeholder="add item"
-//                     onFocus={() => setIsAddingCard(list.id)}
-//                     className={isAddingCard === list.id ? 'add-card-active' : 'add-card'}
-//                     onChange={(e) => setNewCardName(e.target.value)}
-//                     style={{
-//                       margin: '10px',
-//                       padding: '10px',
-//                       width: '200px',
-//                       height: 'auto',
-//                       border: '2px solid #ccc',
-//                       borderRadius: '20px',
-//                     }}
-//                   />
+//   <div className="list-container">
+//       {lsts.map((lst) => (
+//           <div key={lst.id} className="list">
+//           <h3>{lst.name}</h3>
+//           <ShowCards list={lst} />
+//               <input
+//                   type="text"
+//                   placeholder='add item'
+//                   onFocus={() => setIsAddingCard(lst.id)}
+//                   className={isAddingCard === lst.id ? 'add-card-active' : 'add-card'}
+//                   onChange={(e) => setNewCardName(e.target.value)}
+//                   style={{margin: '10px', padding: '10px', 
+//                   width: '200px', height: 'auto', 
+//                   border: '2px solid #ccc', borderRadius: '20px'}}/>
+              
+              
+//               {isAddingCard === lst.id && <AddCard id={lst.id}/>}
+              
 
-//                   {isAddingCard === list.id && <AddCard id={list.id} />}
-
-//                   <br />
-//                   <button onClick={() => handleDeleteList(list)} className="remove-button">
-//                     پاک کردن
-//                   </button>
-//                   </div>
-//               )}
-//               </Draggable>
-//           ))}
-//           {provided.placeholder}
+//               <br />
+//               <button onClick={() => handleDeleteList(lst)} className="remove-button">
+//                   پاک کردن
+//               </button>
 //           </div>
-//       )}
-//       </Droppable>
-//   </DragDropContext>
+//       ))}
+
+//       <div className="add-list-container">
+//           <input
+//               type="text"
+//               placeholder="+ add a list"
+//               className="add-list"
+//               onFocus={() => setIsAddingList(true)}
+//               onChange={(e) => setNewListName(e.target.value)}
+//           />
+//           {isAddingList === true &&  <AddList/>}
+//       </div>
+
+
+//   </div>
 // );

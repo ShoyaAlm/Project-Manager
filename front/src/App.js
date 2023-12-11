@@ -5,7 +5,7 @@ import React, { useState, useEffect, useContext } from 'react'
 // import {useState} from 'react'
 
 
-import { BrowserRouter as Router, Route, Switch} from 'react-router-dom'
+import { BrowserRouter as Router, Route, Switch, Redirect} from 'react-router-dom'
 import {Link, useParams} from 'react-router-dom'
 import NotificationDropdown from './Notif.js'
 
@@ -14,9 +14,10 @@ import { HandleSignupLogin } from './signup-login.js'
 import { Card } from './Card'
 import Profile from './Profile'
 import jwt_decode from 'jwt-decode'
+import Workspace from './Workspace'
 
 import Table from './Table'
-import Timeline from './Timeline'
+import Scheduler from './Scheduler'
 
 export const getJwtFromCookie = () => {
   // Get all cookies as a string
@@ -43,6 +44,9 @@ const App = () => {
 
     const [user, setUser] = useState(null)
     const [view, setView] = useState('board');
+    
+
+    
 
     useEffect(() => {
         // Check if a JWT is stored (in this example, we assume it's stored in a cookie)
@@ -108,12 +112,9 @@ const App = () => {
                     <h3 style={{ fontFamily: 'sans-serif', color: 'black' }}>پروفایل من</h3>
                 </Link>
 
-
-                {/* this is for the notifs */}
-                <div>
-                  <NotificationDropdown user={user}/>
-                </div>
-
+                <Link to="/workspace" style={{ textDecoration: 'none' }}>
+                    <h3 style={{ fontFamily: 'sans-serif', color: 'black' }}>workspace</h3>
+                </Link>
 
                   <Link to="#" style={{ textDecoration: 'none' }} onClick={handleLogout}>خروج</Link>
                     <hr />
@@ -143,9 +144,12 @@ const App = () => {
 
 
               <Switch>
-              <Route exact path='/'>
-                {view === 'board' ? <AllLists /> : (view === 'table' ? <Table /> : <Timeline />)}
+              <Route path='/board/:boardId/lists'>
+                {view === 'board' ? <AllLists /> : (view === 'table' ? <Table /> : <Scheduler/> )}
               </Route>
+              <Route path='/workspace'>
+                  <Workspace />
+                </Route>
                 <Route path='/lists/:listId/cards/:cardId'>
                   <Card />
                 </Route>
@@ -155,6 +159,9 @@ const App = () => {
                 <Route path='/profile'>
                   <Profile />
                 </Route>
+
+                <Redirect from="/" to="/workspace" />
+
               </Switch>
 
         

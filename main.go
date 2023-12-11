@@ -22,7 +22,8 @@ func main() {
 	)
 
 	fmt.Printf("Server running at port 8080...\n")
-
+	
+	routes.SetBoardRoutes(r)
 	routes.SetListRoutes(r)
 	routes.SetCardRoutes(r)
 	routes.SetChecklistRoutes(r)

@@ -1,0 +1,90 @@
+/* Add this CSS to your timeline.css or create a new stylesheet */
+.scheduler-wrapper {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Style for your custom card-timeline */
+.scheduler-wrapper .card-timeline {
+  background-color: #f8f8f8; /* Adjust the background color for cards */
+  border: 1px solid #e0e0e0; /* Adjust the border color for cards */
+  border-radius: 4px;
+  padding: 8px;
+  margin: 4px;
+}
+
+/* Additional styling for date-range and card-title (customize as needed) */
+.scheduler-wrapper .card-timeline .date-range {
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.scheduler-wrapper .card-timeline .card-title {
+  font-size: 14px;
+}
+/* Style for react-big-calendar events */
+.rbc-event {
+  background-color: #3174ad; /* Adjust the background color as needed */
+  color: white;
+  border: 1px solid #285e8e; /* Adjust the border color as needed */
+  border-radius: 4px;
+  padding: 2px 5px;
+}
+
+/* Style for react-big-calendar selected events */
+.rbc-selected {
+  background-color: #1a4577; /* Adjust the background color for selected events */
+}
+
+/* Style for react-big-calendar toolbar (optional) */
+.rbc-toolbar {
+  margin-bottom: 20px;
+}
+
+/* Style for react-big-calendar header (optional) */
+.rbc-header {
+  background-color: #3174ad; /* Adjust the background color of the header */
+  color: white;
+}
+
+/* Style for react-big-calendar date cell (optional) */
+.rbc-date-cell {
+  padding: 10px;
+  text-align: center;
+}
+
+/* Style for react-big-calendar today cell (optional) */
+.rbc-today {
+  background-color: #e5f2ff; /* Adjust the background color for today's date */
+}
+
+/* Style for react-big-calendar day of week (optional) */
+.rbc-row-bg {
+  border-bottom: 1px solid #ccc; /* Adjust the border color for days of the week */
+}
+
+/* Style for horizontal scrollbar (optional) */
+.horizontal-scroll {
+  overflow-x: auto;
+}
+
+/* Style for your custom card-timeline */
+.card-timeline {
+  background-color: #f8f8f8; /* Adjust the background color for cards */
+  border: 1px solid #e0e0e0; /* Adjust the border color for cards */
+  border-radius: 4px;
+  padding: 8px;
+  margin: 4px;
+}
+
+/* Additional styling for date-range and card-title (customize as needed) */
+.date-range {
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.card-title {
+  font-size: 14px;
+}

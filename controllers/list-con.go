@@ -29,7 +29,18 @@ func init() {
 
 func GetAllLists(w http.ResponseWriter, r *http.Request) {
 
-	listRows, err := db.Query("SELECT id, name FROM lists ORDER BY position ASC")
+
+	vars := mux.Vars(r)
+	boardID, err := strconv.Atoi(vars["board_id"])
+	if err != nil {
+		http.Error(w, "Invalid board ID", http.StatusBadRequest)
+		return
+	}
+
+	
+	// listRows, err := db.Query("SELECT id, name FROM lists ORDER BY position WHERE board_id = 1")
+
+	listRows, err := db.Query("SELECT id, name FROM lists WHERE board_id = $1", boardID)
 
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to fetch lists, %s", err), http.StatusInternalServerError)
@@ -261,7 +272,15 @@ func GetAllLists(w http.ResponseWriter, r *http.Request) {
 
 func GetAList(w http.ResponseWriter, r *http.Request) {
 
+	
 	vars := mux.Vars(r)
+	boardID, err := strconv.Atoi(vars["board_id"])
+	if err != nil {
+		http.Error(w, "Invalid board ID", http.StatusBadRequest)
+		return
+	}
+
+	// vars := mux.Vars(r)
 	listID, err := strconv.Atoi(vars["id"])
 	if err != nil {
 		http.Error(w, "Invalid list ID", http.StatusBadRequest)
@@ -269,7 +288,7 @@ func GetAList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Fetch list details
-	listRow := db.QueryRow("SELECT id, name FROM lists WHERE id = $1", listID)
+	listRow := db.QueryRow("SELECT id, name FROM lists WHERE id = $1 and board_id = $2", listID, boardID)
 	list := &model.List{}
 	err = listRow.Scan(&list.ID, &list.Name)
 	if err != nil {

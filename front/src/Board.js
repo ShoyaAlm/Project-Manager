@@ -1,8 +1,10 @@
 import React, {useContext } from 'react'
 import {useState} from 'react'
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { BrowserRouter as Router, Route, Switch, Link, useHistory } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Switch, Link, useHistory, useParams } from 'react-router-dom';
 import Modal from 'react-modal'
+
+
 
 
 import { getJwtFromCookie } from './App';
@@ -16,15 +18,19 @@ import './css/board.css'
 import { useEffect } from 'react';
 const ListContext = React.createContext()
 
+const boardId = 1
+
 export const AllLists = () => {
     const [lsts, setLsts] = useState([]);
     const [isNewListAddedOrRemoved, setIsNewListAddedOrRemoved] = useState(false);
     
+    const { boardId } = useParams();
+
     
     useEffect(() => {
     const fetchData = async () => {
         try {
-            const response = await fetch('http://localhost:8080/api/lists', {
+            const response = await fetch(`http://localhost:8080/api/boards/${boardId}/lists`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
@@ -97,7 +103,7 @@ const List = () => {
         const handleSaveList = async (newListName) => {
             
             try {
-              const response = await fetch('http://localhost:8080/api/lists', {
+              const response = await fetch(`http://localhost:8080/api/boards/${boardId}/lists`, {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
@@ -293,60 +299,69 @@ const List = () => {
       
 
 
-      return (
-        <DragDropContext onDragEnd={handleDragEnd}>
-            <Droppable droppableId="list-container" direction='horizontal'>
-                {(provided) => (
-                    <div
-                        {...provided.droppableProps}
-                        ref={provided.innerRef}
-                        style={{display:'flex'}}
-                    >
-                        {lsts.map((lst, index) => (
-                            <Draggable key={lst.id} draggableId={lst.id.toString()} index={index}>
-                                {(provided) => (
-                                    <div
-                                        {...provided.draggableProps}
-                                        {...provided.dragHandleProps}
-                                        ref={provided.innerRef}
-                                    >
-                                        <div className="list">
-                                            {/* Your existing list content */}
-
-                                      
-                                      <h3>{lst.name}</h3>
-                                      <ShowCards list={lst} />
-                                          <input
-                                              type="text"
-                                              placeholder='add item'
-                                              onFocus={() => setIsAddingCard(lst.id)}
-                                              className={isAddingCard === lst.id ? 'add-card-active' : 'add-card'}
-                                              onChange={(e) => setNewCardName(e.target.value)}
-                                              style={{margin: '10px', padding: '10px', 
-                                              width: '200px', height: 'auto', 
-                                              border: '2px solid #ccc', borderRadius: '20px'}}/>
-                                          
-                                          
-                                          {isAddingCard === lst.id && <AddCard id={lst.id}/>}
-                                          
-
-                                          <br />
-                                          <button onClick={() => handleDeleteList(lst)} className="remove-button">
-                                              پاک کردن
-                                          </button>
-
-                                        </div>
-                                    </div>
-                                )}
-                            </Draggable>
-                        ))}
-                        {provided.placeholder}
+    return (
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <Droppable droppableId="list-container" direction="horizontal">
+          {(provided) => (
+            <div {...provided.droppableProps} ref={provided.innerRef} style={{ display: 'flex' }}>
+              {lsts.map((lst, index) => (
+                <Draggable key={lst.id} draggableId={lst.id.toString()} index={index}>
+                  {(provided) => (
+                    <div {...provided.draggableProps} {...provided.dragHandleProps} ref={provided.innerRef}>
+                      <div className="list">
+                        {/* Your existing list content */}
+                        <h3>{lst.name}</h3>
+                        <ShowCards list={lst} />
+                        <input
+                          type="text"
+                          placeholder="add item"
+                          onFocus={() => setIsAddingCard(lst.id)}
+                          className={isAddingCard === lst.id ? 'add-card-active' : 'add-card'}
+                          onChange={(e) => setNewCardName(e.target.value)}
+                          style={{
+                            margin: '10px',
+                            padding: '10px',
+                            width: '200px',
+                            height: 'auto',
+                            border: '2px solid #ccc',
+                            borderRadius: '20px',
+                          }}
+                        />
+  
+                        {isAddingCard === lst.id && <AddCard id={lst.id} />}
+  
+                        <br />
+                        <button onClick={() => handleDeleteList(lst)} className="remove-button">
+                          پاک کردن
+                        </button>
+                      </div>
                     </div>
+                  )}
+                </Draggable>
+              ))}
+  
+              {/* AddList component */}
+              <div className="list add-list" onClick={() => setIsAddingList(true)}>
+                {isAddingList ? (
+                  <input
+                    type="text"
+                    placeholder="+ add a list"
+                    className="add-list-input"
+                    onChange={(e) => setNewListName(e.target.value)}
+                    onBlur={() => setIsAddingList(false)}
+                  />
+                ) : (
+                  <p>+ add a list</p>
                 )}
-            </Droppable>
-        </DragDropContext>
+                {isAddingList && <AddList name={newListName} />}
+              </div>
+  
+              {provided.placeholder}
+            </div>
+          )}
+        </Droppable>
+      </DragDropContext>
     );
-
 
 
     

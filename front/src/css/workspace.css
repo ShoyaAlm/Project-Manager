@@ -1,0 +1,35 @@
+.workspace-container {
+    background-color: white;
+    padding: 20px;
+  }
+  
+  .boards-container {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  
+  .board {
+    border: 1px solid #ccc;
+    padding: 20px;
+    margin: 10px;
+    border-radius: 10px; /* Added border-radius for a cleaner look */
+    cursor: pointer; /* Added pointer cursor for boards */
+  }
+  
+  .create-board {
+    border: 2px dashed #ccc; /* Dashed border for create board */
+    background-color: #f8f8f8; /* Light gray background for create board */
+  }
+  
+  .create-board:hover {
+    border: 2px dashed #999; /* Darker dashed border on hover */
+  }
+  
+  .create-board p {
+    font-style: italic;
+  }
+  
+  .create-board-container {
+    margin-top: 20px;
+  }
+  

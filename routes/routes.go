@@ -6,14 +6,19 @@ import (
 	"github.com/gorilla/mux"
 )
 
+func SetBoardRoutes(r *mux.Router) {
+	r.HandleFunc("/api/boards/user/{user_id:[0-9]+}", controllers.GetUserBoards).Methods("GET")
+	r.HandleFunc("/api/boards", controllers.CreateBoard).Methods("POST")
+}
+
 func SetListRoutes(r *mux.Router) {
-	r.HandleFunc("/api/lists", controllers.GetAllLists).Methods("GET")
-	r.HandleFunc("/api/lists/{id:[0-9]+}", controllers.GetAList).Methods("GET")
-	r.HandleFunc("/api/lists", controllers.CreateList).Methods("POST")
-	r.HandleFunc("/api/lists/{id:[0-9]+}", controllers.UpdateAList).Methods("PATCH")
-	r.HandleFunc("/api/lists/update-lists-order", controllers.UpdateListOrder).Methods("PUT")
-	r.HandleFunc("/api/lists/{id:[0-9]+}/update-cards-order", controllers.UpdateCardOrder).Methods("PUT")
-	r.HandleFunc("/api/lists/{id:[0-9]+}", controllers.DeleteAList).Methods("DELETE")
+	r.HandleFunc("/api/boards/{board_id:[0-9]+}/lists", controllers.GetAllLists).Methods("GET")
+	r.HandleFunc("/api/boards/{board_id:[0-9]+}/lists/{id:[0-9]+}", controllers.GetAList).Methods("GET")
+	r.HandleFunc("/api/boards/{board_id:[0-9]+}/lists", controllers.CreateList).Methods("POST")
+	r.HandleFunc("/api/boards/{board_id:[0-9]+}/lists/{id:[0-9]+}", controllers.UpdateAList).Methods("PATCH")
+	r.HandleFunc("/api/boards/{board_id:[0-9]+}/lists/update-lists-order", controllers.UpdateListOrder).Methods("PUT")
+	r.HandleFunc("/api/boards/{board_id:[0-9]+}/lists/{id:[0-9]+}/update-cards-order", controllers.UpdateCardOrder).Methods("PUT")
+	r.HandleFunc("/api/boards/{board_id:[0-9]+}/lists/{id:[0-9]+}", controllers.DeleteAList).Methods("DELETE")
 }
 
 func SetCardRoutes(r *mux.Router) {

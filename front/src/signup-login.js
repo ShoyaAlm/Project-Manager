@@ -82,7 +82,7 @@ export const HandleSignupLogin = () => {
 
                         Cookies.set('jwtToken', token);
 
-                        window.location.href = '/';
+                        window.location.href = '/workspace';
                         // Redirect to the main page or perform other actions
                     });
                 } else {

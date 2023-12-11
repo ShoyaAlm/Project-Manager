@@ -64,7 +64,7 @@ func GetAllActivities(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Query activities for the specific card ID
-	activityRows, err := db.Query("SELECT id, message, card_id, created_at FROM activities WHERE card_id = $1", cardID)
+	activityRows, err := db.Query("SELECT id, message, card_id, created_at FROM activities WHERE card_id = $1 ORDER BY created_at DESC LIMIT 5", cardID)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to fetch activities, %s", err), http.StatusInternalServerError)
 		return

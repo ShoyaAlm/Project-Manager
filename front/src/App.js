@@ -145,7 +145,9 @@ const App = () => {
 
               <Switch>
               <Route path='/board/:boardId/lists'>
-                {view === 'board' ? <AllLists /> : (view === 'table' ? <Table /> : <Scheduler/> )}
+                {view === 'board' && <AllLists /> }
+                {view === 'table' && <Table /> }
+                {view === 'timeline' && <Scheduler /> }
               </Route>
               <Route path='/workspace'>
                   <Workspace />

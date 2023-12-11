@@ -16,12 +16,7 @@ const Scheduler = () => {
   const [lists, setLists] = useState([]);
   const [todayMarker, setTodayMarker] = useState(moment().toDate());
 
-  
   useEffect(() => {
-  
-
-    console.log('Scheduler component mounted');
-
     const fetchData = async () => {
       try {
         const response = await fetch('http://localhost:8080/api/table', {
@@ -41,30 +36,54 @@ const Scheduler = () => {
         console.error('Error getting table info:', error);
       }
     };
-
+    
     fetchData();
   }, []);
+
+  // Wait for lists to be populated before rendering the Timeline
+  if (lists.length === 0) {
+    return null; // or render a loading indicator
+  }
 
   const getGroupsAndItems = () => {
     const groups = lists.map((list) => ({ id: list.id, title: list.name }));
     const items = lists.reduce((acc, list) => {
-      const listItems = list.cards.map((card) => ({
-        id: card.id,
-        group: list.id,
-        title: card.name,
-        start_time: new Date(card.dates[0]),
-        end_time: new Date(card.dates[1]),
-        canMove: false,
-        canResize: false,
-      }));
-      return acc.concat(listItems);
+      // Check if list.cards exists and is an array, otherwise set it to an empty array
+      const cardsArray = Array.isArray(list.cards) ? list.cards : [];
+  
+      const listItems = cardsArray.map((card) => {
+        if (card && card.dates && Array.isArray(card.dates) && card.dates.length >= 2) {
+          return {
+            id: card.id,
+            group: list.id,
+            title: card.name,
+            start_time: new Date(card.dates[0]),
+            end_time: new Date(card.dates[1]),
+            canMove: false,
+            canResize: false,
+          };
+        } else {
+          console.warn('Card dates are empty:', card);
+          return null;
+        }
+      });
+  
+      return acc.concat(listItems.filter((item) => item !== null));
     }, []);
-
+  
+    console.log('Items:', items);
+    console.log('Groups:', groups);
+  
     return { groups, items };
   };
-
+  
+  
+  
   const { groups, items } = getGroupsAndItems();
 
+  console.log(items);
+  console.log(groups);
+  
   return (
     <div className="scheduler-wrapper">
       <Timeline

@@ -56,6 +56,33 @@ export const Card = ({card, list}) => {
     const [editedDescription, setEditedDescription] = useState(cardDescription);
     
     
+
+    // const [isNewActivityAdded, setIsNewActivityAdded] = useState(false)
+      
+    const createActivity = async (message) => {
+
+                try{
+                    const response = await fetch(`http://localhost:8080/api/lists/${list.id}/cards/${card.id}/activity`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            message: message
+                        })
+                        
+                    });
+                    if (!response.ok){
+                        throw new Error("Failed to add activity")
+                    }
+        
+                    
+                } catch (error) {
+                    console.log("Error adding the activity");
+                }
+
+
+    }
     
     
     
@@ -85,7 +112,8 @@ export const Card = ({card, list}) => {
             
                     const allChecklists = await response.json();
                     setCardChecklists(allChecklists)
-                    
+
+                
                 } catch (error) {
                     console.log('got error : ', error);
                 }
@@ -122,6 +150,9 @@ export const Card = ({card, list}) => {
                 setCardChecklists([...cardChecklists, newChecklist]);
                 
 
+                createActivity(`${user.name} ${newChecklistName} را به کارت اضافه کرد`)
+
+                
                 setIsAddingChecklist(false)
                 setNewChecklistName('');
 
@@ -161,9 +192,9 @@ export const Card = ({card, list}) => {
     }
 
 
-    const removeChecklist = async (id) => {
+    const removeChecklist = async (checklist) => {
         try{
-            const response = await fetch(`http://localhost:8080/api/lists/${list.id}/cards/${card.id}/checklists/${id}`, {
+            const response = await fetch(`http://localhost:8080/api/lists/${list.id}/cards/${card.id}/checklists/${checklist.id}`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json'
@@ -173,8 +204,10 @@ export const Card = ({card, list}) => {
                 throw new Error("Failed to delete the checklist")
             }
 
+            createActivity(`${user.name} ${checklist.name} را از کارت حذف کرد`)
+
             setIsNewChecklistAddedOrRemoved(true)
-            // setCardChecklists(cardChecklists.filter((checklist) => checklist.id !== id))
+            setCardChecklists(cardChecklists.filter((checklist) => checklist.id !== checklist.id))
 
         } catch (error) {
         console.log("Error deleting the checklist");
@@ -246,6 +279,8 @@ export const Card = ({card, list}) => {
 
                 const newItem = await response.json();
 
+                createActivity(`${user.name} ${newItemName} را به ${checklist.name} اضافه کرد`)
+
                 setChecklistItems([...checklistItems, newItem])
                 checklist.items = checklistItems
                 
@@ -280,9 +315,9 @@ export const Card = ({card, list}) => {
     
 
 
-    const removeItem = async (checklistID, itemID) => {
+    const removeItem = async (checklist, item) => {
         try{
-            const response = await fetch(`http://localhost:8080/api/lists/${newList.id}/cards/${newCard.id}/checklists/${checklistID}/items/${itemID}`, {
+            const response = await fetch(`http://localhost:8080/api/lists/${newList.id}/cards/${newCard.id}/checklists/${checklist.id}/items/${item.id}`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json'
@@ -291,6 +326,9 @@ export const Card = ({card, list}) => {
             if (!response.ok){
                 throw new Error("Failed to delete the item")
             }
+
+            createActivity(`${user.name} ${item.name} را از ${checklist.name} حذف کرد`)
+
 
         } catch (error) {
         console.log("Error deleting the item");
@@ -377,6 +415,8 @@ export const Card = ({card, list}) => {
                     throw new Error("Failed to create new member")
                 }
 
+                createActivity(`${user.name} ${newMemberName} را به کارت اضافه کرد`)
+                
                 const newMember = await response.json()
                 console.log('new member: ', newMember);
 
@@ -565,47 +605,6 @@ export const Card = ({card, list}) => {
 
     const changeDescription = async (editedDescription) => {
 
-
-        let user = null; // Define user variable here
-
-        // First try-catch block: Get user info from JWT
-        try {
-            const jwt = getJwtFromCookie();
-            if (jwt) {
-                const decoded = jwt_decode(jwt);
-                user = decoded; // Update user data from the JWT
-                // console.log(user);
-            }
-        } catch (error) {
-            console.log(error);
-        }
-
-        // Second try-catch block: Send a new notification
-        try {
-            // if (user) { // Check if user is available
-                const notifResponse = await fetch(`http://localhost:8080/api/notifs`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ message: `کاربر ${user.name} توضیحات کارت "${newCard.name}" را تغییر داد`, user_id: user.user_id }),
-                });
-
-                if (!notifResponse.ok) {
-                    throw new Error('Error making a new notification');
-                }
-            // }
-        } catch (error) {
-            console.log(error);
-        }
-
-
-        // now in here, you can send that newly created notif to every user that is a member of that card
-        
-        // write the code here...
-
-
-
         try {
 
             const requestBody = {
@@ -622,6 +621,8 @@ export const Card = ({card, list}) => {
             if(!response.ok){
                 throw new Error("Failed to change description")
             }
+
+            createActivity(`${user.name} بخش توضیحات را تغییر داد`)
 
             const updatedCard = await response.json();
             console.log('Updated card:', updatedCard);
@@ -748,7 +749,11 @@ export const Card = ({card, list}) => {
             if (!response.ok) {
               console.error('Failed to update item assignedto array on the backend');
             }
-          } catch (error) {
+          
+            // createActivity(`${item.name} به ${selectedMember} تخصیص داده شد`)
+
+        
+        } catch (error) {
             console.log(error);
           }
       
@@ -836,10 +841,10 @@ export const Card = ({card, list}) => {
       };
       
 
-    const handleCheckboxChange = async (checklist, checklistId, itemId, currentDoneValue) => {
+    const handleCheckboxChange = async (checklist, checklistId, item, currentDoneValue) => {
         // Update the 'done' attribute on the front-end
         const updatedItems = checklist.items.map(item =>
-            item.id === itemId ? { ...item, done: !currentDoneValue } : item
+            item.id === item.id ? { ...item, done: !currentDoneValue } : item
         );
     
         // Update the state or dispatch an action to update the items in your state management system
@@ -853,7 +858,7 @@ export const Card = ({card, list}) => {
     
         try {
             // Send a PATCH request to the backend
-            const response = await fetch(`http://localhost:8080/api/lists/${newList.id}/cards/${newCard.id}/checklists/${checklistId}/items/${itemId}`, {
+            const response = await fetch(`http://localhost:8080/api/lists/${newList.id}/cards/${newCard.id}/checklists/${checklistId}/items/${item.id}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -867,6 +872,13 @@ export const Card = ({card, list}) => {
                 // Handle error
                 console.error('Failed to update item on the backend');
             }
+
+            if(!currentDoneValue == true){
+                createActivity(`${item.name} قسمت ${checklist.name} انجام شد`)
+            } else {
+                createActivity(`${user.name} قسمت ${checklist.name} به حالت ناتمام بازگشت`)
+            }
+
         } catch (error) {
             console.error('Error during PATCH request:', error);
         }
@@ -945,9 +957,7 @@ export const Card = ({card, list}) => {
     const [activityInput, setActivityInput] = useState('');
 
     const CardActivity = ({ list, card, user }) => {
-        // const [activityInput, setActivityInput] = useState('');
         const [cardActivities, setCardActivities] = useState([]);
-      
         console.log(user);
         const message = ` ${user.name} : ${activityInput}`
         const submitActivity = async () => {
@@ -1253,7 +1263,7 @@ export const Card = ({card, list}) => {
                                                     </div>
                                                     {showOptions && (
                                                     <div className="options-dropdown">
-                                                        <button className="option-button" onClick={() => removeItem(checklist.id, item.id)}>حذف</button>
+                                                        <button className="option-button" onClick={() => removeItem(checklist, item)}>حذف</button>
                                                         <button className="option-button" onClick={() => console.log('add date')}>تاریخ</button>
                                                     </div>
                                                     )}
@@ -1292,7 +1302,7 @@ export const Card = ({card, list}) => {
                                                     id="item"
                                                     checked={item.done}
                                                     onChange={() => {
-                                                    handleCheckboxChange(checklist, checklist.id, item.id, item.done);
+                                                    handleCheckboxChange(checklist, checklist.id, item, item.done);
                                                     // item.done = !item.done; // Don't mutate state directly
                                                     }}
                                                 />
@@ -1325,7 +1335,7 @@ export const Card = ({card, list}) => {
                                 
 
                                 <br />
-                                <button type='submit' className='remove-checklist-button' onClick={() => removeChecklist(checklist.id)}>پاک کردن</button>
+                                <button type='submit' className='remove-checklist-button' onClick={() => removeChecklist(checklist)}>پاک کردن</button>
                             
                                                                 
                                                             </div>
@@ -1339,7 +1349,9 @@ export const Card = ({card, list}) => {
                                 </Droppable>
                             </DragDropContext>
                         ) : (
-                            <span>بدون چکلیست</span>
+                            <span style={{ color: 'green', fontSize: '18px', margin: '10px 0' }}>
+                                بدون چکلیست
+                            </span>
                         )}
                     </div>
 

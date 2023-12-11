@@ -18,7 +18,7 @@ import './css/board.css'
 import { useEffect } from 'react';
 const ListContext = React.createContext()
 
-const boardId = 1
+// const boardId = 1
 
 export const AllLists = () => {
     const [lsts, setLsts] = useState([]);
@@ -75,6 +75,8 @@ const List = () => {
     const [isAddingList, setIsAddingList] = useState(false)
     
     const [newListName, setNewListName] = useState('')
+
+    const { boardId } = useParams();
 
 
     const findUser = () => {
@@ -341,19 +343,15 @@ const List = () => {
               ))}
   
               {/* AddList component */}
-              <div className="list add-list" onClick={() => setIsAddingList(true)}>
-                {isAddingList ? (
+              <div className="add-list-container">
                   <input
-                    type="text"
-                    placeholder="+ add a list"
-                    className="add-list-input"
-                    onChange={(e) => setNewListName(e.target.value)}
-                    onBlur={() => setIsAddingList(false)}
+                      type="text"
+                      placeholder="+ add a list"
+                      className="add-list"
+                      onFocus={() => setIsAddingList(true)}
+                      onChange={(e) => setNewListName(e.target.value)}
                   />
-                ) : (
-                  <p>+ add a list</p>
-                )}
-                {isAddingList && <AddList name={newListName} />}
+                  {isAddingList === true &&  <AddList/>}
               </div>
   
               {provided.placeholder}

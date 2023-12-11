@@ -510,6 +510,16 @@ func findChecklist(checklists []*model.Checklist, id int) (*model.Checklist, boo
 
 
 func CreateList(w http.ResponseWriter, r *http.Request) {
+
+	vars := mux.Vars(r)
+	boardID, err := strconv.Atoi(vars["board_id"])
+	if err != nil {
+		http.Error(w, "Invalid board ID", http.StatusBadRequest)
+		return
+	}
+
+
+
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to read request body, %s", err), http.StatusInternalServerError)
@@ -543,7 +553,7 @@ func CreateList(w http.ResponseWriter, r *http.Request) {
 	// Increment the position value for the new list
 	newPosition := maxPosition + 1
 
-	err = db.QueryRow("INSERT INTO lists (name, position) VALUES ($1, $2) RETURNING id", requestData.Name, newPosition).Scan(&newListID)
+	err = db.QueryRow("INSERT INTO lists (name, board_id, position) VALUES ($1, $2, $3) RETURNING id", requestData.Name, boardID, newPosition).Scan(&newListID)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to create list, %s", err), http.StatusInternalServerError)
 		return

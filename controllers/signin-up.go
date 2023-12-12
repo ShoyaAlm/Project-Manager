@@ -15,6 +15,8 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	_ "github.com/gorilla/mux"
 	_ "github.com/lib/pq" // Import the PostgreSQL driver
+	"golang.org/x/crypto/bcrypt"
+	_ "golang.org/x/crypto/bcrypt"
 )
 
 
@@ -47,6 +49,13 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 	}
 
 
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(requestData.Password), bcrypt.DefaultCost)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to hash password, %s", err), http.StatusInternalServerError)
+		return
+	}
+
+
 	var newUserID int
 
 
@@ -58,7 +67,7 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 	newUser := &model.User{
 		ID: newUserID,
 		Name: requestData.Name,
-		Password: requestData.Password,
+		Password: string(hashedPassword),
 		Email: requestData.Email,
 		Bio: "",
 		Cards: []*model.Card{},
@@ -103,11 +112,16 @@ func Login(w http.ResponseWriter, r *http.Request) {
         Password string `json:"password"`
     }
 
+	
     err := json.NewDecoder(r.Body).Decode(&requestData)
     if err != nil {
         http.Error(w, fmt.Sprintf("Failed to parse JSON data: %s", err), http.StatusBadRequest)
         return
     }
+
+
+
+	
 
     // Query the database to find a user with the given email
     user := model.User{}
@@ -124,11 +138,20 @@ func Login(w http.ResponseWriter, r *http.Request) {
         }
     }
 
-    // Check if the password matches
-    if requestData.Password != user.Password {
-        http.Error(w, "Incorrect password", http.StatusUnauthorized)
-        return
-    }
+	// Check if the password matches using bcrypt.CompareHashAndPassword
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(requestData.Password))
+	if err != nil {
+		if err == bcrypt.ErrMismatchedHashAndPassword {
+			// Passwords do not match
+			http.Error(w, "Incorrect password", http.StatusUnauthorized)
+			return
+		} else {
+			log.Printf("Error comparing hashed passwords: %v", err)
+			http.Error(w, "Failed to compare passwords", http.StatusInternalServerError)
+			return
+		}
+	}
+
 
     // Create a new token
     token := jwt.New(jwt.SigningMethodHS256)

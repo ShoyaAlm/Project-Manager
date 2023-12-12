@@ -85,5 +85,5 @@ func SetActivityRoutes(r *mux.Router) {
 
 
 func SetTableRoutes(r *mux.Router){
-	r.HandleFunc("/api/table", controllers.TableInfo).Methods("GET")
+	r.HandleFunc("/api/boards/{board_id:[0-9]+}/table", controllers.TableInfo).Methods("GET")
 }

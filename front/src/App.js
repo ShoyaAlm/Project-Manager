@@ -131,7 +131,9 @@ const App = () => {
               <span style={styles.link('board')} onClick={() => setView('board')}>
                 Board
               </span>
-              <span style={styles.link('table')} onClick={() => setView('table')}>
+              <span style={styles.link('table')} onClick={() => {
+                
+                setView('table')}}>
                 Table
               </span>
               <span style={styles.link('timeline')} onClick={() => setView('timeline')}>

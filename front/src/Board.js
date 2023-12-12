@@ -20,49 +20,47 @@ const ListContext = React.createContext()
 
 
 export const AllLists = () => {
-    const [lsts, setLsts] = useState([]);
-    const [isNewListAddedOrRemoved, setIsNewListAddedOrRemoved] = useState(false);
-    
-    const { boardId } = useParams();
+  const [lsts, setLsts] = useState([]);
+  const [isNewListAddedOrRemoved, setIsNewListAddedOrRemoved] = useState(false);
 
-    
-    useEffect(() => {
+  const { boardId } = useParams();
+
+  useEffect(() => {
     const fetchData = async () => {
-        try {
-            const response = await fetch(`http://localhost:8080/api/boards/${boardId}/lists`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
+      try {
+        const response = await fetch(`http://localhost:8080/api/boards/${boardId}/lists`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
 
-            if (!response.ok) {
-                throw new Error('Failed to get lists');
-            }
-
-            const Lists = await response.json();
-            setLsts(Lists);
-
-        } catch (error) {
-            console.error('Error getting all lists:', error);
+        if (!response.ok) {
+          throw new Error('Failed to get lists');
         }
-    }
+
+        const Lists = await response.json();
+        setLsts(Lists);
+      } catch (error) {
+        console.error('Error getting all lists:', error);
+      }
+    };
 
     fetchData();
-    
-        if (isNewListAddedOrRemoved){
-            fetchData();
-            setIsNewListAddedOrRemoved(false);
-        }
-    }, [isNewListAddedOrRemoved]);
 
+    if (isNewListAddedOrRemoved) {
+      fetchData();
+      setIsNewListAddedOrRemoved(false);
+    }
+  }, [isNewListAddedOrRemoved]);
 
-    return (
-        <ListContext.Provider value={{ lsts, setLsts, setIsNewListAddedOrRemoved }}>
-            <List />
-        </ListContext.Provider>
-    );
+  return (
+    <ListContext.Provider value={{ lsts, setLsts, setIsNewListAddedOrRemoved }}>
+      <List />
+    </ListContext.Provider>
+  );
 };
+
 
 let user;
 
@@ -244,39 +242,110 @@ const List = () => {
     
 
     
+
+      
+
     const handleDragEnd = (result) => {
+      // Check if the drag operation was completed successfully
       if (!result.destination) {
         return;
       }
+    
+      if (result.type === 'CARD') {
+        // Handle card drag and drop
+        const sourceListId = result.source.droppableId;
+        const destinationListId = result.destination.droppableId;
+        const movedCardId = result.draggableId;
 
-      const updatedLists = Array.from(lsts);
-      const [movedList] = updatedLists.splice(result.source.index, 1);
-      updatedLists.splice(result.destination.index, 0, movedList);
+        // Add console logs to inspect the updatedLists array
+        
+        const updatedLists = [...lsts];
+        
+        console.log('updatedLists:', updatedLists);
+        
+        const sourceList = updatedLists.find((list) => list.id.toString() === sourceListId);
+        console.log('sourceList:', sourceList);
 
-      setLsts(updatedLists);
+        if (!sourceList || !sourceList.cards) {
+          console.error('Source list: ', sourceList);
+          return;
+        }
 
-      // Send a fetch request to update the list positions on the backend
-      // Replace 'YOUR_BACKEND_API_ENDPOINT' with the actual endpoint
-      fetch(`http://localhost:8080/api/boards/${boardId}/lists/update-lists-order`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          listOrder: updatedLists.map((list) => list.id),
-        }),
-      })
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error('Failed to update list order');
-          }
+        const destinationList = updatedLists.find((list) => list.id.toString() === destinationListId);
+        console.log('destinationList:', destinationList);
+
+        if (!destinationList || !destinationList.cards) {
+          console.error('Destination list: ', destinationList);
+          return;
+        }
+    
+        const movedCard = sourceList.cards.find((card) => card.id.toString() === movedCardId);
+    
+        sourceList.cards = sourceList.cards.filter((card) => card.id.toString() !== movedCardId);
+        destinationList.cards = [...destinationList.cards, movedCard];
+    
+        setLsts(updatedLists);
+    
+        // Now, make an API call to update the card order on the server
+        fetch(`http://localhost:8080/api/boards/${boardId}/lists/${sourceListId}/update-cards-order`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            listId: sourceListId,
+            cardOrder: sourceList.cards.map((card) => card.id),
+          }),
         })
-        .catch((error) => {
-          console.error('Error updating list order:', error);
-        });
-    };
-      
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error('Failed to update card order on the server');
+            }
+            // Handle a successful response as needed
+          })
+          .catch((error) => {
+            console.error('Error updating card order on the server:', error);
+            // You can handle the error, show a message, or retry the operation
+          });
+      } else {
+        // Handle list drag and drop
+        const updatedLists = Array.from(lsts);
 
+        // Add console logs to inspect the updatedLists array
+        console.log('updatedLists:', updatedLists);
+
+        if (result.type === 'LIST') {
+          const [movedList] = updatedLists.splice(result.source.index, 1);
+          console.log('movedList:', movedList);
+
+          updatedLists.splice(result.destination.index, 0, movedList);
+          
+          // Update the frontend immediately
+          setLsts(updatedLists);
+    
+          // Now, send a fetch request to update the list positions on the backend
+          fetch(`http://localhost:8080/api/boards/${boardId}/lists/update-lists-order`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              listOrder: updatedLists.map((list) => list.id),
+            }),
+          })
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error('Failed to update list order');
+              }
+            })
+            .catch((error) => {
+              console.error('Error updating list order:', error);
+            });
+        }
+      }
+    };
+    
+    
 
     return (
       <DragDropContext onDragEnd={handleDragEnd}>
@@ -331,15 +400,13 @@ const List = () => {
                   {isAddingList === true &&  <AddList/>}
               </div>
   
-              {provided.placeholder}
+              {/* {provided.placeholder} */}
             </div>
           )}
         </Droppable>
       </DragDropContext>
     );
 
-
-    
 
   };
 
@@ -434,15 +501,15 @@ const ShowCards = ({ list }) => {
 
 
       return (
-        <DragDropContext onDragEnd={onDragEnd}>
-          <Droppable droppableId="cards">
+        // <DragDropContext onDragEnd={onDragEnd}>
+          <Droppable droppableId={`cards-${list.id}`} type="CARD">
             {(provided) => (
               <div ref={provided.innerRef}>
                 {cardList && cardList.length > 0 ? (
                   cardList.map((card, index) => (
                     <Draggable
                       key={card.id.toString()}
-                      draggableId={card.id.toString()}
+                      draggableId={`${card.id}-${list.id}`}
                       index={index}
                     >
                       {(provided) => (
@@ -510,7 +577,7 @@ const ShowCards = ({ list }) => {
               </div>
             )}
           </Droppable>
-        </DragDropContext>
+        // </DragDropContext>
       );
 
 

@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from 'react';
 
 import './css/table.css';
+import { useParams } from 'react-router-dom/cjs/react-router-dom.min';
 
 const Table = () => {
   const [lists, setLists] = useState([]);
 
+  const { boardId } = useParams();
+
+  console.log(boardId);
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('http://localhost:8080/api/table', {
+        const response = await fetch(`http://localhost:8080/api/boards/${boardId}/table`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',

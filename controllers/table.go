@@ -7,15 +7,19 @@ import (
 	"project-manager/model"
 	"time"
 
+	"github.com/gorilla/mux"
 	"github.com/lib/pq"
 )
 
 
 
 func TableInfo(w http.ResponseWriter, r *http.Request){
+
+	vars := mux.Vars(r)
+	boardID := vars["board_id"]
 	
 
-	listRows, err := db.Query("SELECT id, name FROM lists")
+	listRows, err := db.Query("SELECT id, name FROM lists WHERE board_id = $1", boardID)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to fetch lists, %s", err), http.StatusInternalServerError)
 		return

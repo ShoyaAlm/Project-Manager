@@ -18,7 +18,6 @@ import './css/board.css'
 import { useEffect } from 'react';
 const ListContext = React.createContext()
 
-// const boardId = 1
 
 export const AllLists = () => {
     const [lsts, setLsts] = useState([]);
@@ -153,28 +152,6 @@ const List = () => {
 
 
         
-            // try{
-            //     const response = await fetch(`http://localhost:8080/api/notifs/${user.user_id}`, {
-            //         method: 'POST',
-            //         headers: {
-            //             'Content-Type': 'application/json'
-            //         },
-            //         body: JSON.stringify({ message: `شما لیست "${lst.name}" را حذف کردید `, 
-            //         user_id: user.user_id, })
-            //     });
-
-            //     if (!response.ok) {
-            //         throw new Error('Failed to create a new card');
-            //       } 
-                  
-            //     }
-            //     catch (error) {
-            //     console.log('error : ' , error);
-            // }
-        
-
-            // console.log(id);
-        
         try {
             const response = await fetch(`http://localhost:8080/api/lists/${lst.id}`,{
                 method: "DELETE",
@@ -280,7 +257,7 @@ const List = () => {
 
       // Send a fetch request to update the list positions on the backend
       // Replace 'YOUR_BACKEND_API_ENDPOINT' with the actual endpoint
-      fetch('http://localhost:8080/api/lists/update-lists-order', {
+      fetch(`http://localhost:8080/api/boards/${boardId}/lists/update-lists-order`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -379,6 +356,7 @@ const ShowCards = ({ list }) => {
     const [selectedCard, setSelectedCard] = useState(null);
     const [modalIsOpen, setModalIsOpen] = useState(false);
 
+    const { boardId } = useParams();
 
     const openModal = (card) => {
       setSelectedCard(card);
@@ -431,7 +409,7 @@ const ShowCards = ({ list }) => {
         console.log(updatedOrder);
         // Make an API call to update the card order on the server
         // You need to replace 'your-api-endpoint' with your actual API endpoint
-        fetch(`http://localhost:8080/api/lists/${list.id}/update-cards-order`, {
+        fetch(`http://localhost:8080/api/boards/${boardId}/lists/${list.id}/update-cards-order`, {
           method: 'PUT', // Assuming you are using the PUT method to update the order
           headers: {
             'Content-Type': 'application/json',
@@ -454,10 +432,6 @@ const ShowCards = ({ list }) => {
       };
       
 
-    // Update the state with the new order of cards
-    // You should replace this with your state management logic
-    // For example, if you're using Redux, you would dispatch an action
-    // to update the card order.
 
       return (
         <DragDropContext onDragEnd={onDragEnd}>

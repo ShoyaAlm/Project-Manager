@@ -40,7 +40,7 @@ func GetAllLists(w http.ResponseWriter, r *http.Request) {
 	
 	// listRows, err := db.Query("SELECT id, name FROM lists ORDER BY position WHERE board_id = 1")
 
-	listRows, err := db.Query("SELECT id, name FROM lists WHERE board_id = $1", boardID)
+	listRows, err := db.Query("SELECT id, name FROM lists WHERE board_id = $1 ORDER BY position", boardID)
 
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to fetch lists, %s", err), http.StatusInternalServerError)
@@ -68,9 +68,11 @@ func GetAllLists(w http.ResponseWriter, r *http.Request) {
 			Name: listName,
 		}
 
-		cardRows, err := db.Query(`SELECT c.id AS card_id, c.name AS card_name, c.description AS cardDescription, c.dates AS card_dates
+		cardRows, err := db.Query(`SELECT c.id AS card_id, c.name AS card_name, c.description AS card_description, c.dates AS card_dates, c.position AS card_position
 									FROM cards c
-							   WHERE c.list_id = $1`, list.ID)
+							   WHERE c.list_id = $1
+							   ORDER BY c.position;`,
+							    list.ID)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Failed to fetch cards for list, %s", err), http.StatusInternalServerError)
 			return
@@ -83,11 +85,13 @@ func GetAllLists(w http.ResponseWriter, r *http.Request) {
 
 			var (
 				cardID  		    	  int
-				cardName, cardDescription string
+				cardName				  string
+				cardDescription 		  sql.NullString
 				cardDates                 pq.StringArray
+				cardPosition  			  sql.NullInt64
 				// ownerID					  int
 			)
-			err := cardRows.Scan(&cardID, &cardName, &cardDescription, &cardDates)
+			err := cardRows.Scan(&cardID, &cardName, &cardDescription, &cardDates, &cardPosition)
 			if err != nil {
 				http.Error(w, fmt.Sprintf("Error scanning cardRows, %s", err), http.StatusInternalServerError)
 				return
@@ -104,13 +108,26 @@ func GetAllLists(w http.ResponseWriter, r *http.Request) {
 				dates = append(dates, date)
 			}
 
+
+			var position int
+
+			// Check if cardPosition is valid (not NULL)
+			if cardPosition.Valid {
+				position = int(cardPosition.Int64)
+			} else {
+				// Handle the NULL case, e.g., set a default value
+				position = 0 // or any other default value
+			}
+
+
 			card := &model.Card{
 				ID:          cardID,
 				Name:        cardName,
-				Description: cardDescription,
+				Description: getStringOrNil(cardDescription),
 				Dates:       dates,
 				Members:     []*model.User{},
 				Checklists:  []*model.Checklist{},
+				Position: 	 position,
 				// OwnerID: 	 ownerID,
 			}
 
@@ -497,6 +514,13 @@ func GetAList(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonData)
 
+}
+
+func getStringOrNil(nullString sql.NullString) string {
+    if nullString.Valid {
+        return nullString.String
+    }
+    return "" // or whatever default value you want for NULL
 }
 
 func findChecklist(checklists []*model.Checklist, id int) (*model.Checklist, bool) {
@@ -937,6 +961,7 @@ func UpdateCardOrder(w http.ResponseWriter, r *http.Request) {
     err = json.Unmarshal(body, &requestData)
     if err != nil {
         http.Error(w, "Failed to parse JSON data", http.StatusBadRequest)
+		fmt.Printf("error : %s", err)
         return
     }
 
@@ -955,9 +980,62 @@ func UpdateCardOrder(w http.ResponseWriter, r *http.Request) {
             _, err := tx.Exec("UPDATE cards SET position = $1 WHERE id = $2", i, cardID)
             if err != nil {
                 http.Error(w, "Failed to update card order", http.StatusInternalServerError)
-                fmt.Printf("error : %v", err)
+                fmt.Printf("error : %v\n", err)
 				return
             }
+        }
+
+        err = tx.Commit()
+        if err != nil {
+            http.Error(w, "Failed to commit transaction", http.StatusInternalServerError)
+            return
+        }
+    }
+
+    w.WriteHeader(http.StatusOK)
+}
+
+
+func MoveCardToList(w http.ResponseWriter, r *http.Request) {
+    body, err := ioutil.ReadAll(r.Body)
+    if err != nil {
+        http.Error(w, "Failed to read request body", http.StatusInternalServerError)
+        return
+    }
+
+    // Parse the JSON request body
+    var requestData struct {
+        SourceListID       int    `json:"sourceListId"`
+        DestinationListID  int    `json:"destinationListId"`
+        CardID             int    `json:"cardId"`
+        CardName           string `json:"cardName"`
+        Position           int    `json:"newPosition"`
+    }
+
+    err = json.Unmarshal(body, &requestData)
+    if err != nil {
+        http.Error(w, "Failed to parse JSON data", http.StatusBadRequest)
+        fmt.Printf("error : %s\n", err)
+        return
+    }
+
+    // Move the card from the source list to the destination list
+    if requestData.SourceListID != requestData.DestinationListID {
+        // Use a transaction to ensure atomicity
+        tx, err := db.Begin()
+        if err != nil {
+            http.Error(w, "Failed to begin transaction", http.StatusInternalServerError)
+            return
+        }
+        defer tx.Rollback()
+
+        // Update the card's list_id and position
+        _, err = tx.Exec("UPDATE cards SET list_id = $1, position = $2 WHERE id = $3",
+            requestData.DestinationListID, requestData.Position, requestData.CardID)
+        if err != nil {
+            http.Error(w, "Failed to move card", http.StatusInternalServerError)
+            fmt.Printf("error : %s\n", err)
+            return
         }
 
         err = tx.Commit()

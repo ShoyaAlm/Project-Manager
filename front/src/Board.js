@@ -250,100 +250,145 @@ const List = () => {
       if (!result.destination) {
         return;
       }
-    
+      const updatedLists = Array.from(lsts);
+
       if (result.type === 'CARD') {
-        // Handle card drag and drop
-        const sourceListId = result.source.droppableId;
-        const destinationListId = result.destination.droppableId;
-        const movedCardId = result.draggableId;
+      // Handle card drag and drop
+      const sourceListId = result.source.droppableId;
+      const sourceListIdNumber = parseInt(sourceListId.split('-')[1], 10);
 
-        // Add console logs to inspect the updatedLists array
-        
-        const updatedLists = [...lsts];
-        
-        console.log('updatedLists:', updatedLists);
-        
-        const sourceList = updatedLists.find((list) => list.id.toString() === sourceListId);
-        console.log('sourceList:', sourceList);
+      const movedCardId = parseInt(result.draggableId.split('-')[0], 10); // Extract cardId from the draggableId
 
-        if (!sourceList || !sourceList.cards) {
-          console.error('Source list: ', sourceList);
-          return;
-        }
+      const destinationListId = result.destination.droppableId;
+      const destinationListIdNumber = parseInt(destinationListId.split('-')[1], 10);
 
-        const destinationList = updatedLists.find((list) => list.id.toString() === destinationListId);
-        console.log('destinationList:', destinationList);
+      // Clone the current state for modification
+      const updatedLists = [...lsts];
 
-        if (!destinationList || !destinationList.cards) {
-          console.error('Destination list: ', destinationList);
-          return;
-        }
-    
-        const movedCard = sourceList.cards.find((card) => card.id.toString() === movedCardId);
-    
-        sourceList.cards = sourceList.cards.filter((card) => card.id.toString() !== movedCardId);
-        destinationList.cards = [...destinationList.cards, movedCard];
-    
-        setLsts(updatedLists);
-    
-        // Now, make an API call to update the card order on the server
-        fetch(`http://localhost:8080/api/boards/${boardId}/lists/${sourceListId}/update-cards-order`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            listId: sourceListId,
-            cardOrder: sourceList.cards.map((card) => card.id),
-          }),
+      // Find the source list and destination list using their IDs
+      const sourceListIndex = updatedLists.findIndex((list) => list.id === sourceListIdNumber);
+      const destinationListIndex = updatedLists.findIndex((list) => list.id === destinationListIdNumber);
+
+      if (sourceListIndex === -1 || destinationListIndex === -1) {
+        console.error('Source or destination list not found. Lists:', updatedLists);
+        return;
+      }
+
+      const sourceList = updatedLists[sourceListIndex];
+      
+      const destinationList = updatedLists[destinationListIndex];
+      destinationList.cards = destinationList.cards || [];
+
+      if (!destinationList || !destinationList.cards) {
+        console.error('Destination list or its cards array is null or undefined');
+        console.error('Destination list:', destinationList);
+        return;
+      }
+
+
+      // Find the moved card in the source list
+      const movedCardIndex = sourceList.cards.findIndex((card) => card && card.id === movedCardId);
+
+      if (movedCardIndex === -1) {
+        console.error('Moved card not found in source list. Lists:', updatedLists);
+        console.error('Moved card id:', movedCardId);
+        return;
+      }
+
+      // Remove the moved card from the source list and add it to the destination list
+      const movedCard = sourceList.cards.splice(movedCardIndex, 1)[0];
+      destinationList.cards.splice(result.destination.index, 0, movedCard);
+
+      // Update the positions of cards in the source list
+      sourceList.cards.forEach((card, index) => {
+        card.position = index;
+      });
+
+      // Update the positions of cards in the destination list
+      destinationList.cards.forEach((card, index) => {
+        card.position = index;
+      });
+
+      // Update the state with the modified lists
+      setLsts(updatedLists);
+
+      // Now, make an API call to update the card order and positions on the server
+      fetch(`http://localhost:8080/api/boards/${boardId}/lists/${sourceListIdNumber}/update-cards-order`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          listId: sourceListIdNumber,
+          cardOrder: sourceList.cards.map((card) => card.id),
+        }),
+      })
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error('Failed to update card order on the server');
+          }
         })
-          .then((response) => {
-            if (!response.ok) {
-              throw new Error('Failed to update card order on the server');
-            }
-            // Handle a successful response as needed
-          })
-          .catch((error) => {
-            console.error('Error updating card order on the server:', error);
-            // You can handle the error, show a message, or retry the operation
-          });
-      } else {
-        // Handle list drag and drop
-        const updatedLists = Array.from(lsts);
-
-        // Add console logs to inspect the updatedLists array
-        console.log('updatedLists:', updatedLists);
-
-        if (result.type === 'LIST') {
-          const [movedList] = updatedLists.splice(result.source.index, 1);
-          console.log('movedList:', movedList);
-
-          updatedLists.splice(result.destination.index, 0, movedList);
-          
-          // Update the frontend immediately
-          setLsts(updatedLists);
-    
-          // Now, send a fetch request to update the list positions on the backend
-          fetch(`http://localhost:8080/api/boards/${boardId}/lists/update-lists-order`, {
+        .catch((error) => {
+          console.error('Error updating card order on the server:', error);
+        })
+        .finally(() => {
+          // Now, make another API call to update the list of the moved card in the destination list
+          fetch(`http://localhost:8080/api/boards/${boardId}/lists/${destinationListIdNumber}/card-to-list-order`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              listOrder: updatedLists.map((list) => list.id),
+              sourceListId: sourceListIdNumber,
+              destinationListId: destinationListIdNumber,
+              cardId: movedCardId,
+              cardName: movedCard.name,  // Include the name of the card
+              newPosition: result.destination.index,  // Include the new position of the card
             }),
           })
             .then((response) => {
               if (!response.ok) {
-                throw new Error('Failed to update list order');
+                throw new Error('Failed to update card order on the server');
               }
             })
             .catch((error) => {
-              console.error('Error updating list order:', error);
+              console.error('Error updating card order on the server:', error);
             });
-        }
+        });
+      } else {
+        // Handle list drag and drop
+        const movedList = updatedLists.splice(result.source.index, 1)[0];
+        updatedLists.splice(result.destination.index, 0, movedList);
+
+        // Update the positions of lists
+        updatedLists.forEach((list, index) => {
+          list.position = index;
+        });
+
+        // Update the frontend immediately
+        setLsts(updatedLists);
+
+        // Now, send a fetch request to update the list positions on the backend
+        fetch(`http://localhost:8080/api/boards/${boardId}/lists/update-lists-order`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            listOrder: updatedLists.map((list) => list.id),
+          }),
+        })
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error('Failed to update list order');
+            }
+          })
+          .catch((error) => {
+            console.error('Error updating list order:', error);
+          });
       }
     };
+    
     
     
 

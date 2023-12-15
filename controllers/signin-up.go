@@ -138,19 +138,25 @@ func Login(w http.ResponseWriter, r *http.Request) {
         }
     }
 
+	// Check if the password matches
+    if requestData.Password != user.Password {
+        http.Error(w, "Incorrect password", http.StatusUnauthorized)
+        return
+    }
+
 	// Check if the password matches using bcrypt.CompareHashAndPassword
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(requestData.Password))
-	if err != nil {
-		if err == bcrypt.ErrMismatchedHashAndPassword {
-			// Passwords do not match
-			http.Error(w, "Incorrect password", http.StatusUnauthorized)
-			return
-		} else {
-			log.Printf("Error comparing hashed passwords: %v", err)
-			http.Error(w, "Failed to compare passwords", http.StatusInternalServerError)
-			return
-		}
-	}
+	// err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(requestData.Password))
+	// if err != nil {
+	// 	if err == bcrypt.ErrMismatchedHashAndPassword {
+	// 		// Passwords do not match
+	// 		http.Error(w, "Incorrect password", http.StatusUnauthorized)
+	// 		return
+	// 	} else {
+	// 		log.Printf("Error comparing hashed passwords: %v", err)
+	// 		http.Error(w, "Failed to compare passwords", http.StatusInternalServerError)
+	// 		return
+	// 	}
+	// }
 
 
     // Create a new token

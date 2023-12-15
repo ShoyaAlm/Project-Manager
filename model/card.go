@@ -13,4 +13,5 @@ type Card struct {
 	Owner       *User        	`json:"owner"`
 	Label       *string       	`json:"label"` // Added 'Label' attribute
 	Activity    *[]string       `json:"activity"` // Added 'Activity' attribute
+	Position 	int				`json:"position"`
 }

@@ -18,6 +18,7 @@ func SetListRoutes(r *mux.Router) {
 	r.HandleFunc("/api/boards/{board_id:[0-9]+}/lists/{id:[0-9]+}", controllers.UpdateAList).Methods("PATCH")
 	r.HandleFunc("/api/boards/{board_id:[0-9]+}/lists/update-lists-order", controllers.UpdateListOrder).Methods("PUT")
 	r.HandleFunc("/api/boards/{board_id:[0-9]+}/lists/{id:[0-9]+}/update-cards-order", controllers.UpdateCardOrder).Methods("PUT")
+	r.HandleFunc("/api/boards/{board_id:[0-9]+}/lists/{id:[0-9]+}/card-to-list-order", controllers.MoveCardToList).Methods("PUT")
 	r.HandleFunc("/api/boards/{board_id:[0-9]+}/lists/{id:[0-9]+}", controllers.DeleteAList).Methods("DELETE")
 }
 

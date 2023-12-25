@@ -36,12 +36,13 @@ const findUser = () => {
 
 
 
-export const Card = ({card, list}) => {
+export const Card = ({card, list, userIsMember}) => {
 
 
     
     const newCard = card
     const newList = list
+    const isUserMember = userIsMember
 
     const user = findUser()
     
@@ -349,6 +350,13 @@ export const Card = ({card, list}) => {
     
 
     const AddMember = ({ card, list }) => {
+        const {boardId} = useParams()
+
+        console.log('boardId: ', boardId);
+
+        const boardIdAsInt = parseInt(boardId, 10);
+
+        console.log('boardIdAsInt: ', boardIdAsInt);
 
         const [newMemberName, setNewMemberName] = useState('')
         const [matchingUsers, setMatchingUsers] = useState([]);
@@ -429,6 +437,34 @@ export const Card = ({card, list}) => {
             } catch (error) {
                 console.log('Error creating the member');
             }
+
+
+            // add the newly added user to the board, because they have a card in it
+
+            const requestBody = {
+                user_id: selectedUser.id,
+                // board_id: boardIdAsInt,
+              };
+
+
+            try {
+                
+                const response = await fetch(`http://localhost:8080/api/boards/${boardIdAsInt}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-type': 'application/json'
+                    },
+                    body: JSON.stringify({requestBody}),
+                });
+                if(!response.ok){
+                    throw new Error("Failed to add new member to the board")
+                }
+    
+            } catch (error) {
+                console.log('Error adding new member to the board');
+            }
+
+
         }
         
         
@@ -1003,17 +1039,24 @@ export const Card = ({card, list}) => {
         return (
             <>
               <div className="activity-input-container">
-                <input
-                  type="text"
-                  placeholder="Comment"
-                  value={activityInput}
-                  onChange={(e) => setActivityInput(e.target.value)}
-                  style={{ direction: 'rtl' }}
-                  className="activity-input"
-                />
-                <button onClick={submitActivity} className="submit-button">
-                  نظر بدهید
-                </button>
+                
+              {isUserMember && (
+
+                    <>
+                    <input
+                    type="text"
+                    placeholder="Comment"
+                    value={activityInput}
+                    onChange={(e) => setActivityInput(e.target.value)}
+                    style={{ direction: 'rtl' }}
+                    className="activity-input"
+                    />
+                    <button onClick={submitActivity} className="submit-button">
+                    نظر بدهید
+                    </button>
+                    </>
+
+                )}
               </div>
               {cardActivities && cardActivities.length > 0 && (
                 <div className="existing-activities">
@@ -1138,6 +1181,39 @@ export const Card = ({card, list}) => {
             // You can handle the error, show a message, or retry the operation
           });
       };
+
+
+
+      const [isCardJoined, setIsCardJoined] = useState(false);
+      const handleJoinCard = async () => {
+        try {
+            const response = await fetch(`http://localhost:8080/api/lists/${list.id}/cards/${card.id}/members`, {
+                method: 'POST',
+                headers: {
+                    'Content-type': 'application/json'
+                },
+                body: JSON.stringify({name: user.name, email: user.email}),
+            });
+            if(!response.ok){
+                throw new Error("Failed to create new member")
+            }
+
+            createActivity(`${user.name} !عضو کارت شد`)
+            
+            const newMember = await response.json()
+            console.log('new member: ', newMember);
+
+            // setNewMemberName('')
+            // setIsAddingMember(false)
+
+            // setCardMembers([...cardMembers, newMember])
+            // setIsNewMemberAddedOrRemoved(true)
+
+        } catch (error) {
+            console.log('Error creating the member');
+        }
+          setIsCardJoined(true)
+      };
       
 
 
@@ -1146,14 +1222,30 @@ export const Card = ({card, list}) => {
         <div>
            
             <div className='card-container'>
-                
+
                 <div className='card-details'>
+                    
+                    
+                    {!isUserMember && (
+                        <div className={`join-card-button ${isCardJoined ? 'joined' : ''}`}>
+                        <button onClick={handleJoinCard}>
+                            {isCardJoined ? '!عضو شدی' : 'عضو بشو'}
+                        </button>
+                        </div>
+                    )}            
+
                     <h2 className='card-title' style={{textAlign:'right'}}><img src={require('./icons/list.png')} alt="" style={{width:'50px', height:'50px', marginRight:'-6%' , position:'relative', float:'right'}}/>
                     {cardName} 
                     </h2>
                     <h3 className='list-name' style={{textAlign:'right', marginRight:'40px', marginTop:'10px'}}> لیست:  {newList.name}</h3>
 
-                    <button className='remove-card-button' onClick={() => removeCard()}>حذف کارت</button>
+
+                    {isUserMember && (
+                        <>
+                            <button className='remove-card-button' onClick={() => removeCard()}>حذف کارت</button>
+                        </>
+                    )}
+
                     
 
                     <div className='card-members' style={{marginRight:'30px'}}>
@@ -1173,51 +1265,51 @@ export const Card = ({card, list}) => {
                         </h4>
 
 
-                        {memberCardID === newCard.id && <AddMember card={card} list={list}/>}
-                        
-                        <button className='add-member-button' onClick={() => {
-                            if(memberCardID === ''){
-                                setMemberCardID(newCard.id)
-                            } else {
-                                setMemberCardID('')
-                            }
-                        }}>اضافه کردن عضو جدید</button>
-                    
+
+                    {userIsMember && (
+                            <>
+                            {/* ... other member-specific options ... */}
+                            {memberCardID === card.id && <AddMember card={card} list={list} />}
+                            <button className='add-member-button' onClick={() => setMemberCardID(memberCardID === card.id ? '' : card.id)}>
+                                اضافه کردن عضو جدید
+                            </button>
+                            </>
+                        )}
+
                     </div>
 
 
 
 
 
-                    <div className="description-input" style={{marginRight:'30px'}}>
-                    <img src={require('./icons/desc.png')} alt="" style={{width:'20px', height:'20px', marginRight:'-35px', marginTop:'30px', marginBottom:'-10%'}}/>
-                    <h2 className='section-title' style={{textAlign:'right'}}>توضیحات</h2>
+                    <div className="description-input" style={{ marginRight: '30px' }}>
+                        <img src={require('./icons/desc.png')} alt="" style={{ width: '20px', height: '20px', marginRight: '-35px', marginTop: '30px', marginBottom: '-10%' }} />
+                        <h2 className='section-title' style={{ textAlign: 'right' }}>توضیحات</h2>
+
+                        {/* Display description inside an input field for both non-members and members */}
                         <input
-                            type="text"
-                            className={isEditingDescription ? 'card-description-active' : 'card-description'}
-                            value={editedDescription}
-                            onFocus={() => setIsEditingDescription(true)}
-                            // onBlur={() => {setIsEditingDescription(false)}}
-                            // onBlur={cancelDescription}
-                            onChange={(e) => setEditedDescription(e.target.value)}
-                        style={{direction:'rtl'}}/>
-                        {isEditingDescription && (
-                            <div className="description-buttons">
-                                <button type="submit" onClick={() => {
-                                    // setCardDescription(editedDescription)
-                                    changeDescription(editedDescription)
-                                    setIsEditingDescription(false);
-                                }}>ذخیره</button>
-                                <button type="submit" onClick={() => {
-                                    setEditedDescription(cardDescription);
-                                    setIsEditingDescription(false)
-                                    }}>لغو</button>
-                            </div>
+                        type="text"
+                        className={isEditingDescription ? 'card-description-active' : 'card-description'}
+                        value={editedDescription}
+                        onFocus={() => setIsEditingDescription(true)}
+                        readOnly={!userIsMember} // Make the input read-only for non-members
+                        onChange={(e) => setEditedDescription(e.target.value)}
+                        style={{ direction: 'rtl' }}
+                        />
+
+                        {isEditingDescription && userIsMember && (
+                        <div className="description-buttons">
+                            <button type="submit" onClick={() => {
+                            changeDescription(editedDescription);
+                            setIsEditingDescription(false);
+                            }}>ذخیره</button>
+                            <button type="submit" onClick={() => {
+                            setEditedDescription(card.description);
+                            setIsEditingDescription(false);
+                            }}>لغو</button>
+                        </div>
                         )}
                     </div>
-                            
-
-
 
 
                     <div className='showcase-checklists' style={{ marginRight: 'auto', maxWidth: '1200px' }}>
@@ -1255,57 +1347,64 @@ export const Card = ({card, list}) => {
                                                 {...provided.dragHandleProps}
                                                 className="checklist-item"
                                                 >
-                                                <div className="options-container">
-                                                    <div className="options-toggle" onClick={handleToggleOptions}>
-                                                    <div className="circle">
-                                                        <span>...</span>
+                                                {userIsMember && (
+                                                    <>
+                                                    {/* Options container */}
+                                                    <div className="options-container">
+                                                        <div className="options-toggle" onClick={handleToggleOptions}>
+                                                        <div className="circle">
+                                                            <span>...</span>
+                                                        </div>
+                                                        </div>
+                                                        {showOptions && (
+                                                        <div className="options-dropdown">
+                                                            <button className="option-button" onClick={() => removeItem(checklist, item)}>حذف</button>
+                                                            <button className="option-button" onClick={() => console.log('add date')}>تاریخ</button>
+                                                        </div>
+                                                        )}
                                                     </div>
+
+                                                    {/* Clock and date container */}
+                                                    <div className="clock-date-container">
+                                                        <div className="month-day" style={{ fontSize: '12px', marginLeft: '18px' }}>
+                                                        <img src={require('./icons/clock-date.png')} alt="" style={{ width: '14px', height: '14px' }} />
+                                                        {item.dueDate} {/* Assuming item has a dueDate property */}
+                                                        </div>
                                                     </div>
-                                                    {showOptions && (
-                                                    <div className="options-dropdown">
-                                                        <button className="option-button" onClick={() => removeItem(checklist, item)}>حذف</button>
-                                                        <button className="option-button" onClick={() => console.log('add date')}>تاریخ</button>
-                                                    </div>
-                                                    )}
-                                                </div>
 
-                                                <div className="clock-date-container">
-                                                    <div className="month-day" style={{ fontSize: '12px', marginLeft: '18px' }}>
-                                                    <img src={require('./icons/clock-date.png')} alt="" style={{ width: '14px', height: '14px' }} />
-                                                    {item.dueDate} {/* Assuming item has a dueDate property */}
-                                                    </div>
-                                                </div>
-
-                                                {/* Rest of your existing code */}
-
-
-                                                
-                                                {isAssignItemModalOpen && (
-                                                    <AssignItem listID={newList.id} cardID={newCard.id} checklistID={checklist.id} itemID={item.id} />
+                                                    {/* Assign item section */}
+                                                    {isAssignItemModalOpen && (
+                                                        <AssignItem listID={newList.id} cardID={newCard.id} checklistID={checklist.id} itemID={item.id} />
                                                     )}
                                                     <div className='item-assigned-to'>
-                                                        <div className='assigned-to' onClick={() => setAssignItemModalOpen(true)} style={{marginLeft:'18px'}}>
-                                                            <img
+                                                        <div className='assigned-to' onClick={() => setAssignItemModalOpen(true)} style={{ marginLeft: '18px' }}>
+                                                        <img
                                                             src={require('./icons/assignedto.png')}
                                                             alt=""
                                                             style={{ width: '14px', height: '14px', cursor: 'pointer' }}
-                                                            />
+                                                        />
                                                         </div>
                                                     </div>
+                                                    </>
+                                                )}
 
                                     
 
 
                                                 <label htmlFor="item">{item.name}</label>
-                                                <input
-                                                    type="checkbox"
-                                                    id="item"
-                                                    checked={item.done}
-                                                    onChange={() => {
-                                                    handleCheckboxChange(checklist, checklist.id, item, item.done);
-                                                    // item.done = !item.done; // Don't mutate state directly
-                                                    }}
-                                                />
+                                                {isUserMember && (
+                                                    <>
+                                                    <input
+                                                        type="checkbox"
+                                                        id="item"
+                                                        checked={item.done}
+                                                        onChange={() => {
+                                                        handleCheckboxChange(checklist, checklist.id, item, item.done);
+                                                        // item.done = !item.done; // Don't mutate state directly
+                                                        }}
+                                                    />
+                                                    </>
+                                                )}
                                                 </div>
                                             )}
                                             </Draggable>
@@ -1322,20 +1421,32 @@ export const Card = ({card, list}) => {
                                 {itemChecklistID === checklist.id && isAddingItem && <AddItem checklist={checklist}/> }
 
 
-                                <button type='button' className='add-item-button' onClick={() => {
-                                    if(itemChecklistID === ''){
-                                        setIsAddingItem(true)
-                                        setItemChecklistID(checklist.id)
-                                    } else {
-                                        setIsAddingItem(false)
-                                        setItemChecklistID('')
-                                    } 
+                                {isUserMember && (
+
+                                    <>
+                                    <button type='button' className='add-item-button' onClick={() => {
+                                        if(itemChecklistID === ''){
+                                            setIsAddingItem(true)
+                                            setItemChecklistID(checklist.id)
+                                        } else {
+                                            setIsAddingItem(false)
+                                            setItemChecklistID('')
+                                        } 
+                                        
+                                    }}>اضافه کردن آیتم</button>
                                     
-                                }}>اضافه کردن آیتم</button>
+                                    </>
+
+                                )}
                                 
 
                                 <br />
-                                <button type='submit' className='remove-checklist-button' onClick={() => removeChecklist(checklist)}>پاک کردن</button>
+
+                                {isUserMember && (
+                                    <>
+                                    <button type='submit' className='remove-checklist-button' onClick={() => removeChecklist(checklist)}>پاک کردن</button>
+                                    </>
+                                )}
                             
                                                                 
                                                             </div>
@@ -1448,29 +1559,38 @@ export const Card = ({card, list}) => {
                                 {/* Button to open the date picker for the start date */} 
                                 {/* <button onClick={() => document.getElementById('start-date-picker').click()}>انتخاب تاریخ شروع</button> */}
                                 {/* Date picker for the start date */}
-                                <p className="date-picker-text">انتخاب تاریخ شروع</p>
-                                <DatePicker
-                                id="start-date-picker"
-                                selected={editedDates.start}
-                                onChange={(date) => handleDateChange(date, 'start')}
-                                dateFormat="yyyy-MM-dd"
-                                showYearDropdown
-                                className="date-picker-input"
-                                />
+                                
+                                {isUserMember && (
 
-                                {/* Date picker for the end date */}
-                                <p className="date-picker-text">انتخاب تاریخ پایان</p>
-                                <DatePicker
-                                id="end-date-picker"
-                                selected={editedDates.end}
-                                onChange={(date) => handleDateChange(date, 'end')}
-                                dateFormat="yyyy-MM-dd"
-                                showYearDropdown
-                                className="date-picker-input"
-                                />
+                                    <>
+                                        <p className="date-picker-text">انتخاب تاریخ شروع</p>
+                                        <DatePicker
+                                        id="start-date-picker"
+                                        selected={editedDates.start}
+                                        onChange={(date) => handleDateChange(date, 'start')}
+                                        dateFormat="yyyy-MM-dd"
+                                        showYearDropdown
+                                        className="date-picker-input"
+                                        />
 
-                                {/* Button to save the edited dates to the backend */}
-                                <button onClick={changeDates}>ثبت</button>
+                                        {/* Date picker for the end date */}
+                                        <p className="date-picker-text">انتخاب تاریخ پایان</p>
+                                        <DatePicker
+                                        id="end-date-picker"
+                                        selected={editedDates.end}
+                                        onChange={(date) => handleDateChange(date, 'end')}
+                                        dateFormat="yyyy-MM-dd"
+                                        showYearDropdown
+                                        className="date-picker-input"
+                                        />
+
+                                        {/* Button to save the edited dates to the backend */}
+                                        <button onClick={changeDates}>ثبت</button>
+
+                                    </>
+
+                                )}
+
                             </div>
                         </div>
 

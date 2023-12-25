@@ -11,39 +11,58 @@ import Timeline, {
 import 'react-calendar-timeline/lib/Timeline.css';
 import moment from 'moment';
 import './css/scheduler.css';
+import { useParams } from 'react-router-dom/cjs/react-router-dom.min';
 
 const Scheduler = () => {
   const [lists, setLists] = useState([]);
   const [todayMarker, setTodayMarker] = useState(moment().toDate());
+  const { boardId } = useParams();
+
+  
+
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('http://localhost:8080/api/table', {
+        const response = await fetch(`http://localhost:8080/api/boards/${boardId}/table`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
           },
         });
-
+  
         if (!response.ok) {
           throw new Error('Failed to get table info');
         }
-
+  
         const tableData = await response.json();
-        setLists(tableData);
+  
+        // Assuming timelineUnit is an array within tableData
+        const [timelineUnit] = tableData || [];
+  
+        if (!timelineUnit || !Array.isArray(timelineUnit)) {
+          console.error('Invalid table info structure:', tableData);
+          console.error('timelineUnit:', timelineUnit);
+          throw new Error('Invalid table info structure');
+        }
+  
+        setLists([timelineUnit]); // Wrap timelineUnit in an array
       } catch (error) {
         console.error('Error getting table info:', error);
       }
     };
-    
+  
     fetchData();
-  }, []);
+  }, [boardId]);
+  
+
+
 
   // Wait for lists to be populated before rendering the Timeline
   if (lists.length === 0) {
-    return null; // or render a loading indicator
+    return <div>Loading...</div>; // or render a loading indicator
   }
+
 
   const getGroupsAndItems = () => {
     const groups = lists.map((list) => ({ id: list.id, title: list.name }));

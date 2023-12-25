@@ -8,7 +8,9 @@ import (
 
 func SetBoardRoutes(r *mux.Router) {
 	r.HandleFunc("/api/boards/user/{user_id:[0-9]+}", controllers.GetUserBoards).Methods("GET")
+	r.HandleFunc("/api/boards", controllers.GetAllBoards).Methods("GET")
 	r.HandleFunc("/api/boards", controllers.CreateBoard).Methods("POST")
+	r.HandleFunc("/api/boards/{board_id:[0-9]+}", controllers.AddUserToBoard).Methods("PUT")
 }
 
 func SetListRoutes(r *mux.Router) {
@@ -86,5 +88,5 @@ func SetActivityRoutes(r *mux.Router) {
 
 
 func SetTableRoutes(r *mux.Router){
-	r.HandleFunc("/api/boards/{board_id:[0-9]+}/table", controllers.TableInfo).Methods("GET")
+	r.HandleFunc("/api/boards/{boardId:[0-9]+}/table", controllers.TableInfo).Methods("GET")
 }

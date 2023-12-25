@@ -10,6 +10,7 @@ import { Link, useHistory } from 'react-router-dom';
 
 const Workspace = () => {
   const [boards, setBoards] = useState([]);
+  const [otherBoards, setOtherBoards] = useState([]);
   const [newBoardName, setNewBoardName] = useState('');
   const [isCreatingBoard, setIsCreatingBoard] = useState(false);
 
@@ -64,8 +65,32 @@ const Workspace = () => {
       }
     };
 
+
+    // Fetch all other boards
+    const fetchAllBoards = async () => {
+      try {
+        const response = await fetch('http://localhost:8080/api/boards', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          // Filter out user's boards
+          const otherUserBoards = data.filter((board) => !boards.some((userBoard) => userBoard.id === board.id));
+          setOtherBoards(otherUserBoards);
+        } else {
+          console.error('Failed to fetch all boards');
+        }
+      } catch (error) {
+        console.error('Error during fetch:', error);
+      }
+    };
+
+    fetchAllBoards();
     fetchUserBoards();
-  }, []); // Empty dependency array means this effect runs once when the component mounts
+  }, [boards]); // Empty dependency array means this effect runs once when the component mounts
 
   const handleCreateBoard = async () => {
     if (newBoardName.trim() !== '') {
@@ -106,31 +131,57 @@ const Workspace = () => {
 
   return (
     <div className="workspace-container">
-      <h1>Boards</h1>
-
+      <h1 style={{ textAlign: 'center' }}>Boards</h1>
+  
       <div className="boards-container">
-        {boards.map((board, index) => (
-          <div key={index} className="board" onClick={() => handleBoardClick(board.id)}>
-            <p>{board.name}</p>
-          </div>
-        ))}
-
-        <div className={`board create-board ${isCreatingBoard ? 'editing' : ''}`} onClick={handleCreateBoardClick}>
-          {isCreatingBoard ? (
-            <input
-              type="text"
-              placeholder="Enter board name"
-              value={newBoardName}
-              onChange={(e) => setNewBoardName(e.target.value)}
-              onBlur={handleCreateBoard}
-              autoFocus
-            />
+        {/* User's boards */}
+        <div className="user-boards-container">
+          <h2>Your Boards</h2>
+          {boards && boards.length > 0 ? (
+            <div className="user-boards">
+              {boards.map((board, index) => (
+                <div key={index} className="board" onClick={() => handleBoardClick(board.id)}>
+                  <p>{board.name}</p>
+                </div>
+              ))}
+            </div>
           ) : (
-            <p>Create Board</p>
+            <p className="no-boards-message">You have no boards.</p>
+          )}
+  
+          <div className={`board create-board ${isCreatingBoard ? 'editing' : ''}`} onClick={handleCreateBoardClick}>
+            {isCreatingBoard ? (
+              <input
+                type="text"
+                placeholder="Enter board name"
+                value={newBoardName}
+                onChange={(e) => setNewBoardName(e.target.value)}
+                onBlur={handleCreateBoard}
+                autoFocus
+              />
+            ) : (
+              <p>Create Board</p>
+            )}
+          </div>
+        </div>
+  
+        {/* All other boards */}
+        <div className="other-boards-container">
+          <h2>All Other Boards</h2>
+          {otherBoards && otherBoards.length > 0 ? (
+            <div className="other-boards">
+              {otherBoards.map((board, index) => (
+                <div key={index} className="board" onClick={() => handleBoardClick(board.id)}>
+                  <p>{board.name}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="no-boards-message">No other boards available.</p>
           )}
         </div>
       </div>
-
+  
       <div className="create-board-container">
         {isCreatingBoard ? (
           <button onClick={handleCreateBoard}>Create Board</button>
@@ -145,7 +196,7 @@ const Workspace = () => {
       </div>
     </div>
   );
-
+  
 };
 
 export default Workspace;

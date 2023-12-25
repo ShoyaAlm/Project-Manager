@@ -116,3 +116,115 @@ func GetUserBoards(w http.ResponseWriter, r *http.Request) {
 }
 
 
+func AddUserToBoard(w http.ResponseWriter, r *http.Request) {
+
+    vars := mux.Vars(r)
+    BoardID, err := strconv.Atoi(vars["board_id"])
+	if err != nil {
+		http.Error(w, "Invalid Board ID", http.StatusBadRequest)
+		return
+	}
+
+    body, err := ioutil.ReadAll(r.Body)
+    if err != nil {
+        http.Error(w, fmt.Sprintf("Failed to read request body, %s", err), http.StatusInternalServerError)
+        return
+    }
+
+
+
+    var requestData struct {
+        UserID        int   `json:"user_id"`
+        // BoardID    int      `json:"board_id"`    
+    }
+
+
+
+    err = json.Unmarshal(body, &requestData)
+    if err != nil {
+        http.Error(w, fmt.Sprintf("Failed to parse JSON data, %s", err), http.StatusBadRequest)
+        return
+    }
+
+
+
+    // Retrieve the list of boards for the user
+    rows, err := db.Query("SELECT board_id FROM user_boards WHERE user_id = $1", requestData.UserID)
+    if err != nil {
+        http.Error(w, fmt.Sprintf("Failed to retrieve user boards, %s", err), http.StatusInternalServerError)
+        return
+    }
+    defer rows.Close()
+
+    var userBoards []int
+    for rows.Next() {
+        var userBoardID int
+        if err := rows.Scan(&userBoardID); err != nil {
+            http.Error(w, fmt.Sprintf("Failed to scan user board data, %s", err), http.StatusInternalServerError)
+            return
+        }
+        userBoards = append(userBoards, userBoardID)
+    }
+    if err := rows.Err(); err != nil {
+        http.Error(w, fmt.Sprintf("Error iterating over user board rows, %s", err), http.StatusInternalServerError)
+        return
+    }
+
+    // If the board is not already in the user's list of boards, add it
+    if !contains(userBoards, int(BoardID)) {
+        _, err := db.Exec("INSERT INTO user_boards (user_id, board_id) VALUES ($1, $2)", requestData.UserID, BoardID)
+        if err != nil {
+            http.Error(w, fmt.Sprintf("Failed to add board to user boards, %s", err), http.StatusInternalServerError)
+            return
+        }
+    }
+
+    w.WriteHeader(http.StatusOK)
+}
+
+// Helper function to check if an element is in a slice
+func contains(slice []int, element int) bool {
+    for _, e := range slice {
+        if e == element {
+            return true
+        }
+    }
+    return false
+}
+
+
+
+func GetAllBoards(w http.ResponseWriter, r *http.Request) {
+    // Retrieve all boards from the 'boards' table
+    rows, err := db.Query("SELECT id, name FROM boards")
+    if err != nil {
+        http.Error(w, fmt.Sprintf("Failed to retrieve all boards, %s", err), http.StatusInternalServerError)
+        return
+    }
+    defer rows.Close()
+
+    var boards []model.Board
+    for rows.Next() {
+        var board model.Board
+        if err := rows.Scan(&board.ID, &board.Name); err != nil {
+            http.Error(w, fmt.Sprintf("Failed to scan board data, %s", err), http.StatusInternalServerError)
+            return
+        }
+        boards = append(boards, board)
+    }
+    if err := rows.Err(); err != nil {
+        http.Error(w, fmt.Sprintf("Error iterating over rows, %s", err), http.StatusInternalServerError)
+        return
+    }
+
+    // Marshal the boards into JSON
+    jsonData, err := json.Marshal(boards)
+    if err != nil {
+        http.Error(w, "Failed to marshal response data", http.StatusInternalServerError)
+        return
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(http.StatusOK)
+    w.Write(jsonData)
+}

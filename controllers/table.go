@@ -16,7 +16,7 @@ import (
 func TableInfo(w http.ResponseWriter, r *http.Request){
 
 	vars := mux.Vars(r)
-	boardID := vars["board_id"]
+	boardID := vars["boardId"]
 	
 
 	listRows, err := db.Query("SELECT id, name FROM lists WHERE board_id = $1", boardID)

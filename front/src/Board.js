@@ -581,33 +581,37 @@ const ShowCards = ({ list }) => {
                     </div>
                     <br />
                     <Modal isOpen={modalIsOpen} onRequestClose={closeModal} className="modal">
-                        {selectedCard && (
-                            <div className="modal-content">
-                            {user ? (
-                                user.name === selectedCard.owner.name ? (
-                                <>
-                                    {/* Display modal content with selectedCard data */}
-                                    <Card card={selectedCard} list={list}></Card>
-                                    {/* Rest of the modal content */}
-                                    <button onClick={closeModal}>Close Modal</button>
-                                </>
-                                ) : (
-                                <>
-                                    <SimpleCard card={selectedCard} list={list}></SimpleCard>
-                                    <button onClick={closeModal}>Close Modal</button>
-                                </>
-                                )
-                            ) : (
-                                <>
-                                <p>You need to sign up to view this content.</p>
-                                <button onClick={() => {
-                                    history.push('/signup')
-                                }}>Sign Up</button>
-                                <button onClick={closeModal}>Close Modal</button>
-                                </>
-                            )}
-                            </div>
+                    {selectedCard && (
+                      <div className="modal-content">
+                        {user ? (
+                          selectedCard.members.some((member) => member.name === user.name) ? (
+                            <>
+                              {/* Display modal content with selectedCard data */}
+                              <Card card={selectedCard} list={list} userIsMember={true}></Card>
+                              {/* Rest of the modal content */}
+                              <button onClick={closeModal}>Close Modal</button>
+                            </>
+                          ) : (
+                            <>
+                              <Card card={selectedCard} list={list} userIsMember={false}></Card>
+                              <button onClick={closeModal}>Close Modal</button>
+                            </>
+                          )
+                        ) : (
+                          <>
+                            <p>You need to sign up to view this content.</p>
+                            <button
+                              onClick={() => {
+                                history.push('/signup');
+                              }}
+                            >
+                              Sign Up
+                            </button>
+                            <button onClick={closeModal}>Close Modal</button>
+                          </>
                         )}
+                      </div>
+                    )}
                     </Modal>
                 </div>
                         </div>

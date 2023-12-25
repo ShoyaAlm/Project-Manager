@@ -193,7 +193,7 @@
   width: 40%;
   background: linear-gradient(to bottom, #B2CFDC, #91CFE8);
   /* Remove the height property */
-  /* max-height: 400px; */
+  max-height: 300px;
   /* height: 150px; */
   overflow-y: auto; /* Add scroll if content exceeds the max-height */
   margin: 20px;

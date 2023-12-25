@@ -9,4 +9,5 @@ type Item struct {
 	DueDate    time.Time `json:"duedate"`
 	Done       bool      `json:"done"`
 	AssignedTo []*Member  `json:"assignedto"`
+	Position   int 		`json:"position"`
 }

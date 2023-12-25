@@ -1125,20 +1125,23 @@ export const Card = ({card, list, userIsMember}) => {
         };
 
 
-    // drag and drop items  
-    // const [checklistItems, setChecklistItems] = useState([])
-    // drag and drop items in a checklist
-    const onChecklistItemsDragEnd = (result,  listID, cardID, checklist) => {
-        if (!result.destination) {
+    // drag and drop items
+    const onChecklistItemsDragEnd = (result, listID, cardID, draggedChecklist) => {
+        const { source, destination } = result;
+        
+        // Ensure that the dragged checklist is an object and has the necessary properties
+        if (!draggedChecklist || !draggedChecklist.id || !draggedChecklist.items) {
+          console.error('Invalid checklist data');
+          console.log('result: ', result);
+          console.log('listID: ', listID);
+          console.log('cardID: ', cardID);
+          console.log('draggedChecklist: ', draggedChecklist);
           return;
         }
-
-        // the checklist we get in here is in the form like this [{id, name, items}]
-        console.log(checklist[0]);
       
-        const updatedItems = [...checklist[0].items];
-        const [movedItem] = updatedItems.splice(result.source.index, 1);
-        updatedItems.splice(result.destination.index, 0, movedItem);
+        const updatedItems = [...draggedChecklist.items];
+        const [movedItem] = updatedItems.splice(source.index, 1);
+        updatedItems.splice(destination.index, 0, movedItem);
       
         // Update the position property based on the new order
         const updatedItemsWithPosition = updatedItems.map((item, index) => ({
@@ -1146,27 +1149,26 @@ export const Card = ({card, list, userIsMember}) => {
           position: index,
         }));
       
-        // Assuming you have a function to update the checklist items order
-        // You might need to update the state for the entire checklist, including items
-        setCardChecklists((prevChecklists) => {
-          return prevChecklists.map((prevChecklist) =>
-            prevChecklist.id === checklist.id
+        // Update the state for the entire checklist in setCardChecklists
+        setCardChecklists((prevChecklists) =>
+          prevChecklists.map((prevChecklist) =>
+            prevChecklist.id === draggedChecklist.id
               ? { ...prevChecklist, items: updatedItemsWithPosition }
               : prevChecklist
-          );
-        });
+          )
+        );
       
         // Prepare data to update the order on the backend
         const updatedOrder = updatedItemsWithPosition.map((item) => item.id);
       
         // Make an API call to update the item order on the server
-        fetch(`http://localhost:8080/api/lists/${listID}/cards/${cardID}/checklists/${checklist[0].id}/update-items-order`, {
-          method: 'PUT', // Assuming you are using the PUT method to update the order
+        fetch(`http://localhost:8080/api/lists/${listID}/cards/${cardID}/checklists/${draggedChecklist.id}/update-items-order`, {
+          method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            checklistId: checklist.id, // Assuming you pass the checklist ID to identify the checklist
+            checklistId: draggedChecklist.id,
             itemOrder: updatedOrder,
           }),
         })
@@ -1174,14 +1176,13 @@ export const Card = ({card, list, userIsMember}) => {
             if (!response.ok) {
               throw new Error('Failed to update item order on the server');
             }
-            // Handle a successful response as needed
           })
           .catch((error) => {
             console.error('Error updating item order on the server:', error);
-            // You can handle the error, show a message, or retry the operation
           });
       };
-
+      
+      
 
 
       const [isCardJoined, setIsCardJoined] = useState(false);
@@ -1334,6 +1335,9 @@ export const Card = ({card, list, userIsMember}) => {
                                                             </h2>
                                                                 {/* ... (existing code for items) */}
 
+                                        {/* Add a separate DragDropContext for onChecklistItemsDragEnd */}
+                                        <DragDropContext onDragEnd={(result) => onChecklistItemsDragEnd(result, newList.id, newCard.id, checklist)}>
+                                                            
                                             {checklist.items && checklist.items.length > 0 ? (
                                             <Droppable droppableId={`checklist-${checklist.id}`} type={`checklist-${checklist.id}`}>
                                             {(provided) => (
@@ -1416,6 +1420,8 @@ export const Card = ({card, list, userIsMember}) => {
                                 ) : (
                                     <span>بدون آیتم</span>
                                 )}
+                                </DragDropContext>
+
                                 {/* ... (your existing code) */}
 
                                 {itemChecklistID === checklist.id && isAddingItem && <AddItem checklist={checklist}/> }

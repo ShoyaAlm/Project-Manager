@@ -799,6 +799,12 @@ func DeleteAList(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		_, err = db.Exec("DELETE FROM activities WHERE card_id = $1", cardID)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Failed to delete activities of card, %s", err), http.StatusInternalServerError)
+			return
+		}
+
 		// deleting items & checklists
 		var checklistIDs []int
 		checklistRows, err := db.Query("SELECT id FROM checklists WHERE card_id = $1", cardID)

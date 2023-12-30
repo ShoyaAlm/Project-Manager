@@ -39,6 +39,7 @@ func SetChecklistRoutes(r *mux.Router) {
 	r.HandleFunc("/api/lists/{id:[0-9]+}/cards/{cardID:[0-9]+}/update-checklists-order", controllers.UpdateChecklistOrder).Methods("PUT")
 	r.HandleFunc("/api/lists/{id:[0-9]+}/cards/{cardID:[0-9]+}/checklists/{checklistID:[0-9]+}/update-items-order", controllers.UpdateItemOrder).Methods("PUT")
 	r.HandleFunc("/api/lists/{id:[0-9]+}/cards/{cardID:[0-9]+}/checklists/{checklistID:[0-9]+}", controllers.UpdateChecklist).Methods("PATCH")
+	r.HandleFunc("/api/lists/{id:[0-9]+}/cards/{cardID:[0-9]+}/checklists/{checklistID:[0-9]+}/item-to-checklist-order", controllers.MoveItemToChecklist).Methods("PUT")
 	r.HandleFunc("/api/lists/{id:[0-9]+}/cards/{cardID:[0-9]+}/checklists/{checklistID:[0-9]+}", controllers.DeleteChecklist).Methods("DELETE")
 }
 

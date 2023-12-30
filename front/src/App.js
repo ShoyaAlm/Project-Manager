@@ -1,13 +1,13 @@
 // import projects from './projects.js'
 import './css/index.css'
-
+import './css/app.css'
 import React, { useState, useEffect, useContext } from 'react'
 // import {useState} from 'react'
 
 
 import { BrowserRouter as Router, Route, Switch, Redirect} from 'react-router-dom'
 import {Link, useParams} from 'react-router-dom'
-import NotificationDropdown from './Notif.js'
+
 
 import { AllLists } from './Board'
 import { HandleSignupLogin } from './signup-login.js'
@@ -81,17 +81,20 @@ const App = () => {
           marginBottom: '10px',
           padding: '10px',
           borderBottom: '1px solid #ddd',
-          backgroundColor: '#f4f4f4', // Add your desired background color
-          border: '1px solid #ccc', // Add your desired border style
-          borderRadius: '5px', // Optional: Add border radius for rounded corners
+          backgroundColor: '#f4f4f4',
+          border: '1px solid #ccc',
+          borderRadius: '5px',
+          display: 'flex',
+          justifyContent: 'flex-end',  // Align items to the right
         },
         link: (currentView) => ({
           cursor: 'pointer',
-          marginLeft: '20px',
+          marginRight: '20px',  // Adjusted margin to separate links
           color: view === currentView ? '#007BFF' : '#000',
           fontWeight: view === currentView ? 'bold' : 'normal',
         }),
       };
+      
       
 
     return (
@@ -103,41 +106,45 @@ const App = () => {
 
             <Router>
 
-           <Link to="/" style={{textDecoration:'none', fontFamily:'bardiya', color:'black'}}><h1 style={{textAlign:'center'}}>مدیریت پروژه</h1></Link> <br />
-
+            <Link to="/" style={{ textDecoration: 'none', fontFamily: 'bardiya', color: 'black', display: 'block', textAlign: 'center' }}>
+              <h1 style={{ margin: '20px 0', fontSize: '2.5rem', fontWeight: 'bold', fontFamily:'shabnam', color: 'white' }}>مدیریت پروژه</h1>
+            </Link>
            {user ? (
-            <div style={{textAlign:'right '}}>
-                  <h3 style={{textAlign:'right', color:'black'}}>! خوش آمدی {user.name}</h3>
-             <Link to="/profile" style={{ textDecoration: 'none' }}>
-                    <h3 style={{ fontFamily: 'sans-serif', color: 'black' }}>پروفایل من</h3>
+            
+            <div className="header-container">
+              <h3 className="welcome-message" style={{fontSize:'16px'}}>خوش آمدی {user.name}!</h3>
+              <div className="link-container">
+                <Link to="/profile" className="nav-link profile-link">
+                  <h3 style={{fontFamily: 'shabnam'}}>پروفایل من</h3>
                 </Link>
-
-                <Link to="/workspace" style={{ textDecoration: 'none' }}>
-                    <h3 style={{ fontFamily: 'sans-serif', color: 'black' }}>workspace</h3>
+                <Link to="/workspace" className="nav-link workspace-link">
+                  <h3>Workspace</h3>
                 </Link>
-
-                  <Link to="#" style={{ textDecoration: 'none' }} onClick={handleLogout}>خروج</Link>
-                    <hr />
-                </div>
-                ) : (
-                <Link to="/signup" style={{ textDecoration: 'none' }}>
-                    <h3 style={{ textAlign: 'right', fontFamily: 'sans-serif', color: 'black' }}>ورود/ثبت نام</h3>
-                    <hr />
-                </Link>
+              </div>
+              <Link to="#" className="logout-link" onClick={handleLogout}>
+                خروج
+              </Link>
+              <hr className="divider" />
+            </div>
+                        ) : (
+                          <Link to="/signup" style={{ textDecoration: 'none', display: 'flex', justifyContent: 'flex-end' }}>
+                            <div className="auth-button">
+                              <h3 style={{fontFamily: 'shabnam' }}>ورود/ثبت نام</h3>
+                              <hr />
+                            </div>
+                          </Link>
             )}
 
 
             <div style={styles.container}>
-              <span style={styles.link('board')} onClick={() => setView('board')}>
-                Board
-              </span>
-              <span style={styles.link('table')} onClick={() => {
-                
-                setView('table')}}>
-                Table
-              </span>
               <span style={styles.link('timeline')} onClick={() => setView('timeline')}>
-                Timeline
+                تایملاین
+              </span>
+              <span style={styles.link('table')} onClick={() => setView('table')}>
+                جدول کارت ها
+              </span>
+              <span style={styles.link('board')} onClick={() => setView('board')}>
+                صفحه بورد
               </span>
             </div>
 
@@ -154,7 +161,7 @@ const App = () => {
               <Route path='/workspace'>
                   <Workspace />
                 </Route>
-                <Route path='/lists/:listId/cards/:cardId'>
+                <Route path='/boards/:boardId/lists/:listId/cards/:cardId'>
                   <Card />
                 </Route>
                 <Route path='/signup'>

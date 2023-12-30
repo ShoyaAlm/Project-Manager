@@ -474,3 +474,39 @@ func UpdateItemOrder(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
   }
   
+
+  func MoveItemToChecklist(w http.ResponseWriter, r *http.Request) {
+    body, err := ioutil.ReadAll(r.Body)
+    if err != nil {
+        http.Error(w, "Failed to read request body", http.StatusInternalServerError)
+        return
+    }
+
+    type MoveItemToChecklistRequest struct {
+        SourceChecklistID    	int    `json:"sourceChecklistID"`
+        DestinationChecklistID 	int	   `json:"destinationChecklistID"`
+        ChecklistID       		int    `json:"checklistID"`
+        ItemID            		int    `json:"itemID"`
+        ItemName          		string `json:"itemName"`
+        Position          		int    `json:"newPosition"`
+    }
+
+    var requestData MoveItemToChecklistRequest
+    err = json.Unmarshal(body, &requestData)
+    if err != nil {
+        http.Error(w, "Failed to parse JSON data", http.StatusBadRequest)
+        fmt.Printf("error: %v", err)
+		return
+    }
+
+    // Update the ChecklistID and Position of the specified item
+    _, err = db.Exec("UPDATE items SET checklist_id = $1, position = $2 WHERE id = $3",
+        requestData.DestinationChecklistID, requestData.Position, requestData.ItemID)
+    if err != nil {
+        fmt.Printf("error: %v", err)
+        http.Error(w, "Failed to move item to checklist", http.StatusInternalServerError)
+        return
+    }
+
+    w.WriteHeader(http.StatusOK)
+}

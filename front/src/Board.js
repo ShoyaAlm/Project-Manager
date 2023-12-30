@@ -10,7 +10,6 @@ import Modal from 'react-modal'
 import { getJwtFromCookie } from './App';
 import jwt_decode from 'jwt-decode'
 
-import SimpleCard from './simpleCard';
 
 import { Card } from './Card';
 
@@ -41,6 +40,7 @@ export const AllLists = () => {
 
         const Lists = await response.json();
         setLsts(Lists);
+        console.error(Lists);
       } catch (error) {
         console.error('Error getting all lists:', error);
       }
@@ -74,6 +74,8 @@ const List = () => {
     const [newListName, setNewListName] = useState('')
 
     const { boardId } = useParams();
+
+    const [isNewCardAddedOrRemoved, setIsNewCardAddedOrRemoved] = useState(false);
 
 
     const findUser = () => {
@@ -126,7 +128,6 @@ const List = () => {
         
         const addNewList = () => {
             if (newListName.trim() !== '') {
-                // handleNotif()
                 handleSaveList(newListName)
                 setNewListName('');
                 setIsAddingList(false)
@@ -135,10 +136,10 @@ const List = () => {
 
          return (
             <div className="add-list-buttons">
+              <button type="submit" onClick={() => addNewList()}>ذخیره</button>
                 <button type="submit" onClick={() => {
                     setIsAddingList(false)
                 }}>لغو</button>
-                <button type="submit" onClick={() => addNewList()}>ذخیره</button>
             </div>
         )
 
@@ -147,11 +148,9 @@ const List = () => {
 
      
     const handleDeleteList = async (lst) => {
-
-
         
         try {
-            const response = await fetch(`http://localhost:8080/api/lists/${lst.id}`,{
+            const response = await fetch(`http://localhost:8080/api/boards/${boardId}/lists/${lst.id}`,{
                 method: "DELETE",
                 headers: {
                     "Content-Type": "application/json"
@@ -178,51 +177,54 @@ const List = () => {
     const AddCard = ({id}) => {
 
 
+      const handleSaveCard = async (newCardName) => {
+        console.log(user);
+        try {
+            const response = await fetch(`http://localhost:8080/api/lists/${id}/cards`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              name: newCardName,
+              username: user.name,
+              user_id: user.id,
+              user_email: user.email,
+              owner_id: user.user_id,
+            }),
+          });
 
+          if (!response.ok) {
+            throw new Error('Failed to create a new card');
+          }
+      
+          const newCard = await response.json();
+      
+          const updatedLists = lsts.map((list) => {
+            if (list.id === id) {
+              return {
+                ...list,
+                cards: [...list.cards, ...newCard.cards],
+              };
+            }
+            return list;
+          });
+          
+          setIsNewCardAddedOrRemoved(true); // Move this line after setLsts
+          
+          setLsts(updatedLists);
 
+          window.location.reload();
+        } catch (error) {
+          console.error('Error creating a new card:', error);
+        }
 
-
-        const handleSaveCard = async (newCardName) => {
-            console.log(user);
-            try{
-                const response = await fetch(`http://localhost:8080/api/lists/${id}/cards`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ name: newCardName, username: user.name, user_id: user.id, user_email: user.email, owner_id: user.user_id })
-                });
-                if (!response.ok) {
-                    throw new Error('Failed to create a new card');
-                  }
-              
-                  const newCard = await response.json();
-                  const updatedLists = lsts.map((list) => {
-                    if (list.id === id) {
-                      return {
-                        ...list,
-                        cards: [...list.cards, newCard],
-                      };
-                    }
-                    return list;
-                  });
-                  
-                  setLsts(updatedLists);
-                  
-
-
-            } catch (error) {
-                  console.error('Error creating a new card:', error);
-                  // Handle the error as needed
-                }      
-        };
+      };
         
         
         const addNewCard = () => {
             if (newCardName.trim() !== '') {
-                // handleNotif()
                 handleSaveCard(newCardName)
-                setIsNewListAddedOrRemoved(true);
                 setNewCardName('');
                 setIsAddingCard(false);
             }
@@ -231,15 +233,15 @@ const List = () => {
 
         return (
             <div className="add-card-buttons">
+              <button type="submit" onClick={() => addNewCard()}>ذخیره</button>
                 <button type="submit" onClick={() => {
                     setIsAddingCard(false)
                 }}>لغو</button>
-                <button type="submit" onClick={() => addNewCard()}>ذخیره</button>
             </div>
         )
 
     }
-    
+
 
     
 
@@ -404,7 +406,7 @@ const List = () => {
                       <div className="list">
                         {/* Your existing list content */}
                         <h3>{lst.name}</h3>
-                        <ShowCards list={lst} />
+                        <ShowCards list={lst} isNewCardAddedOrRemoved={isNewCardAddedOrRemoved} setIsNewCardAddedOrRemoved={setIsNewCardAddedOrRemoved}/>
                         <input
                           type="text"
                           placeholder="add item"
@@ -418,6 +420,7 @@ const List = () => {
                             height: 'auto',
                             border: '2px solid #ccc',
                             borderRadius: '20px',
+                            direction:'rtl'
                           }}
                         />
   
@@ -425,7 +428,7 @@ const List = () => {
   
                         <br />
                         <button onClick={() => handleDeleteList(lst)} className="remove-button">
-                          پاک کردن
+                          حذف لیست
                         </button>
                       </div>
                     </div>
@@ -460,7 +463,7 @@ const List = () => {
 
 // Inside the ShowCards component
 
-const ShowCards = ({ list }) => {
+const ShowCards = ({ list, isNewCardAddedOrRemoved, setIsNewCardAddedOrRemoved }) => {
 
     const [cardList, setCardList] = useState(list.cards)
 
@@ -481,7 +484,13 @@ const ShowCards = ({ list }) => {
       history.push('/'); // Redirect to the main page when closing modal
     };
 
-
+    useEffect(() => {
+      if (isNewCardAddedOrRemoved) {
+        setCardList(list.cards);
+        setIsNewCardAddedOrRemoved(false); // Reset the variable after updating the cards
+      }
+    }, [isNewCardAddedOrRemoved, list.cards, setIsNewCardAddedOrRemoved]);
+    
 
      let user = null; // Define user variable here
 
@@ -569,7 +578,7 @@ const ShowCards = ({ list }) => {
                 <div
                         style={{ textDecoration: 'none', color: 'black', cursor: 'pointer' }}
                         onClick={() => openModal(card)}>
-                        <h4 style={{ fontFamily: 'sans-serif' }}>{card.name}</h4>
+                        <h4 style={{ fontFamily: 'Shabnam-Medium', fontWeight: 'normal' }}>{card.name}</h4>
                 </div>
                      
                     <div className="icons-container" style={{display:'inline-flex' , direction: 'rtl'}}>
@@ -589,26 +598,43 @@ const ShowCards = ({ list }) => {
                               {/* Display modal content with selectedCard data */}
                               <Card card={selectedCard} list={list} userIsMember={true}></Card>
                               {/* Rest of the modal content */}
-                              <button onClick={closeModal}>Close Modal</button>
+                              <div className="center-button-container">
+                                <button onClick={() => { window.location.href = `/board/${boardId}/lists` }}
+                                style={{fontFamily:'shabnam'}}>
+                                  بستن صفحه
+                                  </button>
+                              </div>
                             </>
                           ) : (
                             <>
                               <Card card={selectedCard} list={list} userIsMember={false}></Card>
-                              <button onClick={closeModal}>Close Modal</button>
+                              <button onClick={() => {
+                                window.location.href = `/board/${boardId}/lists`
+                              }}>بستن صفحه</button>
                             </>
                           )
-                        ) : (
-                          <>
-                            <p>You need to sign up to view this content.</p>
-                            <button
-                              onClick={() => {
-                                history.push('/signup');
-                              }}
-                            >
-                              Sign Up
-                            </button>
-                            <button onClick={closeModal}>Close Modal</button>
-                          </>
+                        ) : (<div className="authentication-prompt">
+                              <p>شما برای دیدن محتوای کارت باید وارد شوید</p>
+                              <div className="buttons-container">
+                                <button
+                                  className="signup-button"
+                                  onClick={() => {
+                                    history.push('/signup');
+                                  }}
+                                  style={{fontFamily:'vazirmatn'}}
+                                >
+                                  ثبت نام
+                                </button>
+                                <button
+                                  className="close-modal-button"
+                                  onClick={() => {
+                                    window.location.href = `/board/${boardId}/lists`;
+                                  }}
+                                >
+                                  Close Modal
+                                </button>
+                              </div>
+                            </div>
                         )}
                       </div>
                     )}

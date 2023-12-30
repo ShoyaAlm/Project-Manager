@@ -1,3 +1,9 @@
+.card-container-parent{
+  max-width: auto;
+  min-height: auto;
+  /* background-color: #c5e1fe; */
+
+}
 .card-container {
     left: auto;
     right: 50%;
@@ -22,6 +28,7 @@
     margin-right: auto;
     position: absolute; /* Position absolutely */
     top: 20px; /* Position from the top */
+    font-family: 'Vazirmatn';
 
     /* left: 10%; */
 }
@@ -94,20 +101,23 @@
 }
 
 
-.remove-card-button{
-    margin: 10px 5px;
-    padding: 5px 10px;
-    border: none;
-    background-color:crimson;
-    color: white;
-    cursor: pointer;
-    border-radius: 4px;
-    display: flex;
-    /* justify-content: left; */
-    /* margin-right: auto; */
-    margin-left: auto;
-    margin-right: 5%;   
-}
+.remove-card-button {
+  margin: 10px 5px;
+  padding: 8px 16px;
+  border: none;
+  background-color: #e74c3c; /* Crimson color */
+  color: white;
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s ease;
+  font-family: 'shabnam';
+  font-size: 12px;
+  margin-left: auto;
+  margin-right: 5%; 
+  }
 
 .list-name {
     font-size: 14px;
@@ -115,10 +125,89 @@
     margin-left: 32px;
 }
 
+
+
 .card-members {
-    margin-top: 30px;
-    margin-left: 32px;
+  margin-right: 30px;
+  display: flex;
+  flex-direction: column;
 }
+
+.members-header {
+  display: flex;
+  align-items: center;
+}
+
+.member-circle-container {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.member-circle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  margin-left: -10px; /* Negative margin to create overlap */
+  overflow: hidden;
+  transition: transform 0.2s ease-in-out, z-index 0.2s ease-in-out;
+}
+
+.member-color {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f0f0f0; /* Light background color */
+  border-radius: 50%;
+  font-size: 15px;
+  font-weight: bold;
+  overflow: hidden;
+  transition: visibility 0.2s ease-in-out, opacity 0.2s ease-in-out;
+}
+
+.member-name {
+  display: none;
+  white-space: nowrap;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 12px;
+  transition: transform 0.2s ease-in-out;
+}
+
+.member-name::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #f0f0f0;
+  border-radius: 50%;
+  z-index: -1;
+}
+
+.member-circle:hover {
+  transform: scale(1.2);
+  z-index: 1;
+}
+
+.member-circle:hover .member-color {
+  visibility: hidden;
+  opacity: 0;
+}
+
+.member-circle:hover .member-name {
+  display: inline-block;
+}
+
+
+
 
 
 .listItem {
@@ -248,7 +337,7 @@
 
 
 .checklist {
-  width: 80%; /* Adjust the width as needed */
+  width: auto; /* Adjust the width as needed */
   max-width: 320px; /* Set a maximum width */
   background: linear-gradient(to bottom, #DCB2CF, #E891CF);
   margin: 20px;
@@ -275,17 +364,12 @@
 
 .button-and-search-container {
   display: flex;
-  flex-direction: row;
-  align-items: center;
-}
-.button-and-search-container {
-  display: flex;
   align-items: center;
 }
 
 .custom-button {
-  width: 50px;
-  height: 40px;
+  width: 40px; /* Adjusted width */
+  height: 30px; /* Adjusted height */
   margin-right: 10px;
   background-color: #4CAF50;
   color: white;
@@ -300,8 +384,8 @@
 }
 
 .custom-textfield {
-  width: 100px;
-  height: 25px;
+  width: 80px; /* Adjusted width */
+  height: 25px; /* Adjusted height */
   margin: 0;
   direction: rtl;
 }
@@ -313,19 +397,22 @@
   border-radius: 4px;
 }
 
-.remove-item-button{
-    background-color: #ff3333; /* Red background color */
-    color: white; /* White text color */
-    border: none; /* No border */
-    border-radius: 20%; /* Rounded border */
-    padding: 1px 3px; /* Padding to make it visually smaller */
-     /* Add some space to separate it from the member name */
-    margin-right: auto;
-    
-    cursor: pointer; /* Change cursor to pointer on hover */
-    
-    margin-top: 2%;
-    margin-bottom: 2%;
+
+.remove-item-button {
+  background-color: #ff3333;
+  color: white;
+  border: none;
+  border-radius: 4px; /* Adjusted border-radius */
+  padding: 5px 10px; /* Increased padding for better visibility */
+  margin-right: auto;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-top: 2%;
+  margin-bottom: 2%;
+}
+
+.remove-item-button:hover {
+  background-color: #d9534f; /* Darker red on hover */
 }
 
 
@@ -407,6 +494,21 @@
   background-color: #2980b9;
 }
 
+.checklist-message {
+  background-color: #aedbe7; /* Light gray background color */
+  border: 1px solid #bdc3c7; /* Border color */
+  border-radius: 5px; /* Rounded corners */
+  padding: 10px; /* Padding around the text */
+  display: inline-block; /* Make it inline-block to wrap the content */
+  margin: 10px 0; /* Margin around the whole element */
+  width: 280px;
+  text-align: center;
+  max-height: 50px;
+  margin-right: 30px;
+  margin-left: auto;
+}
+
+
 
 .add-member{
     margin: 12px 10px;
@@ -464,21 +566,26 @@
 
 
 .add-member-button {
-    margin: 10px 5px;
-    padding: 5px 10px;
-    border: none;
-    background-color: #007bff;
-    color: white;
-    cursor: pointer;
-    border-radius: 4px;
-    /* margin-top: 20%; */
-    display: flex;
-    margin-left: auto;
-    /* justify-content: right; */
-    /* margin-left: 42%; */
-    margin-right: 0%;
+  margin: 10px 5px;
+  padding: 8px 16px;
+  border: none;
+  background-color: #3498db; /* Blue color */
+  color: white;
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s ease;
+  margin-left: auto;
+  
+  font-family: 'shabnam';
+  font-size: 10px;
 }
 
+.add-member-button:hover {
+  background-color: #2980b9; /* Darker blue color on hover */
+}
 
 .remove-member-button {
     background-color: #ff3333; /* Red background color */
@@ -679,7 +786,21 @@
     font-size: 16px; /* Adjust the font size as needed */
   }
   
+  /* .options-container,
+  .options-dropdown,
+  .clock-date-container {
+    display: none;
+  }
+  
+  .checklist-item:hover .options-container,
+  .checklist-item:hover .options-dropdown,
+  .checklist-item:hover .clock-date-container {
+    display: block;
+  } */
+  
+  
   .options-dropdown {
+
     position: absolute;
     top: 30px; /* Adjust the top position as needed */
     right: 0;

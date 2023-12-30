@@ -1,32 +1,71 @@
+@font-face {
+    font-family: 'VazirMatn';
+    src: url('../../node_modules/vazirmatn/fonts/ttf/Vazirmatn-Black.ttf') format('truetype'); /* Adjust the path as needed */
+    src: url('../../node_modules/vazirmatn/fonts/ttf/Vazirmatn-Bold.ttf') format('truetype');
+    src: url('../../node_modules/vazirmatn/fonts/ttf/Vazirmatn-ExtraBold.ttf') format('truetype');
+    src: url('../../node_modules/vazirmatn/fonts/ttf/Vazirmatn-ExtraLight.ttf') format('truetype');
+    src: url('../../node_modules/vazirmatn/fonts/ttf/Vazirmatn-Medium.ttf') format('truetype');
+    src: url('../../node_modules/vazirmatn/fonts/ttf/Vazirmatn-Regular.ttf') format('truetype');
+    /* Add additional formats for different font file types if available */
+}
+
+@font-face {
+    font-family: 'Shabnam';
+    src: url('../../node_modules/shabnam-font/dist/Shabnam.ttf') format('truetype');
+    src: url('../../node_modules/shabnam-font/dist/Shabnam-Thin.woff') format('truetype');
+    src: url('../../node_modules/shabnam-font/dist/Shabnam-Bold.eot') format('truetype');
+    src: url('../../node_modules/shabnam-font/dist/Shabnam-Bold.ttf') format('truetype');
+    src: url('../../node_modules/shabnam-font/dist/Shabnam-Thin.woff') format('truetype');
+    src: url('../../node_modules/shabnam-font/dist/Shabnam-Medium.woff') format('truetype');
+    /* Add additional formats for different font file types if available */
+}
+
 body {
     margin: 0;
     padding: 0;
     background: linear-gradient(to bottom, #FF9966, #FF0066);
-    font-family: sans-serif;
+    font-family: 'VazirMatn', sans-serif, 'Shabnam', 'Shabnam-Thin', 'Shabnam-Medium';
+    font-weight: normal;
+    max-width: auto;
+    
   }
 
-.list-container {
+  .list-container {
+    max-width: 1200px; /* Set the maximum width according to your design */
+    margin: 0 auto; /* Center the list-container on the page */
     display: flex;
     flex-wrap: wrap;
-    justify-content: right;
+    justify-content: flex-start; /* Align items from left to right */
     text-align: center;
     direction: rtl;
     background: linear-gradient(to bottom, #666699, #669999);
-    /* background-color: #CC3399; */
-}
+    padding: 20px; /* Add some padding for better aesthetics */
+  }
 
 
 
-.list {
-    background: linear-gradient(to bottom, #F1A7BE,#E37295);
+  .list {
+    background: linear-gradient(to bottom, #F1A7BE, #E37295);
     border: 1px solid #ccc;
     border-radius: 8px;
     padding: 16px;
-    margin: 20px;
-    width: auto;
+    margin: 10px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 0 0 calc(20% - 20px); /* Each list takes up 20% of the container width with margin */
+  }
+
+.list h3 {
+    margin: 0;
 }
+
+/* .card-name {
+    font-family: 'Shabnam', sans-serif;
+} */
+
 
 
 .list-link {
@@ -45,8 +84,11 @@ body {
     border-radius: 4px;
     cursor: pointer;
     text-align: center;
+    font-family: 'shabnam';
+    font-size: 11px;
 }
-.remove-button:hover{
+
+.remove-button:hover {
     background-color: black;
 }
 
@@ -163,8 +205,10 @@ body {
 .add-list-container {
     position: relative;
     margin-top: 30px;
-}
+    order: -1; /* Move the "Add List" container to the left */
+  }
 
+  
 .add-list-container button{
     margin-top: auto;
     /* position:static; */
@@ -178,6 +222,7 @@ body {
     border: 2px solid #ccc;
     border-radius: 20px;
     color: #333;
+    direction: rtl;
 }
 .modal {
     position: fixed;
@@ -196,11 +241,86 @@ body {
     box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.5);
     width: auto;
     max-height: 80vh; /* Adjust as needed */
-    max-width: 80vw; /* Adjust as needed */
+    max-width: auto; /* Adjust as needed */
     overflow: auto;
     padding: 20px; /* Add padding to the content if necessary */
+    background-color: #c5e1fe;
   }
 
   *{
     box-sizing: border-box;
+  }
+
+
+
+  .authentication-prompt {
+    text-align: center;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    max-width: 300px;
+    margin: auto;
+    max-height: 900px;
+  }
+  
+  .authentication-prompt p {
+    font-size: 16px;
+    margin-bottom: 20px;
+  }
+  
+  .buttons-container {
+    display: flex;
+    justify-content: center;
+  }
+  
+  .signup-button,
+  .close-modal-button {
+    padding: 10px 20px;
+    margin: 0 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .signup-button {
+    background-color: #007bff;
+    color: #fff;
+  }
+  
+  .signup-button:hover {
+    background-color: #0056b3;
+  }
+  
+  .close-modal-button {
+    background-color: #ccc;
+    color: #333;
+  }
+  
+  .close-modal-button:hover {
+    background-color: #999;
+  }
+  
+
+  .center-button-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px; /* Adjust as needed */
+  }
+  
+  .center-button-container button {
+    padding: 10px 20px;
+    background-color: #dbb434; /* Blue color */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  
+    
+  }
+
+  .center-button-container button:hover {
+    background-color: #a4882d; /* Darker blue color on hover */
   }

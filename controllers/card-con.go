@@ -447,6 +447,16 @@ func DeleteCard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+
+	_, err = db.Exec("DELETE FROM activities WHERE card_id = $1", cardID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to activities of card, %s", err), http.StatusInternalServerError)
+		return
+	}
+
+	
+
+
 	// Fetch the IDs of checklists associated with the card
 	var checklistIDs []int
 	rows, err := db.Query("SELECT id FROM checklists WHERE card_id = $1", cardID)
@@ -705,133 +715,3 @@ func UpdateCard(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
-
-
-
-                    //     {cardChecklists && cardChecklists.length > 0 ? (
-                        
-                    //     cardChecklists.map((checklist, index) => (
-
-                    //         <>
-                    //         <div className='checklist' key={index}>
-                                
-                                
-                    //             <h2 className='checklist-title'><img src={require('./icons/checklist.png')} alt="" style={{width:'25px', height:'25px', marginBottom:'-5px', marginLeft:'-30px', marginRight:'10px'}}/>
-                    //             {checklist.name}</h2>
-                    //             {checklist.items && checklist.items.length > 0 ? (
-                    //             checklist.items.map((item) => {
-                    //                 // Parse the due date string into a Date object
-                    //                 const dueDate = new Date(item.duedate);
-                                
-                    //                 // Extract the month and day from the Date object
-                    //                 const month = dueDate.getMonth() + 1; // Months are zero-based, so add 1
-                    //                 const day = dueDate.getDate();
-                                
-                                  
-
-                    //                 return (
-                    //                     <div className="checklist-item" key={item.id}>
-                    //                       <div className="options-container">
-                    //                         <div className="options-toggle" onClick={handleToggleOptions}>
-                    //                           {/* Circular div for 3-dots icon */}
-                    //                           <div className="circle">
-                    //                             <span>...</span>
-                    //                           </div>
-                    //                         </div>
-                    //                         {showOptions && (
-                    //                           <div className="options-dropdown">
-                    //                             <button className="option-button" onClick={() => removeItem(checklist.id, item.id)}>حذف</button>
-                    //                             <button className="option-button" onClick={() => console.log('add date')}>تاریخ</button>
-                    //                           </div>
-                    //                         )}
-                    //                       </div>
-                                    
-                    //                       <div className="clock-date-container">
-                    //                         <div className="month-day" style={{ fontSize: '12px', marginLeft:'18px' }}>
-                    //                           <img src={require('./icons/clock-date.png')} alt="" style={{ width: '14px', height: '14px' }} />
-                    //                           {month}/{day}
-                    //                         </div>
-                    //                       </div>
-
-
-
-                    //                       {isAssignItemModalOpen && (
-                    //                         <AssignItem listID={newList.id} cardID={newCard.id} checklistID={checklist.id} itemID={item.id} />
-                    //                         )}
-                    //                         <div className='item-assigned-to'>
-                    //                             <div className='assigned-to' onClick={() => setAssignItemModalOpen(true)} style={{marginLeft:'18px'}}>
-                    //                                 <img
-                    //                                 src={require('./icons/assignedto.png')}
-                    //                                 alt=""
-                    //                                 style={{ width: '14px', height: '14px', cursor: 'pointer' }}
-                    //                                 />
-                    //                             </div>
-                    //                         </div>
-
-                                    
-
-
-
-                    //                       <label htmlFor="item">{item.name}</label>
-                                    
-                    //                       <input
-                    //                         type="checkbox"
-                    //                         id="item"
-                    //                         checked={item.done}
-                    //                         onChange={() => {
-                    //                           handleCheckboxChange(checklist, checklist.id, item.id, item.done);
-                    //                           item.done = !item.done;
-                    //                         }}
-                    //                       />
-                    //                     </div>
-                    //                   );
-
-
-
-
-
-                    //             })
-                                
-                                
-                                
-                    //             ) : (
-                    //                 <span>بدون آیتم</span>
-                    //             )}
-
-
-                    //             {itemChecklistID === checklist.id && isAddingItem && <AddItem checklist={checklist}/> }
-
-
-                    //             <button type='button' className='add-item-button' onClick={() => {
-                    //                 if(itemChecklistID === ''){
-                    //                     setIsAddingItem(true)
-                    //                     setItemChecklistID(checklist.id)
-                    //                 } else {
-                    //                     setIsAddingItem(false)
-                    //                     setItemChecklistID('')
-                    //                 } 
-                                    
-                    //             }}>اضافه کردن آیتم</button>
-                                
-
-                    //             <br />
-                    //             <button type='submit' className='remove-checklist-button' onClick={() => removeChecklist(checklist.id)}>پاک کردن</button>
-                            
-
-                    //         </div>
-                            
-                    //         </>
-
-
-
-                    //     ))
-
-                        
-                            
-                    //     ) : (
-                    //         <span>بدون چکلیست</span>
-                    //     )}
-                        
-
-                        
-                    // </div>

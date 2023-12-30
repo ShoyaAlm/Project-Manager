@@ -587,40 +587,7 @@ export const Card = ({card, list, userIsMember}) => {
 
 
     const removeCard = async () => {
-        // let user = null; // Define user variable here
-
-        // // First try-catch block: Get user info from JWT
-        // try {
-        //     const jwt = getJwtFromCookie();
-        //     if (jwt) {
-        //         const decoded = jwt_decode(jwt);
-        //         user = decoded; // Update user data from the JWT
-        //         console.log(user);
-        //     }
-        // } catch (error) {
-        //     console.log(error);
-        // }
-
-        // Second try-catch block: Send a new notification
-        try {
-            if (user) { // Check if user is available
-                const notifResponse = await fetch(`http://localhost:8080/api/notifs`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ message: `کاربر "${user.name}" کارت با نام "${newCard.name}" را پاک کرد`, user_id: user.user_id }),
-                });
-
-                if (!notifResponse.ok) {
-                    throw new Error('Error making a new notification');
-                }
-            }
-        } catch (error) {
-            console.log(error);
-        }
-
-        // Third try-catch block: Delete the card
+        
         try {
             const response = await fetch(`http://localhost:8080/api/lists/${newList.id}/cards/${newCard.id}`, {
                 method: 'DELETE',
@@ -634,6 +601,8 @@ export const Card = ({card, list, userIsMember}) => {
         } catch (error) {
             console.log(error);
         }
+
+        window.location.reload();
     };
 
 
@@ -727,6 +696,7 @@ export const Card = ({card, list, userIsMember}) => {
     
     const [isAssignItemModalOpen, setAssignItemModalOpen] = useState(false);
     
+    const [selectedItemId, setSelectedItemId] = useState(null);
 
     const AssignItem = ({ listID, cardID, checklistID, itemID }) => {
         // const [isAssignItemModalOpen, setAssignItemModalOpen] = useState(false);
@@ -801,7 +771,7 @@ export const Card = ({card, list, userIsMember}) => {
         return (
           <div>
             {isAssignItemModalOpen && (
-              <div className="assignment-modal" style={{ marginLeft: '5px', marginRight: '5px', padding: '10px', position:'relative'}}>
+              <div className="assignment-modal" style={{ marginLeft: '10px', marginRight: 'auto', position:'relative'}}>
 
                 <div className="button-and-search-container">
                 <button
@@ -818,7 +788,7 @@ export const Card = ({card, list, userIsMember}) => {
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="نام کاربر را وارد کنید"
+                    placeholder="نام کاربر..."
                     className="custom-textfield"
                     InputProps={{
                     startAdornment: (
@@ -1051,7 +1021,7 @@ export const Card = ({card, list, userIsMember}) => {
                     style={{ direction: 'rtl' }}
                     className="activity-input"
                     />
-                    <button onClick={submitActivity} className="submit-button">
+                    <button onClick={submitActivity} className="submit-button" style={{fontFamily:'vazirmatn', fontSize:'10px'}}>
                     نظر بدهید
                     </button>
                     </>
@@ -1063,7 +1033,7 @@ export const Card = ({card, list, userIsMember}) => {
                   {/* <h4>Existing Activities:</h4> */}
                   <ul className="activity-list">
                   {cardActivities.map((activity, index) => (
-                    <li key={index} className="activity-message">
+                    <li key={index} className="activity-message" style={{fontFamily:'vazirmatn', fontSize:'15px'}}>
                         {activity.message}
                     </li>
                     ))}
@@ -1182,6 +1152,63 @@ export const Card = ({card, list, userIsMember}) => {
           });
       };
       
+
+
+
+
+      const onItemDrop = (result, sourceChecklist, destinationChecklist, listID, cardID) => {
+        if (!result.destination) {
+          return;
+        }
+      
+        const { source, destination } = result;
+      
+        const updatedSourceChecklistItems = [...sourceChecklist.items];
+        const [movedItem] = updatedSourceChecklistItems.splice(source.index, 1);
+      
+        const updatedDestinationChecklistItems = [...destinationChecklist.items];
+        updatedDestinationChecklistItems.splice(destination.index, 0, movedItem);
+      
+        // Update position for the source checklist
+        const updatedSourceItemsWithPosition = updatedSourceChecklistItems.map((item, index) => ({
+          ...item,
+          position: index,
+        }));
+      
+        // Update position for the destination checklist
+        const updatedDestinationItemsWithPosition = updatedDestinationChecklistItems.map((item, index) => ({
+          ...item,
+          position: index,
+        }));
+      
+        // Update state to reflect the changes
+        setCardChecklists((prevChecklists) =>
+          prevChecklists.map((prevChecklist) => {
+            if (prevChecklist.id === sourceChecklist.id) {
+              return { ...prevChecklist, items: updatedSourceItemsWithPosition };
+            } else if (prevChecklist.id === destinationChecklist.id) {
+              return { ...prevChecklist, items: updatedDestinationItemsWithPosition };
+            } else {
+              return prevChecklist;
+            }
+          })
+        );
+
+
+        // Prepare data to update the order on the backend
+        const updatedSourceOrder = updatedSourceItemsWithPosition.map((item) => item.id);
+        const updatedDestinationOrder = updatedDestinationItemsWithPosition.map((item) => item.id);
+
+        // Make API calls to update item order on the server
+        // You might need to adjust the API endpoint and payload structure based on your backend implementation
+        // ...
+
+        // Handle other backend updates if needed
+        // ...
+        };
+
+
+
       
 
 
@@ -1217,10 +1244,227 @@ export const Card = ({card, list, userIsMember}) => {
       };
       
 
+      const onDragEnd = (result, listID, cardID, draggedChecklist) => {
+        
+        if (!result.destination) {
+            return;
+          }
+        
+          // Handle checklist drag and drop
+          if (result.type === 'checklist') {
+            const updatedChecklists = [...cardChecklists];
+            const [movedChecklist] = updatedChecklists.splice(result.source.index, 1);
+            updatedChecklists.splice(result.destination.index, 0, movedChecklist);
+        
+            // Update the position property based on the new order
+            const updatedChecklistsWithPosition = updatedChecklists.map((checklist, index) => ({
+              ...checklist,
+              position: index,
+            }));
+        
+            // Assuming you have a function to update the card checklists order
+            // You might need to update the state for the entire card, including checklists
+            setCardChecklists(updatedChecklistsWithPosition);
+        
+            // Prepare data to update the order on the backend
+            const updatedOrder = updatedChecklistsWithPosition.map((checklist) => checklist.id);
+        
+            // Make an API call to update the checklist order on the server
+            fetch(`http://localhost:8080/api/lists/${listID}/cards/${cardID}/update-checklists-order`, {
+              method: 'PUT', // Assuming you are using the PUT method to update the order
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                checklistOrder: updatedOrder,
+              }),
+            })
+              .then((response) => {
+                if (!response.ok) {
+                  throw new Error('Failed to update checklist order on the server');
+                }
+                // Handle a successful response as needed
+              })
+              .catch((error) => {
+                console.error('Error updating checklist order on the server:', error);
+                // You can handle the error, show a message, or retry the operation
+              });
+          }
+
+
+
+
+        // Handle item drag and drop
+    else if (result.type === 'checklist-item') {
+        const updatedChecklists = [...cardChecklists];
+        const sourceChecklist = updatedChecklists.find((checklist) => checklist.id === result.source.droppableId);
+        const destinationChecklist = updatedChecklists.find((checklist) => checklist.id === result.destination.droppableId);
+
+        // Ensure that the dragged checklist is an object and has the necessary properties
+        if (!sourceChecklist || !sourceChecklist.id || !sourceChecklist.items) {
+        console.error('Invalid checklist data');
+        console.log('result: ', result);
+        console.log('listID: ', listID);
+        console.log('cardID: ', cardID);
+        console.log('sourceChecklist: ', sourceChecklist);
+        return;
+        }
+
+        const updatedItems = [...sourceChecklist.items];
+        const [movedItem] = updatedItems.splice(result.source.index, 1);
+        destinationChecklist.items.splice(result.destination.index, 0, movedItem);
+
+        // Update the position property based on the new order
+        const updatedItemsWithPosition = destinationChecklist.items.map((item, index) => ({
+        ...item,
+        position: index,
+        }));
+
+        // Update the state for the destination checklist in setCardChecklists
+        setCardChecklists((prevChecklists) =>
+        prevChecklists.map((prevChecklist) =>
+            prevChecklist.id === destinationChecklist.id
+            ? { ...prevChecklist, items: updatedItemsWithPosition }
+            : prevChecklist
+        )
+        );
+
+        // Prepare data to update the order on the backend
+        const updatedOrder = updatedItemsWithPosition.map((item) => item.id);
+
+        // Make an API call to update the item order on the server
+        fetch(`http://localhost:8080/api/lists/${listID}/cards/${cardID}/checklists/${destinationChecklist.id}/update-items-order`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            checklistId: destinationChecklist.id,
+            itemOrder: updatedOrder,
+        }),
+        })
+        .then((response) => {
+            if (!response.ok) {
+            throw new Error('Failed to update item order on the server');
+            }
+        })
+        .catch((error) => {
+            console.error('Error updating item order on the server:', error);
+        });
+        }
+      };
+
+      const onInterChecklistItemDragEnd = (result, listID, cardID, cardChecklists) => {
+    if (!result.destination) {
+        return;
+    }
+
+    const { source, destination, draggableId, type } = result;
+
+    console.log('cardChecklists:', cardChecklists);
+
+    if (type === 'item-to-checklist') {
+        // Extract numeric part from checklist IDs
+        const sourceChecklistId = source.droppableId.match(/\d+/)[0];
+        const destinationChecklistId = destination.droppableId.match(/\d+/)[0];
+
+        // Find the source and destination checklists directly
+        const sourceChecklist = cardChecklists.find((checklist) => checklist.id === +sourceChecklistId);
+        const destinationChecklist = cardChecklists.find((checklist) => checklist.id === +destinationChecklistId);
+
+        // Log source and destination checklists for debugging
+        // console.log('Source Checklist:', sourceChecklist);
+        // console.log('Destination Checklist:', destinationChecklist);
+
+            if (!sourceChecklist || !destinationChecklist) {
+    
+                console.error('SourceChecklistID:', sourceChecklistId);
+                console.error('DestinationChecklistID:', destinationChecklistId);
+
+                console.error('Invalid checklist data');
+    
+                console.error('sourceChecklist: ', sourceChecklist);
+                console.error('destinationChecklist: ', destinationChecklist);
+                
+                return;
+            }
+    
+            // Find the moved item in the source checklist
+            const movedItem = sourceChecklist.items.find((item) => item.id === +draggableId);
+    
+            if (!movedItem) {
+                console.error('sourceChecklist.items: ', sourceChecklist.items);
+                console.error('Invalid item data');
+                return;
+            }
+    
+            // Remove the item from the source checklist
+            const updatedSourceItems = sourceChecklist.items.filter((item) => item.id !== +draggableId);
+
+            // If destination checklist has no items, add a temporary item
+            if (!destinationChecklist.items || destinationChecklist.items.length === 0) {
+                destinationChecklist.items = [{ id: 'tempItem', name: 'Temporary Item' }];
+            }
+
+            // Rest of the code for moving items...
+
+            // Remove the temporary item after the actual item has been added
+            if (destinationChecklist.items.length === 1 && destinationChecklist.items[0].id === 'tempItem') {
+                destinationChecklist.items = [];
+            }
+
+            // Add the item to the destination checklist
+            const updatedDestinationItems = [...destinationChecklist.items];
+            updatedDestinationItems.splice(destination.index, 0, movedItem);
+    
+            // Update the state with the new checklist items
+            setCardChecklists((prevChecklists) =>
+                prevChecklists.map((prevChecklist) =>
+                    prevChecklist.id === sourceChecklist.id
+                        ? { ...prevChecklist, items: updatedSourceItems }
+                        : prevChecklist.id === destinationChecklist.id
+                        ? { ...prevChecklist, items: updatedDestinationItems }
+                        : prevChecklist
+                )
+            );
+    
+            // Prepare data to update the order on the backend
+            const updatedOrder = updatedDestinationItems.map((item) => item.id);
+    
+            // Make an API call to update the item order on the server
+            fetch(
+                `http://localhost:8080/api/lists/${listID}/cards/${cardID}/checklists/${destinationChecklistId}/item-to-checklist-order`,
+                {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        sourceChecklistID: parseInt(sourceChecklistId, 10), // Convert to integer
+                        destinationChecklistID: parseInt(destinationChecklistId, 10),
+                        checklistID: parseInt(destinationChecklistId, 10),
+                        itemID: movedItem.id,
+                        itemName: movedItem.name,
+                        position: destination.index,
+                    }),
+                }
+            )
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error('Failed to update item order on the server');
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error updating item order on the server:', error);
+                });
+        }
+    };
+    
+      
 
     return (
         
-        <div>
+        <div className='card-container-parent'>
            
             <div className='card-container'>
 
@@ -1249,35 +1493,46 @@ export const Card = ({card, list, userIsMember}) => {
 
                     
 
-                    <div className='card-members' style={{marginRight:'30px'}}>
-                        <img src={require('./icons/members.png')} alt="" style={{width:'24px', height:'24px', marginLeft:'800px', marginTop:'30px', position:'relative', float:'right'}}/>
-                        <h3 style={{textAlign:'right', marginRight:'6px'}}>اعضا</h3>
-                        <h4 style={{textAlign:'right'}}>
+                    <div className='card-members' style={{ marginRight: '30px', display: 'flex', flexDirection: 'column' }}>
+                    <div>
+                        <img
+                        src={require('./icons/members.png')}
+                        alt=""
+                        style={{
+                            width: '28px',
+                            height: '24px',
+                            marginLeft: '800px',
+                            marginTop: '30px',
+                            position: 'relative',
+                            float: 'right',
+                        }}
+                        />
+                        <h3 style={{ textAlign: 'right', marginRight: '6px' }}>اعضا</h3>
+                        <div className="member-circle-container">
                         {cardMembers && cardMembers.length > 0 ? (
                             cardMembers.map((member, index) => (
-                                <span key={index} style={{ marginRight: '8px', textAlign: 'right' }}>
-                                 {member.name}
-                                </span>
+                            <div className="member-circle" key={index}>
+                                <div className="member-color">{member.name.charAt(0)}</div>
+                                <span className="member-name">{member.name}</span>
+                            </div>
                             ))
-                            ) : (
+                        ) : (
                             <span>بدون عضو</span>
                         )}
-
-                        </h4>
-
-
+                        </div>
+                    </div>
 
                     {userIsMember && (
-                            <>
-                            {/* ... other member-specific options ... */}
-                            {memberCardID === card.id && <AddMember card={card} list={list} />}
-                            <button className='add-member-button' onClick={() => setMemberCardID(memberCardID === card.id ? '' : card.id)}>
-                                اضافه کردن عضو جدید
-                            </button>
-                            </>
-                        )}
-
+                        <>
+                        {/* ... other member-specific options ... */}
+                        {memberCardID === card.id && <AddMember card={card} list={list} />}
+                        <button className='add-member-button' onClick={() => setMemberCardID(memberCardID === card.id ? '' : card.id)}>
+                            اضافه کردن عضو جدید
+                        </button>
+                        </>
+                    )}
                     </div>
+
 
 
 
@@ -1313,9 +1568,10 @@ export const Card = ({card, list, userIsMember}) => {
                     </div>
 
 
+
                     <div className='showcase-checklists' style={{ marginRight: 'auto', maxWidth: '1200px' }}>
                         <div className='activity'>
-                            <h3 style={{textAlign:'center'}}>فعالیت</h3>
+                            <h3 style={{textAlign:'center', fontFamily:'vazirmatn'}}>فعالیت</h3>
                             <CardActivity list={newList} card={newCard} user={user}/>
                         </div>
 
@@ -1343,76 +1599,74 @@ export const Card = ({card, list, userIsMember}) => {
                                             {(provided) => (
                                             <div ref={provided.innerRef} {...provided.droppableProps}>
                                             {checklist.items.map((item, itemIndex) => (
-                                            <Draggable key={item.id.toString()} draggableId={item.id.toString()} index={itemIndex}>
-                                            {(provided) => (
-                                                <div
-                                                ref={provided.innerRef}
-                                                {...provided.draggableProps}
-                                                {...provided.dragHandleProps}
-                                                className="checklist-item"
-                                                >
-                                                {userIsMember && (
-                                                    <>
-                                                    {/* Options container */}
-                                                    <div className="options-container">
-                                                        <div className="options-toggle" onClick={handleToggleOptions}>
-                                                        <div className="circle">
-                                                            <span>...</span>
-                                                        </div>
-                                                        </div>
-                                                        {showOptions && (
-                                                        <div className="options-dropdown">
-                                                            <button className="option-button" onClick={() => removeItem(checklist, item)}>حذف</button>
-                                                            <button className="option-button" onClick={() => console.log('add date')}>تاریخ</button>
-                                                        </div>
-                                                        )}
-                                                    </div>
+    <Draggable key={item.id.toString()} draggableId={item.id.toString()} index={itemIndex}>
+        {(provided) => (
+            <div
+                ref={provided.innerRef}
+                {...provided.draggableProps}
+                {...provided.dragHandleProps}
+                className="checklist-item"
+            >
+                {userIsMember && (
+                    <>
+                        {/* Options container */}
+                        <div className="options-container">
+                            <div className="options-toggle" onClick={() => handleToggleOptions(item.id)}>
+                                <div className="circle">
+                                    <span>...</span>
+                                </div>
+                            </div>
+                            {showOptions && selectedItemId === item.id && (
+                                <div className="options-dropdown">
+                                    <button className="option-button" onClick={() => removeItem(checklist, item)}>حذف</button>
+                                    <button className="option-button" onClick={() => console.log('add date')}>تاریخ</button>
+                                </div>
+                            )}
+                        </div>
 
-                                                    {/* Clock and date container */}
-                                                    <div className="clock-date-container">
-                                                        <div className="month-day" style={{ fontSize: '12px', marginLeft: '18px' }}>
-                                                        <img src={require('./icons/clock-date.png')} alt="" style={{ width: '14px', height: '14px' }} />
-                                                        {item.dueDate} {/* Assuming item has a dueDate property */}
-                                                        </div>
-                                                    </div>
+                        {/* Clock and date container */}
+                        <div className="clock-date-container">
+                            <div className="month-day" style={{ fontSize: '12px', marginLeft: '18px' }}>
+                                <img src={require('./icons/clock-date.png')} alt="" style={{ width: '14px', height: '14px' }} />
+                                {item.dueDate} {/* Assuming item has a dueDate property */}
+                            </div>
+                        </div>
 
-                                                    {/* Assign item section */}
-                                                    {isAssignItemModalOpen && (
-                                                        <AssignItem listID={newList.id} cardID={newCard.id} checklistID={checklist.id} itemID={item.id} />
-                                                    )}
-                                                    <div className='item-assigned-to'>
-                                                        <div className='assigned-to' onClick={() => setAssignItemModalOpen(true)} style={{ marginLeft: '18px' }}>
-                                                        <img
-                                                            src={require('./icons/assignedto.png')}
-                                                            alt=""
-                                                            style={{ width: '14px', height: '14px', cursor: 'pointer' }}
-                                                        />
-                                                        </div>
-                                                    </div>
-                                                    </>
-                                                )}
+                        {/* Assign item section */}
+                        {isAssignItemModalOpen === item.id && (
+                            <AssignItem listID={newList.id} cardID={newCard.id} checklistID={checklist.id} itemID={item.id} />
+                        )}
 
-                                    
+                        <div className='item-assigned-to'>
+                            <div className='assigned-to' onClick={() => setAssignItemModalOpen(item.id)} style={{ marginLeft: '18px' }}>
+                                <img
+                                    src={require('./icons/assignedto.png')}
+                                    alt=""
+                                    style={{ width: '14px', height: '14px', cursor: 'pointer' }}
+                                />
+                            </div>
+                        </div>
+                    </>
+                )}
 
-
-                                                <label htmlFor="item">{item.name}</label>
-                                                {isUserMember && (
-                                                    <>
-                                                    <input
-                                                        type="checkbox"
-                                                        id="item"
-                                                        checked={item.done}
-                                                        onChange={() => {
-                                                        handleCheckboxChange(checklist, checklist.id, item, item.done);
-                                                        // item.done = !item.done; // Don't mutate state directly
-                                                        }}
-                                                    />
-                                                    </>
-                                                )}
-                                                </div>
-                                            )}
-                                            </Draggable>
-                                        ))}
+                <label htmlFor="item" style={{fontSize:'14px'}}>{item.name}</label>
+                {isUserMember && (
+                    <>
+                        <input
+                            type="checkbox"
+                            id="item"
+                            checked={item.done}
+                            onChange={() => {
+                                handleCheckboxChange(checklist, checklist.id, item, item.done);
+                                // item.done = !item.done; // Don't mutate state directly
+                            }}
+                        />
+                    </>
+                )}
+            </div>
+        )}
+    </Draggable>
+))}
                                         {provided.placeholder}
                                         </div>
                                     )}
@@ -1430,7 +1684,9 @@ export const Card = ({card, list, userIsMember}) => {
                                 {isUserMember && (
 
                                     <>
-                                    <button type='button' className='add-item-button' onClick={() => {
+                                    <button type='button' className='add-item-button'
+                                    style={{fontFamily:'shabnam', fontSize:'10px'}}
+                                    onClick={() => {
                                         if(itemChecklistID === ''){
                                             setIsAddingItem(true)
                                             setItemChecklistID(checklist.id)
@@ -1450,7 +1706,9 @@ export const Card = ({card, list, userIsMember}) => {
 
                                 {isUserMember && (
                                     <>
-                                    <button type='submit' className='remove-checklist-button' onClick={() => removeChecklist(checklist)}>پاک کردن</button>
+                                    <button type='submit' className='remove-checklist-button'
+                                    style={{fontFamily:'vazirmatn', fontSize:'10px'}}
+                                    onClick={() => removeChecklist(checklist)}>پاک کردن</button>
                                     </>
                                 )}
                             
@@ -1473,16 +1731,18 @@ export const Card = ({card, list, userIsMember}) => {
                     </div>
 
 
+                    
 
 
 
 
 
 
-                    <div className='add-to-card' style={{width:'200px', height:'auto'}}>
+
+                    <div className='add-to-card' style={{width:'200px', height:'auto', fontFamily:'vazirmatn'}}>
                         
                         <div className='dropdown'>
-                        <button className='dropbtn'>اعضا</button>
+                        <button className='dropbtn' style={{fontFamily:'shabnam'}}>اعضا</button>
                             <div className='dropdown-content'>
                             {cardMembers && cardMembers.length > 0 ? (
                                 cardMembers.map((member, index) => {
@@ -1495,7 +1755,7 @@ export const Card = ({card, list, userIsMember}) => {
                                 })
 
                             ) : (
-                                <span>No members</span>
+                                <span style={{fontFamily:'shabnam'}}>بدون عضو</span>
                             )}
                             </div>
                         </div>
@@ -1505,6 +1765,7 @@ export const Card = ({card, list, userIsMember}) => {
                             <button
                                 className='dropbtn'
                                 onClick={() => setShowAddChecklist(true)} // Show the checklist input when the button is clicked
+                                style={{fontFamily:'shabnam'}}
                             >
                                 چکلیست
                             </button>
@@ -1545,7 +1806,10 @@ export const Card = ({card, list, userIsMember}) => {
 
 
                         <div className='dropdown'>
-                        <button className='dropbtn' onClick={() => setIsLabelOpen(!isLabelOpen)}>برچسب</button>
+                        <button className='dropbtn' onClick={() => setIsLabelOpen(!isLabelOpen)}
+                         style={{fontFamily:'shabnam'}}
+                         >برچسب
+                         </button>
                             <div className='dropdown-content'>
                                 {isLabelOpen && <LabelDropdown />}
                             </div>
@@ -1557,7 +1821,7 @@ export const Card = ({card, list, userIsMember}) => {
                             <script type="text/javascript" src="jalalidatepicker.min.js"></script>
 
                         <div className='dropdown'>
-                            <button className='dropbtn'>تاریخ</button>
+                            <button className='dropbtn' style={{fontFamily:'shabnam'}}>تاریخ</button>
                             <div className='dropdown-content'>
                             <a href="#" className="start-date">  شروع : {formatDate(newCard.dates[0])}</a>
                             <a href="#" className="due-date">  پایان : {formatDate(newCard.dates[1])}</a>
@@ -1620,79 +1884,271 @@ export const Card = ({card, list, userIsMember}) => {
 
 
 
+// items can be dragged and dropped from one checklist into another
+/*
+<div className='showcase-checklists' style={{ marginRight: 'auto', maxWidth: '1200px' }}>
+                        <div className='activity'>
+                            <h3 style={{textAlign:'center'}}>فعالیت</h3>
+                            <CardActivity list={newList} card={newCard} user={user}/>
+                        </div>
+
+                        {cardChecklists && cardChecklists.length > 0 ? (
+                        <DragDropContext
+                            onDragEnd={(result) => onInterChecklistItemDragEnd(result, newList.id, newCard.id, cardChecklists)}
+                        >
+                            <Droppable droppableId="checklist-container" type="checklist">
+                                {(provided) => (
+                                    <div ref={provided.innerRef} {...provided.droppableProps} className="checklists" style={{ display: 'flex', flexDirection: 'column', flex: '1', marginLeft: '100px' }}>
+                                        {cardChecklists.map((checklist, checklistIndex) => (
+                                            <Draggable key={checklist.id.toString()} draggableId={`checklist-draggable-${checklist.id}`} index={checklistIndex}>
+                                                {(provided) => (
+                                                    <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
+                                                        <div className='checklist'>
+                                                            <h2 className='checklist-title'>
+                                                                <img src={require('./icons/checklist.png')} alt="" style={{ width: '25px', height: '25px', marginBottom: '-5px', marginLeft: '-30px', marginRight: '10px' }} />
+                                                                {checklist.name}
+                                                            </h2>
+
+                                                            {/* Add Droppable for items within each checklist */
+                                                            /*
+                                                            <Droppable droppableId={`checklist-items-${checklist.id}`} type="item-to-checklist">
+                                                                {(provided) => (
+                                                                    <div ref={provided.innerRef} {...provided.droppableProps} className="checklist-items">
+                                                                        {checklist.items && checklist.items.length > 0 ? (
+                                                                            checklist.items.map((item, itemIndex) => (
+                                                                                <Draggable key={item.id.toString()} draggableId={item.id.toString()} index={itemIndex}>
+                                                                                    {(provided) => (
+                                                                                        <div
+                                                                                            ref={provided.innerRef}
+                                                                                            {...provided.draggableProps}
+                                                                                            {...provided.dragHandleProps}
+                                                                                            className="checklist-item"
+                                                                                        >
+                                                                            {userIsMember && (
+                                                                                <>
+                                                                                {/* Options container */
+                                                                                /*
+                                                                                <div className="options-container">
+                                                                                    <div className="options-toggle" onClick={handleToggleOptions}>
+                                                                                    <div className="circle">
+                                                                                        <span>...</span>
+                                                                                    </div>
+                                                                                    </div>
+                                                                                    {showOptions && (
+                                                                                    <div className="options-dropdown">
+                                                                                        <button className="option-button" onClick={() => removeItem(checklist, item)}>حذف</button>
+                                                                                        <button className="option-button" onClick={() => console.log('add date')}>تاریخ</button>
+                                                                                    </div>
+                                                                                    )}
+                                                                                </div>
+
+                                                                                {/* Clock and date container */
+                                                                                /*
+                                                                                <div className="clock-date-container">
+                                                                                    <div className="month-day" style={{ fontSize: '12px', marginLeft: '18px' }}>
+                                                                                    <img src={require('./icons/clock-date.png')} alt="" style={{ width: '14px', height: '14px' }} />
+                                                                                    {item.dueDate} {/* Assuming item has a dueDate property */
+                                                                                    /*
+                                                                                    </div>
+                                                                                </div>
+
+                                                                                {/* Assign item section */
+                                                                                /*
+                                                                                {isAssignItemModalOpen && (
+                                                                                    <AssignItem listID={newList.id} cardID={newCard.id} checklistID={checklist.id} itemID={item.id} />
+                                                                                )}
+                                                                                <div className='item-assigned-to'>
+                                                                                    <div className='assigned-to' onClick={() => setAssignItemModalOpen(true)} style={{ marginLeft: '18px' }}>
+                                                                                    <img
+                                                                                        src={require('./icons/assignedto.png')}
+                                                                                        alt=""
+                                                                                        style={{ width: '14px', height: '14px', cursor: 'pointer' }}
+                                                                                    />
+                                                                                    </div>
+                                                                                </div>
+                                                                                </>
+                                                                            )}
+
+                                                                
 
 
-{/* <div className='showcase-checklists' style={{ marginRight: 'auto' }}>
-<div className='activity'>
-    <h3 style={{ textAlign: 'center' }}>فعالیت</h3>
-    <CardActivity list={newList} card={newCard} user={user} />
-</div>
+                                                                            <label htmlFor="item">{item.name}</label>
+                                                                            {isUserMember && (
+                                                                                <>
+                                                                                <input
+                                                                                    type="checkbox"
+                                                                                    id="item"
+                                                                                    checked={item.done}
+                                                                                    onChange={() => {
+                                                                                    handleCheckboxChange(checklist, checklist.id, item, item.done);
+                                                                                    // item.done = !item.done; // Don't mutate state directly
+                                                                                    }}
+                                                                                />
+                                                                                </>
+                                                                            )}
+                                                                    </div>
+                                                                )}
+                                                            </Draggable>
+                                                        ))
+                                                    ) : (
+                                                        <Droppable
+                                                            droppableId={`checklist-items-${checklist.id}`}
+                                                            type="item-to-checklist"
+                                                            direction="vertical"
+                                                            // Add onDragEnd for handling dragging items within a checklist
+                                                            onDragEnd={(result) => onChecklistItemsDragEnd(result, newList.id, newCard.id, checklist)}
+                                                        >
+                                                            {(provided) => (
+                                                                <div ref={provided.innerRef} {...provided.droppableProps} className="checklist-items">
+                                                                    {/* Placeholder or message for an empty checklist */
+                                                                    /*
+                                                                    <div>No items</div>
+                                                                    {provided.placeholder}
+                                                                </div>
+                                                            )}
+                                                        </Droppable>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </Droppable>
+                                        {/* Add a separate DragDropContext for onChecklistItemsDragEnd */
 
-<DragDropContext onDragEnd={(result) => onDragEnd(result, newList.id, newCard.id, cardChecklists, setCardChecklists)}>
-    {cardChecklists && cardChecklists.length > 0 ? (
-        cardChecklists.map((checklist, index) => (
-            <Droppable key={index} droppableId={`checklist-${checklist.id}`} type={`checklist-${checklist.id}`}>
-                {(provided) => (
-                    <div ref={provided.innerRef} {...provided.droppableProps}>
-                        <Draggable draggableId={`checklist-draggable-${checklist.id}`} index={index}>
-                            {(provided) => (
-                                <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps}>
-                                    <div className='checklist'>
-                                        <h2 className='checklist-title'>
-                                            <img src={require('./icons/checklist.png')} alt="" style={{ width: '25px', height: '25px', marginBottom: '-5px', marginLeft: '-30px', marginRight: '10px' }} />
-                                            {checklist.name}
-                                        </h2>
-                                        {checklist.items && checklist.items.length > 0 ? (
-                                            <div>
-                                                {checklist.items.map((item, itemIndex) => (
-                                                    <Draggable key={item.id.toString()} draggableId={item.id.toString()} index={itemIndex}>
-                                                        {(provided) => (
-                                                            <div
-                                                                ref={provided.innerRef}
-                                                                {...provided.draggableProps}
-                                                                {...provided.dragHandleProps}
-                                                                className="checklist-item"
-                                                            >
-                                                                {/* ... (existing code for checklist items) */}
-//                                                             </div>
-//                                                         )}
-//                                                     </Draggable>
-//                                                 ))}
-//                                             </div>
-//                                         ) : (
-//                                             <span>بدون آیتم</span>
-//                                         )}
-//                                         {/* ... (existing code for adding items, buttons, etc.) */}
+                                {/* ... (your existing code) */}
+/*
+                                {itemChecklistID === checklist.id && isAddingItem && <AddItem checklist={checklist}/> }
+
+
+                                {isUserMember && (
+
+                                    <>
+                                    <button type='button' className='add-item-button' onClick={() => {
+                                        if(itemChecklistID === ''){
+                                            setIsAddingItem(true)
+                                            setItemChecklistID(checklist.id)
+                                        } else {
+                                            setIsAddingItem(false)
+                                            setItemChecklistID('')
+                                        } 
+                                        
+                                    }}>اضافه کردن آیتم</button>
                                     
-//                                         {itemChecklistID === checklist.id && isAddingItem && <AddItem checklist={checklist}/> }
+                                    </>
+
+                                )}
+
+                                */
+                                /*
+
+                                <br />
+
+                                {isUserMember && (
+                                    <>
+                                    <button type='submit' className='remove-checklist-button' onClick={() => removeChecklist(checklist)}>پاک کردن</button>
+                                    </>
+                                )}
+                            
+                                                                
+                                    </div>
+                                        </div>
+                                    )}
+                                                </Draggable>
+                                            ))}
+                                            {provided.placeholder}
+                                        </div>
+                                    )}
+                                </Droppable>
+                            </DragDropContext>
+                        ) : (
+                            <div className="checklist-message">
+                            <span style={{ color: 'green', fontSize: '18px' }}>
+                                بدون چکلیست
+                            </span>
+                            </div>
+                        )}
+                    </div>
+
+                    */
 
 
-//                                         <button type='button' className='add-item-button' onClick={() => {
-//                                             if(itemChecklistID === ''){
-//                                                 setIsAddingItem(true)
-//                                                 setItemChecklistID(checklist.id)
-//                                             } else {
-//                                                 setIsAddingItem(false)
-//                                                 setItemChecklistID('')
-//                                             } 
-                                            
-//                                         }}>اضافه کردن آیتم</button>
 
 
-//                                         <br />
-//                                         <button type='submit' className='remove-checklist-button' onClick={() => removeChecklist(checklist.id)}>پاک کردن</button>
 
-//                                     </div>
-//                                 </div>
-//                             )}
-//                         </Draggable>
-//                         {provided.placeholder}
-//                     </div>
-//                 )}
-//             </Droppable>
-//         ))
-//     ) : (
-//             <span>بدون چکلیست</span>
-//         )}
-// </DragDropContext>
-// </div> */}
+
+
+
+/* make the options for items hidden unless we hover over them
+
+<div
+                                                ref={provided.innerRef}
+                                                {...provided.draggableProps}
+                                                {...provided.dragHandleProps}
+                                                className="checklist-item"
+                                                onMouseEnter={handleToggleOptions}
+                                                onMouseLeave={() => handleToggleOptions(false)}
+                                              >
+                                                {userIsMember && (
+                                                  <>
+                                                    {/* Options container */
+                                                    /*
+                                                    <div className="options-container">
+                                                      <div className="options-toggle">
+                                                        <div className="circle">
+                                                          <span>...</span>
+                                                        </div>
+                                                      </div>
+                                                      {showOptions && (
+                                                        <div className="options-dropdown">
+                                                          <button className="option-button" onClick={() => removeItem(checklist, item)}>
+                                                            حذف
+                                                          </button>
+                                                          <button className="option-button" onClick={() => console.log('add date')}>
+                                                            تاریخ
+                                                          </button>
+                                                        </div>
+                                                      )}
+                                                    </div>
+                                              
+                                                    {/* Clock and date container */
+                                                    /*
+                                                    <div className="clock-date-container">
+                                                      <div className="month-day" style={{ fontSize: '12px', marginLeft: '18px' }}>
+                                                        <img src={require('./icons/clock-date.png')} alt="" style={{ width: '14px', height: '14px' }} />
+                                                        {item.dueDate} {/* Assuming item has a dueDate property */
+                                                        /*
+                                                      </div>
+                                                    </div>
+                                              
+                                                    {/* Assign item section */
+                                                    /*
+                                                    {isAssignItemModalOpen && (
+                                                      <AssignItem listID={newList.id} cardID={newCard.id} checklistID={checklist.id} itemID={item.id} />
+                                                    )}
+                                                    <div className="item-assigned-to">
+                                                      <div className="assigned-to" onClick={() => setAssignItemModalOpen(true)} style={{ marginLeft: '18px' }}>
+                                                        <img
+                                                          src={require('./icons/assignedto.png')}
+                                                          alt=""
+                                                          style={{ width: '14px', height: '14px', cursor: 'pointer' }}
+                                                        />
+                                                      </div>
+                                                    </div>
+                                                  </>
+                                                )}
+                                              
+                                                <label htmlFor="item">{item.name}</label>
+                                                {isUserMember && (
+                                                  <>
+                                                    <input
+                                                      type="checkbox"
+                                                      id="item"
+                                                      checked={item.done}
+                                                      onChange={() => {
+                                                        handleCheckboxChange(checklist, checklist.id, item, item.done);
+                                                      }}
+                                                    />
+                                                  </>
+                                                )}
+                                              </div>
+
+
+*/

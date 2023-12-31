@@ -68,7 +68,8 @@ func GetAllLists(w http.ResponseWriter, r *http.Request) {
 			Name: listName,
 		}
 
-		cardRows, err := db.Query(`SELECT c.id AS card_id, c.name AS card_name, c.description AS card_description, c.dates AS card_dates, c.position AS card_position
+		cardRows, err := db.Query(`SELECT c.id AS card_id, c.name AS card_name, c.description AS card_description,
+								   c.dates AS card_dates, c.position AS card_position, c.label AS card_label
 									FROM cards c
 							   WHERE c.list_id = $1
 							   ORDER BY c.position;`,
@@ -89,9 +90,10 @@ func GetAllLists(w http.ResponseWriter, r *http.Request) {
 				cardDescription 		  sql.NullString
 				cardDates                 pq.StringArray
 				cardPosition  			  sql.NullInt64
+				cardLabel				  sql.NullString
 				// ownerID					  int
 			)
-			err := cardRows.Scan(&cardID, &cardName, &cardDescription, &cardDates, &cardPosition)
+			err := cardRows.Scan(&cardID, &cardName, &cardDescription, &cardDates, &cardPosition, &cardLabel)
 			if err != nil {
 				http.Error(w, fmt.Sprintf("Error scanning cardRows, %s", err), http.StatusInternalServerError)
 				return
@@ -120,6 +122,20 @@ func GetAllLists(w http.ResponseWriter, r *http.Request) {
 			}
 
 
+
+			var label *string
+
+			if cardLabel.Valid {
+				// Use cardLabel.String when the label is present
+				actualLabel := cardLabel.String
+				label = &actualLabel
+			} else {
+				// Handle the case where the label is NULL
+				label = nil // or any other default value for a missing label
+			}
+			
+
+
 			card := &model.Card{
 				ID:          cardID,
 				Name:        cardName,
@@ -128,6 +144,7 @@ func GetAllLists(w http.ResponseWriter, r *http.Request) {
 				Members:     []*model.User{},
 				Checklists:  []*model.Checklist{},
 				Position: 	 position,
+				Label:		 label,	
 				// OwnerID: 	 ownerID,
 			}
 

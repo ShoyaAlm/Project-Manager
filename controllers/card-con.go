@@ -242,14 +242,15 @@ func GetACard(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Fetch list details
-	cardRow := db.QueryRow("SELECT id, name, description, dates FROM cards WHERE id = $1 AND list_id = $2", cardID, listID)
+	cardRow := db.QueryRow("SELECT id, name, description, dates, label FROM cards WHERE id = $1 AND list_id = $2", cardID, listID)
 
 	var (
 		cardName, cardDescription string
 		cardDates                 pq.StringArray
+		cardLabel 				  sql.NullString
 	)
 
-	err = cardRow.Scan(&cardID, &cardName, &cardDescription, &cardDates)
+	err = cardRow.Scan(&cardID, &cardName, &cardDescription, &cardDates, &cardLabel)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			http.Error(w, "Card not found", http.StatusNotFound)
@@ -269,6 +270,19 @@ func GetACard(w http.ResponseWriter, r *http.Request) {
 		dates = append(dates, date)
 	}
 
+
+
+	var label *string
+
+			if cardLabel.Valid {
+				// Use cardLabel.String when the label is present
+				actualLabel := cardLabel.String
+				label = &actualLabel
+			} else {
+				// Handle the case where the label is NULL
+				label = nil // or any other default value for a missing label
+			}
+
 	card := &model.Card{
 		ID:          cardID,
 		Name:        cardName,
@@ -276,6 +290,7 @@ func GetACard(w http.ResponseWriter, r *http.Request) {
 		Dates:       dates,
 		Members:     []*model.User{},
 		Checklists:  []*model.Checklist{},
+		Label: 		 label,
 	}
 
 

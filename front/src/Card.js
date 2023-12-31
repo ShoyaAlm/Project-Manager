@@ -175,18 +175,23 @@ export const Card = ({card, list, userIsMember}) => {
         return (
             <div className="add-checklist-container">
               <h3 className="add-checklist-title">نام چکلیست جدید</h3>
-              <input
-                className="add-checklist-input"
-                type="text"
-                value={newChecklistName}
-                onChange={(e) => setNewChecklistName(e.target.value)}
-                placeholder="نام چکلیست جدید"
-              />
-              <button className="add-checklist-button" onClick={() => addNewChecklist()} type="button">
-                ذخیره
-              </button>
+              <div className="add-checklist-input-container">
+                <input
+                  className="add-checklist-input"
+                  type="text"
+                  value={newChecklistName}
+                  onChange={(e) => setNewChecklistName(e.target.value)}
+                  placeholder="نام چکلیست جدید"
+                />
+                <button className="add-checklist-button" onClick={() => addNewChecklist()} type="button"
+                style={{fontFamily:'shabnam', fontSize:'12px'}}>
+                  ذخیره
+                </button>
+              </div>
             </div>
           );
+          
+          
           
 
         
@@ -301,17 +306,21 @@ export const Card = ({card, list, userIsMember}) => {
             }
           }
     
-        return (
-            <div>
-                <button onClick={() => addNewItem()} style={{width:'auto', height:'auto'}}>ذخیره</button>
-                <input
-                    type="text"
-                    value={newItemName}
-                    onChange={(e) => setNewItemName(e.target.value)}
-                    placeholder="Enter item name"
-                    style={{width:'200px', height: '40px', direction:"rtl"}}/>
+          return (
+            <div className="add-item-container">
+              <input
+                type="text"
+                value={newItemName}
+                onChange={(e) => setNewItemName(e.target.value)}
+                placeholder="نام آیتم را وارد کنید"
+                className="add-item-input"
+              />
+              <button onClick={() => addNewItem()} className="add-item-save">
+                ذخیره
+              </button>
             </div>
-        );
+          );
+          
     };
     
 
@@ -849,18 +858,15 @@ export const Card = ({card, list, userIsMember}) => {
 
     const handleCheckboxChange = async (checklist, checklistId, item, currentDoneValue) => {
         // Update the 'done' attribute on the front-end
-        const updatedItems = checklist.items.map(item =>
-            item.id === item.id ? { ...item, done: !currentDoneValue } : item
-        );
-    
-        // Update the state or dispatch an action to update the items in your state management system
-    
-        setChecklist(prevChecklist => ({
-            ...prevChecklist,
-            items: updatedItems,
-        }));
-        // Call the changeItem function with the appropriate argument
-        // changeItem('checkbox')   ;
+    const updatedItems = checklist.items.map(currentItem =>
+        currentItem.id === item.id ? { ...currentItem, done: !currentDoneValue } : currentItem
+    );
+
+    // Update the state or dispatch an action to update the items in your state management system
+    setChecklist(prevChecklist => ({
+        ...prevChecklist,
+        items: updatedItems,
+    }));
     
         try {
             // Send a PATCH request to the backend
@@ -880,9 +886,9 @@ export const Card = ({card, list, userIsMember}) => {
             }
 
             if(!currentDoneValue == true){
-                createActivity(`${item.name} قسمت ${checklist.name} انجام شد`)
+                createActivity(`${item.name} مربوط به ${checklist.name} انجام شد`)
             } else {
-                createActivity(`${user.name} قسمت ${checklist.name} به حالت ناتمام بازگشت`)
+                createActivity(`${item.name} مربوط به ${checklist.name} به حالت ناتمام بازگشت`)
             }
 
         } catch (error) {
@@ -901,47 +907,48 @@ export const Card = ({card, list, userIsMember}) => {
 
 
     const [isLabelOpen, setIsLabelOpen] = useState(false);
-    const LabelDropdown = ({}) => {
-      
+    const LabelDropdown = ({ newCard, isLabelOpen, newList, newCardId }) => {
         const labels = ['green', 'yellow', 'orange', 'red', 'purple', 'blue'];
-
-        const url = `http://localhost:8080/api/lists/${newList.id}/cards/${newCard.id}`
+      
+        const url = `http://localhost:8080/api/lists/${newList.id}/cards/${newCard.id}`;
         const handleLabelClick = async (label) => {
-            try {
-              const response = await fetch(url, {
-                method: 'PATCH',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ label }),
-              });
-        
-              if (response.ok) {
-                console.log('adding label has ok response');
-              } else {
-                console.error('Failed to update label');
-              }
-            } catch (error) {
-              console.error('Error updating label:', error);
+          try {
+            const response = await fetch(url, {
+              method: 'PATCH',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ label }),
+            });
+      
+            if (response.ok) {
+              console.log('adding label has ok response');
+            } else {
+              console.error('Failed to update label');
             }
-          };
+          } catch (error) {
+            console.error('Error updating label:', error);
+          }
+        };
       
         return (
-            <div>
+          <div>
             {isLabelOpen && (
-              <div className='dropdown-content'>
+              <div className="label-dropdown">
                 {newCard.label ? (
-                  <>
+                  <div className="current-label">
                     <p>: برچسب فعلی</p>
                     <div className={`label-color ${newCard.label}`}></div>
-                  </>
+                    <p className="choose-another">انتخاب برچسب دیگر</p>
+                  </div>
                 ) : (
-                  <p>: انتخاب برچسب</p>
+                  <div className="no-label">
+                    <p>: انتخاب برچسب</p>
+                    <p className="choose-label">انتخاب برچسب</p>
+                  </div>
                 )}
-                {console.log("Label:", newCard.label)} {/* Log the label value */}
-                {console.log("Is Label Open?", isLabelOpen)} {/* Log the isLabelOpen value */}
-          
-                <div className='label-colors'>
+      
+                <div className="label-colors">
                   {labels.map((label) => (
                     <div
                       key={label}
@@ -953,10 +960,9 @@ export const Card = ({card, list, userIsMember}) => {
               </div>
             )}
           </div>
-          
         );
       };
-
+      
 
 
 
@@ -964,7 +970,7 @@ export const Card = ({card, list, userIsMember}) => {
 
     const CardActivity = ({ list, card, user }) => {
         const [cardActivities, setCardActivities] = useState([]);
-        console.log(user);
+        // console.log(user);
         const message = ` ${user.name} : ${activityInput}`
         const submitActivity = async () => {
             try {
@@ -1649,20 +1655,22 @@ export const Card = ({card, list, userIsMember}) => {
                     </>
                 )}
 
-                <label htmlFor="item" style={{fontSize:'14px'}}>{item.name}</label>
-                {isUserMember && (
-                    <>
-                        <input
+                        <label htmlFor={`item-${item.id}`} style={{ fontSize: '14px' }}>
+                        {item.name}
+                        </label>
+                        {isUserMember && (
+                        <>
+                            <input
                             type="checkbox"
-                            id="item"
+                            id={`item-${item.id}`}
                             checked={item.done}
                             onChange={() => {
                                 handleCheckboxChange(checklist, checklist.id, item, item.done);
-                                // item.done = !item.done; // Don't mutate state directly
                             }}
-                        />
-                    </>
-                )}
+                            />
+                        </>
+                        )}
+
             </div>
         )}
     </Draggable>
@@ -1672,7 +1680,7 @@ export const Card = ({card, list, userIsMember}) => {
                                     )}
                                     </Droppable>
                                 ) : (
-                                    <span>بدون آیتم</span>
+                                    <span className="no-items-message">بدون آیتم</span>
                                 )}
                                 </DragDropContext>
 
@@ -1684,19 +1692,21 @@ export const Card = ({card, list, userIsMember}) => {
                                 {isUserMember && (
 
                                     <>
-                                    <button type='button' className='add-item-button'
-                                    style={{fontFamily:'shabnam', fontSize:'10px'}}
-                                    onClick={() => {
-                                        if(itemChecklistID === ''){
-                                            setIsAddingItem(true)
-                                            setItemChecklistID(checklist.id)
-                                        } else {
-                                            setIsAddingItem(false)
-                                            setItemChecklistID('')
-                                        } 
-                                        
-                                    }}>اضافه کردن آیتم</button>
-                                    
+                                    <button
+                                        type="button"
+                                        className="add-item-button"
+                                        onClick={() => {
+                                            if (itemChecklistID === '') {
+                                            setIsAddingItem(true);
+                                            setItemChecklistID(checklist.id);
+                                            } else {
+                                            setIsAddingItem(false);
+                                            setItemChecklistID('');
+                                            }
+                                        }}
+                                        >
+                                        اضافه کردن آیتم
+                                    </button>
                                     </>
 
                                 )}
@@ -1780,15 +1790,6 @@ export const Card = ({card, list, userIsMember}) => {
                                         }}
                                     />
                                 )}
-                                {/* {cardChecklists && cardChecklists.length > 0 ? (
-                                    cardChecklists.map((checklist, index) => (
-                                        <div key={index}>
-                                            <a href="#">{checklist.name}</a>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <span>No Checklist</span>
-                                )} */}
                             </div>
                         </div>
 
@@ -1811,7 +1812,7 @@ export const Card = ({card, list, userIsMember}) => {
                          >برچسب
                          </button>
                             <div className='dropdown-content'>
-                                {isLabelOpen && <LabelDropdown />}
+                                {isLabelOpen && <LabelDropdown newCard={newCard} isLabelOpen={isLabelOpen} newList={newList} newCardId={newCard.id} />}
                             </div>
                         </div>
 
@@ -1823,8 +1824,8 @@ export const Card = ({card, list, userIsMember}) => {
                         <div className='dropdown'>
                             <button className='dropbtn' style={{fontFamily:'shabnam'}}>تاریخ</button>
                             <div className='dropdown-content'>
-                            <a href="#" className="start-date">  شروع : {formatDate(newCard.dates[0])}</a>
-                            <a href="#" className="due-date">  پایان : {formatDate(newCard.dates[1])}</a>
+                            <a href="#" className="start-date" style={{fontFamily:'vazirmatn', fontSize:'15px'}}>  شروع : {formatDate(newCard.dates[0])}</a>
+                            <a href="#" className="due-date" style={{fontFamily:'vazirmatn', fontSize:'15px'}}>  پایان : {formatDate(newCard.dates[1])}</a>
 
                                 {/* Button to open the date picker for the start date */} 
                                 {/* <button onClick={() => document.getElementById('start-date-picker').click()}>انتخاب تاریخ شروع</button> */}

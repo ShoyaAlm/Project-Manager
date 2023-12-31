@@ -47,6 +47,69 @@
 }
 
 
+.label-dropdown {
+  border: 1px solid #ccc;
+  padding: 10px;
+  width: 200px;
+}
+
+.current-label {
+  margin-bottom: 10px;
+}
+
+.choose-another {
+  margin-top: 5px;
+  color: #666;
+}
+
+.no-label {
+  margin-bottom: 10px;
+}
+
+.choose-label {
+  margin-top: 5px;
+  color: #666;
+}
+
+.label-colors {
+  display: flex;
+  gap: 5px;
+}
+
+.label-color {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+/* Add color styles for each label */
+.label-color.green {
+  background-color: green;
+}
+
+.label-color.yellow {
+  background-color: yellow;
+}
+
+.label-color.orange {
+  background-color: orange;
+}
+
+.label-color.red {
+  background-color: red;
+}
+
+.label-color.purple {
+  background-color: purple;
+}
+
+.label-color.blue {
+  background-color: blue;
+}
+
+
+
 .join-card-button {
   margin-left: 800px; /* Adjust the margin as needed */
 }
@@ -422,77 +485,148 @@
 } */
 
 .checklist-item input[type="checkbox"] {
-    margin-right: 10px;
-    text-align: right;
-} 
-
-.checklist-item label { /*this is for item.name*/
-    font-size: 16px;
-    text-align: right;
-    margin-right: 5px;
-    margin-left: auto;
-} 
- 
-.checklist-item input[type="checkbox"]:checked + label {
-    text-decoration: line-through;
-    color: #999;
-    align-items: right;
-    margin-right: 2px;
-}
-
-
-
-
-
-
-.add-item-button{
-    width: 85px;
-    height: 28px;
-    background-color: white;
-    border-radius: 4px;
-    margin-top: 5px;
-}
-.add-item-button:hover{
-    background-color: grey;
-}
-
-.add-checklist-container {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  margin-right: 45px;
-}
-
-.add-checklist-title {
+  margin-right: 10px;
   text-align: right;
-  font-size: 16px;
-  margin-bottom: 5px;
 }
 
-.add-checklist-input {
+.checklist-item label {
+  font-size: 16px;
+  text-align: right;
+  margin-right: 5px;
+  margin-left: auto;
+}
+
+.checklist-item input[type="checkbox"]:checked + label {
+  text-decoration: line-through;
+  color: #999;
+}
+
+
+
+
+
+span.no-items-message {
+  display: inline-block;
+  padding: 8px 16px;
+  background-color: #FFD2C2; /* Warm background color */
+  border-radius: 8px;
+  margin-top: 10px;
+  font-size: 14px;
+  margin-right: 20px;
+  color: #7E7E7E; /* Text color */
+  /* justify-content: center; */
+}
+
+
+
+
+
+.add-item-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.add-item-input {
   width: 200px;
   height: 40px;
-  margin-bottom: 10px;
-  padding: 8px;
   direction: rtl;
+  padding: 8px;
+  font-size: 14px;
   border: 1px solid #ccc;
   border-radius: 4px;
-  outline: none;
 }
 
-.add-checklist-button {
-  background-color: #3498db;
-  color: #fff;
-  padding: 8px 16px;
+.add-item-save,
+.add-item-button {
+  width: auto;
+  height: auto;
+  padding: 10px 15px;
+  background-color: #4caf50;
+  color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  transition: background-color 0.3s ease;
+  font-family: 'shabnam';
 }
 
-/* Optional: Style the button on hover */
-.add-checklist-button:hover {
-  background-color: #2980b9;
+.add-item-save {
+  background-color: #72db76; /* Green color for Save button */
 }
+
+.add-item-save:hover {
+  background-color: #38a03c; /* Green color for Save button */
+}
+
+
+.add-item-button {
+  background-color: #a13da8; /* Blue color for Add Item button */
+}
+
+
+.add-item-button:hover {
+  background-color: #6d2e72;
+  font-size: 11px; /* Adjust the font size on hover if needed */
+}
+
+.add-item-button {
+  font-size: 10px;
+}
+
+
+
+
+
+
+.add-checklist-container {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.add-checklist-title {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.add-checklist-input-container {
+  display: flex;
+  gap: 10px;
+}
+
+.add-checklist-input {
+  flex-grow: 1;
+  padding: 12px;
+  font-size: 16px;
+  border: 2px solid #4CAF50;
+  border-radius: 8px;
+}
+
+.add-checklist-button {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.add-checklist-button:hover {
+  background-color: #45a049;
+}
+
+
+
+
+
+
+
+
+
 
 .checklist-message {
   background-color: #aedbe7; /* Light gray background color */

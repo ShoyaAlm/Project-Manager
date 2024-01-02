@@ -137,9 +137,9 @@ const App = () => {
 
 
             <div style={styles.container}>
-              <span style={styles.link('timeline')} onClick={() => setView('timeline')}>
+              {/* <span style={styles.link('timeline')} onClick={() => setView('timeline')}>
                 تایملاین
-              </span>
+              </span> */}
               <span style={styles.link('table')} onClick={() => setView('table')}>
                 جدول کارت ها
               </span>

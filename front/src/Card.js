@@ -661,14 +661,14 @@ export const Card = ({card, list, userIsMember}) => {
       };
 
 
-    const changeDates = async () => {
+    const changeDatesOfCard = async () => {
 
         let editedDatesArray = [editedDates.start, editedDates.end]
         
         try {
 
             const requestBody = {
-                dates: editedDatesArray
+                startdate: editedDatesArray
             }
             
             const backendEndpoint = await fetch(`http://localhost:8080/api/lists/${newList.id}/cards/${newCard.id}`, {
@@ -695,19 +695,81 @@ export const Card = ({card, list, userIsMember}) => {
             
     }
 
-    const formatDate = (dateString) => {
-        const options = { year: 'numeric', month: 'long', day: 'numeric' };
-        const formattedDate = new Date(dateString).toLocaleDateString('fa-IR', options);
-        return formattedDate;
-      };
-      
+
+    // EDITING ITEM's Dates
+    // #####################
+    // #####################
+    // #####################
+    // #####################
+    // #####################
+    // #####################
+    const [isEditingDates, setIsEditingDates] = useState(false);
+    const [editedItemDates, setEditedItemDates] = useState({
+        start: null,
+        end: null,
+      });
+    
+
+    // const [startDate, setStartDate] = useState(new Date());
+    // const [endDate, setEndDate] = useState(new Date);
+    const changeDatesOfItem = async (checklistId, itemId, startDate, endDate) => {
+        try {
+        const requestBody = {
+            startdate: startDate,
+            enddate: endDate
+        };
+
+        const backendEndpoint = await fetch(`http://localhost:8080/api/checklists/${checklistId}/items/${itemId} `, {
+            method: 'PATCH',
+            headers: {
+            'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestBody),
+        });
+
+        if (!backendEndpoint.ok) {
+            throw new Error('Failed to change dates');
+        }
+
+        const updatedDates = await backendEndpoint.json();
+        console.log('Updated dates:', updatedDates);
+        } catch (error) {
+        // Handle any errors that occur during the API call
+        console.error('Error saving dates:', error);
+        }
+  };
+
+  const handleItemDateChange = (date, type) => {
+    setEditedItemDates((prevDates) => ({ ...prevDates, [type]: date }));
+  };
+
+  const saveEditedDates = (checklistId, itemId) => {
+    // Assuming you have access to the item's ID and want to update the dates for that item
+    const startDate = editedItemDates.start;
+    const endDate = editedItemDates.end;
+
+    // Call the function to change dates
+    changeDatesOfItem(checklistId, itemId, startDate, endDate);
+
+    // Reset the editing state after saving
+    setIsEditingDates(false);
+  };     
+
+  
+    // #####################
+    // #####################
+    // #####################
+    // #####################
+    // #####################
+    // #####################
+
 
     
     const [isAssignItemModalOpen, setAssignItemModalOpen] = useState(false);
     
     const [selectedItemId, setSelectedItemId] = useState(null);
 
-    const AssignItem = ({ listID, cardID, checklistID, itemID }) => {
+    const AssignItem = ({ listID, cardID, checklistID, item }) => {
         // const [isAssignItemModalOpen, setAssignItemModalOpen] = useState(false);
         const [searchQuery, setSearchQuery] = useState('');
         const [searchResults, setSearchResults] = useState([]);
@@ -754,7 +816,7 @@ export const Card = ({card, list, userIsMember}) => {
             assignedto: selectedMember,
           };
           try {
-            const response = await fetch(`http://localhost:8080/api/lists/${listID}/cards/${cardID}/checklists/${checklistID}/items/${itemID}`, {
+            const response = await fetch(`http://localhost:8080/api/lists/${listID}/cards/${cardID}/checklists/${checklistID}/items/${item.id}`, {
               method: 'PATCH',
               headers: {
                 'Content-Type': 'application/json',
@@ -764,8 +826,7 @@ export const Card = ({card, list, userIsMember}) => {
             if (!response.ok) {
               console.error('Failed to update item assignedto array on the backend');
             }
-          
-            // createActivity(`${item.name} به ${selectedMember} تخصیص داده شد`)
+            createActivity(`${item.name} به ${selectedMember.name} اختصاص داده شد`)
 
         
         } catch (error) {
@@ -855,6 +916,72 @@ export const Card = ({card, list, userIsMember}) => {
         );
       };
       
+
+
+
+      const [tooltipContent, setTooltipContent] = useState(null);
+
+      const [hoveredItemId, setHoveredItemId] = useState(null);
+
+      const ItemMembers = ({ itemId }) => {
+        const [assignedMembers, setAssignedMembers] = useState([]);
+      
+        useEffect(() => {
+          // Fetch assigned members for the item with the given itemId
+          const fetchData = async () => {
+
+
+            try {
+                const response = await fetch(`http://localhost:8080/api/items/${itemId}`, {
+                  method: 'GET',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                //   body: JSON.stringify(requestBody),
+                });
+                if (!response.ok) {
+                  console.error('Failed to update item assignedto array on the backend');
+                }
+              
+                
+              const data = await response.json();
+              setAssignedMembers(data);
+    
+            
+            } catch (error) {
+                console.log(error);
+              }
+
+          };
+      
+          fetchData();
+        }, [itemId]);
+      
+        return (
+            <div className="item-members">
+              {assignedMembers && assignedMembers.length > 0 ? (
+                <ul>
+                  <span className="tooltip-header">تخصیص داده شده به</span>
+                  {assignedMembers.map((member) => (
+                    <li key={member.id}>{member.name}</li>
+                  ))}
+                </ul>
+              ) : (
+                <span className="tooltip-no-assignment">تاکنون به کسی اختصاص نیافته است</span>
+              )}
+            </div>
+          );
+          
+          
+      };
+
+
+      const formatDate = (dateString) => {
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        const formattedDate = new Date(dateString).toLocaleDateString('fa-IR', options);
+        return formattedDate;
+      };
+
 
     const handleCheckboxChange = async (checklist, checklistId, item, currentDoneValue) => {
         // Update the 'done' attribute on the front-end
@@ -1479,7 +1606,7 @@ export const Card = ({card, list, userIsMember}) => {
                     
                     {!isUserMember && (
                         <div className={`join-card-button ${isCardJoined ? 'joined' : ''}`}>
-                        <button onClick={handleJoinCard}>
+                        <button onClick={handleJoinCard} style={{fontFamily:'vazirmatn'}}>
                             {isCardJoined ? '!عضو شدی' : 'عضو بشو'}
                         </button>
                         </div>
@@ -1616,31 +1743,84 @@ export const Card = ({card, list, userIsMember}) => {
                 {userIsMember && (
                     <>
                         {/* Options container */}
-                        <div className="options-container">
-                            <div className="options-toggle" onClick={() => handleToggleOptions(item.id)}>
-                                <div className="circle">
-                                    <span>...</span>
+                        <div className="remove-item-container">
+                            
+                                <div className="remove-item">
+                                <button
+                                    className="remove-item-button"
+                                    onClick={() => removeItem(checklist, item)}
+                                >
+                                    حذف
+                                </button>
                                 </div>
-                            </div>
-                            {showOptions && selectedItemId === item.id && (
-                                <div className="options-dropdown">
-                                    <button className="option-button" onClick={() => removeItem(checklist, item)}>حذف</button>
-                                    <button className="option-button" onClick={() => console.log('add date')}>تاریخ</button>
-                                </div>
-                            )}
+                            
                         </div>
 
+
+
+
+
                         {/* Clock and date container */}
-                        <div className="clock-date-container">
-                            <div className="month-day" style={{ fontSize: '12px', marginLeft: '18px' }}>
-                                <img src={require('./icons/clock-date.png')} alt="" style={{ width: '14px', height: '14px' }} />
-                                {item.dueDate} {/* Assuming item has a dueDate property */}
-                            </div>
+                <div className="clock-date-container">
+                    <div className="month-day" style={{ fontSize: '12px', marginLeft: '18px' }}>
+                        <div className='dropdown'>
+                        <img
+                            src={require('./icons/clock-date.png')}
+                            alt=""
+                            style={{ width: '14px', height: '14px', cursor: 'pointer' }}
+                            onClick={() => setIsEditingDates(!isEditingDates)}
+                        />
+                        {isEditingDates && (
+            <div className="dropdown-content">
+                            {/* <a href="#" className="start-date" style={{fontFamily:'vazirmatn', fontSize:'12px'}}>  شروع : {formatDate(item.startDate)}</a>
+                            <a href="#" className="due-date" style={{fontFamily:'vazirmatn', fontSize:'12px'}}>  پایان : {formatDate(item.dueDate)}</a> */}
+
+            <span>
+                {item.startDate && `شروع: ${formatDate(item.startDate)}`}
+                {item.dueDate && ` | پایان: ${formatDate(item.dueDate)}`}
+            </span>
+              <p className="date-picker-text">انتخاب تاریخ شروع</p>
+              <DatePicker
+                selected={editedItemDates.start}
+                onChange={(date) => handleItemDateChange(date, 'start')}
+                dateFormat="yyyy-MM-dd"
+                showYearDropdown
+                className="date-picker-input"
+              />
+
+              <p className="date-picker-text">انتخاب تاریخ پایان</p>
+              <DatePicker
+                selected={editedItemDates.end}
+                onChange={(date) => handleItemDateChange(date, 'end')}
+                dateFormat="yyyy-MM-dd"
+                showYearDropdown
+                className="date-picker-input"
+              />
+
+              <button onClick={() => saveEditedDates(checklist.id, item.id)}>ثبت</button>
+            </div>
+          )}
+          {/* {!isEditingDates && (
+            <span>
+              {item.startDate && `شروع: ${formatDate(item.startDate)}`}
+              {item.dueDate && ` | پایان: ${formatDate(item.dueDate)}`}
+            </span>
+          )} */}
                         </div>
+                    </div>
+
+                </div>
+
+
+
+
+
+
+
 
                         {/* Assign item section */}
                         {isAssignItemModalOpen === item.id && (
-                            <AssignItem listID={newList.id} cardID={newCard.id} checklistID={checklist.id} itemID={item.id} />
+                            <AssignItem listID={newList.id} cardID={newCard.id} checklistID={checklist.id} item={item} />
                         )}
 
                         <div className='item-assigned-to'>
@@ -1651,13 +1831,34 @@ export const Card = ({card, list, userIsMember}) => {
                                     style={{ width: '14px', height: '14px', cursor: 'pointer' }}
                                 />
                             </div>
+                            {/* <ItemMembers itemId={item.id} /> */}
                         </div>
                     </>
                 )}
 
-                        <label htmlFor={`item-${item.id}`} style={{ fontSize: '14px' }}>
-                        {item.name}
-                        </label>
+                        
+                <label htmlFor={`item-${item.id}`} style={{ fontSize: '14px', position: 'relative' }}
+                onMouseEnter={() => {
+                    setHoveredItemId(item.id);
+                    const timeoutId = setTimeout(() => {
+                    setTooltipContent(<ItemMembers itemId={item.id} />);
+                    }, 1000); // Adjust the delay time as needed
+
+                    return () => clearTimeout(timeoutId);
+                }}
+                onMouseLeave={() => {
+                    setHoveredItemId(null);
+                    setTooltipContent(null);
+                }}
+                >
+                {item.name}
+                {hoveredItemId === item.id && tooltipContent && (
+                    <div className="custom-tooltip" style={{ position: 'absolute', top: '100%', left: 0, zIndex: 1000 }}>
+                    {tooltipContent}
+                    </div>
+                )}
+                </label>
+
                         {isUserMember && (
                         <>
                             <input
@@ -1734,9 +1935,15 @@ export const Card = ({card, list, userIsMember}) => {
                                 </Droppable>
                             </DragDropContext>
                         ) : (
-                            <span style={{ color: 'green', fontSize: '18px', margin: '10px 0' }}>
+                            <div style={{ backgroundColor: '#eafbea', padding: '10px',
+                             border: '1px solid #4caf50', borderRadius: '5px',
+                              display: 'inline-block', width:'290px', textAlign:'center',
+                              marginRight:'30px',
+                              height:'50px' }}>
+                            <span style={{ color: '#4caf50', fontSize: '18px' }}>
                                 بدون چکلیست
                             </span>
+                        </div>
                         )}
                     </div>
 
@@ -1827,10 +2034,6 @@ export const Card = ({card, list, userIsMember}) => {
                             <a href="#" className="start-date" style={{fontFamily:'vazirmatn', fontSize:'15px'}}>  شروع : {formatDate(newCard.dates[0])}</a>
                             <a href="#" className="due-date" style={{fontFamily:'vazirmatn', fontSize:'15px'}}>  پایان : {formatDate(newCard.dates[1])}</a>
 
-                                {/* Button to open the date picker for the start date */} 
-                                {/* <button onClick={() => document.getElementById('start-date-picker').click()}>انتخاب تاریخ شروع</button> */}
-                                {/* Date picker for the start date */}
-                                
                                 {isUserMember && (
 
                                     <>
@@ -1856,7 +2059,7 @@ export const Card = ({card, list, userIsMember}) => {
                                         />
 
                                         {/* Button to save the edited dates to the backend */}
-                                        <button onClick={changeDates}>ثبت</button>
+                                        <button onClick={changeDatesOfCard}>ثبت</button>
 
                                     </>
 

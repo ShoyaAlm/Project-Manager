@@ -11,6 +11,7 @@ func SetBoardRoutes(r *mux.Router) {
 	r.HandleFunc("/api/boards", controllers.GetAllBoards).Methods("GET")
 	r.HandleFunc("/api/boards", controllers.CreateBoard).Methods("POST")
 	r.HandleFunc("/api/boards/{board_id:[0-9]+}", controllers.AddUserToBoard).Methods("PUT")
+	r.HandleFunc("/api/boards/{board_id:[0-9]+}", controllers.DeleteBoard).Methods("DELETE")
 }
 
 func SetListRoutes(r *mux.Router) {
@@ -49,6 +50,9 @@ func SetItemRoutes(r *mux.Router) {
 	r.HandleFunc("/api/lists/{id:[0-9]+}/cards/{cardID:[0-9]+}/checklists/{checklistID:[0-9]+}/items", controllers.CreateItem).Methods("POST")
 	r.HandleFunc("/api/lists/{id:[0-9]+}/cards/{cardID:[0-9]+}/checklists/{checklistID:[0-9]+}/items/{itemID:[0-9]+}", controllers.UpdateItem).Methods("PATCH")
 	r.HandleFunc("/api/lists/{id:[0-9]+}/cards/{cardID:[0-9]+}/checklists/{checklistID:[0-9]+}/items/{itemID:[0-9]+}", controllers.DeleteItem).Methods("DELETE")
+
+	r.HandleFunc("/api/checklists/{checklistID:[0-9]+}/items/{itemID:[0-9]+}", controllers.ChangeItemDates).Methods("PATCH")	
+	r.HandleFunc("/api/items/{itemID:[0-9]+}", controllers.GetItemMembers).Methods("GET")
 }
 
 func SetMemberRoutes(r *mux.Router) {

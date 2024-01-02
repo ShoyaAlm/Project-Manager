@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"time"
 
@@ -482,10 +483,141 @@ func DeleteItem(w http.ResponseWriter, r *http.Request) {
 }
 
 
-func AssignMemberToItem(w http.ResponseWriter, r *http.Request){
+// func AssignMemberToItem(w http.ResponseWriter, r *http.Request){
+
+// }
+
+
+func ChangeItemDates(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	_, err := strconv.Atoi(vars["checklistID"])
+	if err != nil {
+		http.Error(w, "Invalid checklist ID", http.StatusBadRequest)
+		return
+	}
+
+	itemID, err := strconv.Atoi(vars["itemID"])
+	if err != nil {
+		http.Error(w, "Invalid item ID", http.StatusBadRequest)
+		return
+	}
+
+	// Read the request body
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
+		return
+	}
+
+	// Parse the JSON request body
+	var requestData struct {
+		StartDate *time.Time `json:"startdate"`
+		DueDate   *time.Time `json:"duedate"`
+	}
+
+	err = json.Unmarshal(body, &requestData)
+	if err != nil {
+		http.Error(w, "Failed to parse JSON data", http.StatusBadRequest)
+		return
+	}
+
+	// Check if either start date or due date is provided
+	if requestData.StartDate != nil {
+		
+
+		// Update the item's name in the database
+		_, err := db.Exec("UPDATE items SET start_date = $1 WHERE id = $2", requestData.StartDate, itemID)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Failed to update item starting date, %s", err), http.StatusInternalServerError)
+			return
+		}
+
+
+		}
+
+		if requestData.DueDate != nil {
+		
+
+			// Update the item's name in the database
+			_, err := db.Exec("UPDATE items SET due_date = $1 WHERE id = $2", requestData.DueDate, itemID)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Failed to update item due date, %s", err), http.StatusInternalServerError)
+				return
+			}
+	
+	
+		}
+		
+		if requestData.StartDate != nil && requestData.DueDate != nil {
+			http.Error(w, "No valid fields provided for update", http.StatusBadRequest)
+			return
+		}
+		
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+		w.Write([]byte("{}"))
+}
 
 
 
 
 
+func GetItemMembers(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	itemIDStr := vars["itemID"]
+	if itemIDStr == "" {
+		log.Println("Item ID is empty")
+		http.Error(w, "Invalid item ID", http.StatusBadRequest)
+		return
+	}
+
+	itemID, err := strconv.Atoi(itemIDStr)
+	if err != nil {
+		log.Printf("Error converting item ID to integer: %s", err)
+		http.Error(w, "Invalid item ID", http.StatusBadRequest)
+		return
+	}
+
+	// Fetch members associated with the item
+	rows, err := db.Query("SELECT m.id, m.name FROM item_members im JOIN members m ON im.member_id = m.id WHERE im.item_id = $1", itemID)
+	if err != nil {
+		log.Printf("Error fetching item members: %s", err)
+		http.Error(w, fmt.Sprintf("Failed to fetch item members, %s", err), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	var members []*model.Member
+
+	for rows.Next() {
+		var (
+			memberID int
+			name     string
+		)
+
+		if err := rows.Scan(&memberID, &name); err != nil {
+			log.Printf("Error scanning rows: %s", err)
+			http.Error(w, fmt.Sprintf("Error scanning rows, %s", err), http.StatusInternalServerError)
+			return
+		}
+
+		member := &model.Member{
+			ID:   memberID,
+			Name: name,
+			// Add other member properties if needed
+		}
+
+		members = append(members, member)
+	}
+
+	jsonData, err := json.Marshal(members)
+	if err != nil {
+		log.Printf("Error marshaling item members data: %s", err)
+		http.Error(w, "Failed to marshal item members data", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonData)
 }

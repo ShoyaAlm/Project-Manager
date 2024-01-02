@@ -192,6 +192,31 @@ func contains(slice []int, element int) bool {
     return false
 }
 
+func DeleteBoard(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	boardID, err := strconv.Atoi(vars["board_id"])
+	if err != nil {
+		http.Error(w, "Invalid board ID", http.StatusBadRequest)
+		return
+	}
+
+	// Delete all lists associated with the specified board
+	_, err = db.Exec("DELETE FROM lists WHERE board_id = $1", boardID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to delete lists for the board, %s", err), http.StatusInternalServerError)
+		return
+	}
+
+	// Delete the board itself
+	_, err = db.Exec("DELETE FROM boards WHERE id = $1", boardID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to delete the board, %s", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
 
 
 func GetAllBoards(w http.ResponseWriter, r *http.Request) {

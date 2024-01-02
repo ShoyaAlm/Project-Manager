@@ -79,7 +79,6 @@ func GetAllChecklists(w http.ResponseWriter, r *http.Request) {
 				itemName 			 		string
 				itemStartDate, itemDueDate 	time.Time
 				itemDone 			 		bool
-				itemAssignedTo        		[]*model.Member
 			)
 
 			err := itemRows.Scan(&itemID, &itemName, &itemStartDate, &itemDueDate, &itemDone)
@@ -95,8 +94,30 @@ func GetAllChecklists(w http.ResponseWriter, r *http.Request) {
 				StartDate:    	itemStartDate,
 				DueDate:    	itemDueDate,
 				Done: 			itemDone,	
-				AssignedTo: 	itemAssignedTo,
+				AssignedTo: 	[]*model.Member{},
 			}
+
+			assignedRows, err := db.Query("SELECT m.id, m.name FROM item_members im JOIN members m ON im.member_id = m.id WHERE im.item_id = $1", itemID)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Failed to fetch assigned members for items, %s", err), http.StatusInternalServerError)
+				return
+			}
+
+			defer assignedRows.Close()
+
+			for assignedRows.Next() {
+				var member model.Member
+				err := assignedRows.Scan(&member.ID, &member.Name)
+				if err != nil {
+					http.Error(w, fmt.Sprintf("Error scanning assigned members, %s", err), http.StatusInternalServerError)
+					return
+				}
+				fmt.Println("Start Date:", itemStartDate)
+				fmt.Println("Due Date:", itemDueDate)
+
+				item.AssignedTo = append(item.AssignedTo, &member)
+			}
+
 
 			items = append(items, item)
 

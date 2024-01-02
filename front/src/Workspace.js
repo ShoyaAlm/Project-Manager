@@ -50,13 +50,38 @@ const Workspace = () => {
 
 
   useEffect(() => {
-    // Fetch user boards when the component mounts
-    const fetchUserBoards = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch(`http://localhost:8080/api/boards/user/${getUserId()}`);
-        if (response.ok) {
-          const data = await response.json();
-          setBoards(data);
+        // Fetch user boards
+        const userBoardsResponse = await fetch(`http://localhost:8080/api/boards/user/${getUserId()}`);
+        if (userBoardsResponse.ok) {
+          const userData = await userBoardsResponse.json();
+          setBoards(userData);
+  
+          // Fetch all other boards
+          const allBoardsResponse = await fetch('http://localhost:8080/api/boards', {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+          if (allBoardsResponse.ok) {
+            const allBoardsData = await allBoardsResponse.json();
+            
+            // Filter out user's boards using the userData directly
+            if (userData && userData.length > 0) {
+              // User has boards, filter out user's boards using the userData directly
+              const otherUserBoards = allBoardsData.filter(
+                (board) => !userData.some((userBoard) => userBoard.id === board.id)
+              );
+              setOtherBoards(otherUserBoards);
+            } else {
+              // User has no boards, set otherBoards to allBoardsData
+              setOtherBoards(allBoardsData);
+            }
+          } else {
+            console.error('Failed to fetch all boards');
+          }
         } else {
           console.error('Failed to fetch user boards');
         }
@@ -64,34 +89,11 @@ const Workspace = () => {
         console.error('Error during fetch:', error);
       }
     };
+  
+    fetchData();
+  }, []);
 
-
-    // Fetch all other boards
-    const fetchAllBoards = async () => {
-      try {
-        const response = await fetch('http://localhost:8080/api/boards', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-        if (response.ok) {
-          const data = await response.json();
-          // Filter out user's boards
-          const otherUserBoards = data.filter((board) => !boards.some((userBoard) => userBoard.id === board.id));
-          setOtherBoards(otherUserBoards);
-        } else {
-          console.error('Failed to fetch all boards');
-        }
-      } catch (error) {
-        console.error('Error during fetch:', error);
-      }
-    };
-
-    fetchAllBoards();
-    fetchUserBoards();
-  }, [boards]); // Empty dependency array means this effect runs once when the component mounts
-
+  
   const handleCreateBoard = async () => {
     if (newBoardName.trim() !== '') {
       // Make a POST request to create a new board
@@ -128,46 +130,52 @@ const Workspace = () => {
     setIsCreatingBoard(true);
   };
 
+  const handleDeleteBoard = async (boardId) => {
+    try {
+      const response = await fetch(`http://localhost:8080/api/boards/${boardId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+  
+      if (response.ok) {
+        // Update the state by removing the deleted board
+        setBoards(boards.filter(board => board.id !== boardId));
+      } else {
+        console.error('Failed to delete board');
+      }
+    } catch (error) {
+      console.error('Error during fetch:', error);
+    }
+  }
+  
 
   return (
     <div className="workspace-container">
-      <h1 style={{ textAlign: 'center' }}>Boards</h1>
+      <h1 style={{ textAlign: 'center', fontFamily: 'vazirmatn', color: '#333', marginBottom: '20px', padding: '10px', backgroundColor: '#f8f8f8', borderRadius: '10px', boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)', marginRight: '630px', marginLeft: '630px' }}>صفحه بورد</h1>
   
       <div className="boards-container">
         {/* User's boards */}
         <div className="user-boards-container">
-          <h2>Your Boards</h2>
-          {boards && boards.length > 0 ? (
-            <div className="user-boards">
-              {boards.map((board, index) => (
-                <div key={index} className="board" onClick={() => handleBoardClick(board.id)}>
-                  <p>{board.name}</p>
-                </div>
-              ))}
+        <h2>بوردهای شما</h2>
+        {boards && boards.length > 0 ? (
+          <div className="user-boards">
+          {boards.map((board, index) => (
+            <div key={index} className="board" onClick={() => handleBoardClick(board.id)}>
+              <p>{board.name}</p>
+              <button onClick={() => handleDeleteBoard(board.id)} style={{fontFamily:'vazirmatn', fontSize:'10px'}}>حذف بورد</button>
             </div>
-          ) : (
-            <p className="no-boards-message">You have no boards.</p>
-          )}
-  
-          <div className={`board create-board ${isCreatingBoard ? 'editing' : ''}`} onClick={handleCreateBoardClick}>
-            {isCreatingBoard ? (
-              <input
-                type="text"
-                placeholder="Enter board name"
-                value={newBoardName}
-                onChange={(e) => setNewBoardName(e.target.value)}
-                onBlur={handleCreateBoard}
-                autoFocus
-              />
-            ) : (
-              <p>Create Board</p>
-            )}
-          </div>
+          ))}
         </div>
+        ) : (
+          <p className="no-boards-message">شما بوردی ندارید!</p>
+        )}
+      </div>
   
         {/* All other boards */}
         <div className="other-boards-container">
-          <h2>All Other Boards</h2>
+          <h2>بوردهای دیگر</h2>
           {otherBoards && otherBoards.length > 0 ? (
             <div className="other-boards">
               {otherBoards.map((board, index) => (
@@ -177,14 +185,30 @@ const Workspace = () => {
               ))}
             </div>
           ) : (
-            <p className="no-boards-message">No other boards available.</p>
+            <p className="no-boards-message">شما به بوردها دسترسی ندارید.</p>
           )}
         </div>
       </div>
   
+      {/* Create Board Section */}
+      <div className={`board create-board ${isCreatingBoard ? 'editing' : ''}`} onClick={handleCreateBoardClick}>
+        {isCreatingBoard ? (
+          <input
+            type="text"
+            placeholder="Enter board name"
+            value={newBoardName}
+            onChange={(e) => setNewBoardName(e.target.value)}
+            onBlur={handleCreateBoard}
+            autoFocus
+          />
+        ) : (
+          <p>ساختن بورد</p>
+        )}
+      </div>
+  
       <div className="create-board-container">
         {isCreatingBoard ? (
-          <button onClick={handleCreateBoard}>Create Board</button>
+          <button onClick={handleCreateBoard}>ساختن بورد</button>
         ) : (
           <input
             type="text"
@@ -196,6 +220,9 @@ const Workspace = () => {
       </div>
     </div>
   );
+  
+  
+  
   
 };
 

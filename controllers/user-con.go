@@ -6,7 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"time"
+
+	// "time"
 
 	// "log"
 	"net/http"
@@ -14,7 +15,7 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
-	"github.com/lib/pq"
+	// "github.com/lib/pq"
 	_ "github.com/lib/pq" // Import the PostgreSQL driver
 )
 
@@ -132,8 +133,6 @@ func GetUser(w http.ResponseWriter, r *http.Request){
 		return
 	}
 
-	// userID := 1
-
 	// Fetch list details
 	userRow := db.QueryRow("SELECT id, name, email, bio FROM users WHERE id = $1", userID)
 
@@ -151,12 +150,17 @@ func GetUser(w http.ResponseWriter, r *http.Request){
 		}
 		return
 	}
+	
+	var userBioValue string
+	if userBio.Valid {
+		userBioValue = userBio.String
+	}
 
 	user := &model.User{
 		ID:   userID,
 		Name: userName,
 		Email: userEmail,
-		// Bio: userBio,
+		Bio: userBioValue,
 	}
 
 	// if userBio.Valid { // Check if the bio column is not NULL
@@ -167,189 +171,189 @@ func GetUser(w http.ResponseWriter, r *http.Request){
 
 
 
-	cardsRows, err := db.Query(`SELECT c.id AS card_id, c.name AS card_name, 
-								c.description AS card_description, c.dates AS card_dates
-								FROM cards c
-								WHERE c.owner_id = $1`, userID)
+	// cardsRows, err := db.Query(`SELECT c.id AS card_id, c.name AS card_name, 
+	// 							c.description AS card_description, c.dates AS card_dates
+	// 							FROM cards c
+	// 							WHERE c.owner_id = $1`, userID)
 
-		if err != nil {
-			http.Error(w, fmt.Sprintf("Failed to fetch the cards inside user, %s", err), http.StatusInternalServerError)
-					return						
-		}
+	// 	if err != nil {
+	// 		http.Error(w, fmt.Sprintf("Failed to fetch the cards inside user, %s", err), http.StatusInternalServerError)
+	// 				return						
+	// 	}
 								
-		defer cardsRows.Close()
+	// 	defer cardsRows.Close()
 										
 		
-		var cards []*model.Card
+		// var cards []*model.Card
 
-		for cardsRows.Next() {
-			var (
-				cardID int
-				cardName, cardDescription string
-				cardDates                 pq.StringArray
-			)
+		// for cardsRows.Next() {
+		// 	var (
+		// 		cardID int
+		// 		cardName, cardDescription string
+		// 		cardDates                 pq.StringArray
+		// 	)
 
-			err := cardsRows.Scan(&cardID, &cardName, &cardDescription, &cardDates)
-			if err != nil {
-				http.Error(w, fmt.Sprintf("Error scanning cardsRows, %s", err), http.StatusInternalServerError)
-				return
-			}
+		// 	err := cardsRows.Scan(&cardID, &cardName, &cardDescription, &cardDates)
+		// 	if err != nil {
+		// 		http.Error(w, fmt.Sprintf("Error scanning cardsRows, %s", err), http.StatusInternalServerError)
+		// 		return
+		// 	}
 
-			var dates []time.Time
+		// 	var dates []time.Time
 
-			for _, dateString := range cardDates {
-				date, err := time.Parse("2006-01-02", dateString)
-				if err != nil {
-					// Handle the error, e.g., log it or return an error response
-				}
-				dates = append(dates, date)
-			}
+		// 	for _, dateString := range cardDates {
+		// 		date, err := time.Parse("2006-01-02", dateString)
+		// 		if err != nil {
+		// 			// Handle the error, e.g., log it or return an error response
+		// 		}
+		// 		dates = append(dates, date)
+		// 	}
 		
 
-			card := &model.Card{
-				ID: cardID,
-				Name: cardName,
-				Description: cardDescription,
-				Dates:       dates,
-				Members:     []*model.User{},
-				Checklists:  []*model.Checklist{},
-			}
+		// 	card := &model.Card{
+		// 		ID: cardID,
+		// 		Name: cardName,
+		// 		Description: cardDescription,
+		// 		Dates:       dates,
+		// 		Members:     []*model.User{},
+		// 		Checklists:  []*model.Checklist{},
+		// 	}
 
 			
-		checklistRows, err := db.Query(`SELECT cl.id AS checklist_id, cl.name AS checklist_name
-								FROM checklists cl
-							   WHERE cl.card_id = $1`, cardID)
+		// checklistRows, err := db.Query(`SELECT cl.id AS checklist_id, cl.name AS checklist_name
+		// 						FROM checklists cl
+		// 					   WHERE cl.card_id = $1`, cardID)
 
-		if err != nil {
-			http.Error(w, fmt.Sprintf("Failed to fetch checklists for card, %s", err), http.StatusInternalServerError)
-			return
+		// if err != nil {
+		// 	http.Error(w, fmt.Sprintf("Failed to fetch checklists for card, %s", err), http.StatusInternalServerError)
+		// 	return
 
-		}
+		// }
 
-		defer checklistRows.Close()
+		// defer checklistRows.Close()
 
-		var checklists []*model.Checklist
+		// var checklists []*model.Checklist
 
-		for checklistRows.Next() {
+		// for checklistRows.Next() {
 
-			var (
-				checklistID   int
-				checklistName string
-			)
-			err := checklistRows.Scan(&checklistID, &checklistName)
+		// 	var (
+		// 		checklistID   int
+		// 		checklistName string
+		// 	)
+		// 	err := checklistRows.Scan(&checklistID, &checklistName)
 
-			if err != nil {
-				http.Error(w, fmt.Sprintf("Error scanning checklistRows, %s", err), http.StatusInternalServerError)
-				return
-			}
+		// 	if err != nil {
+		// 		http.Error(w, fmt.Sprintf("Error scanning checklistRows, %s", err), http.StatusInternalServerError)
+		// 		return
+		// 	}
 
-			checklist := &model.Checklist{
-				ID:    checklistID,
-				Name:  checklistName,
-				Items: []*model.Item{},
-			}
+		// 	checklist := &model.Checklist{
+		// 		ID:    checklistID,
+		// 		Name:  checklistName,
+		// 		Items: []*model.Item{},
+		// 	}
 
-			// Start looking for items inside every checklist of every card
-			itemRows, err := db.Query(`SELECT i.id AS item_id, i.name AS item_name, i.due_date AS item_due_date, i.assigned_to AS item_assigned_to
-					FROM items i
-					WHERE i.checklist_id = $1`, checklistID)
+		// 	// Start looking for items inside every checklist of every card
+		// 	itemRows, err := db.Query(`SELECT i.id AS item_id, i.name AS item_name, i.due_date AS item_due_date, i.assigned_to AS item_assigned_to
+		// 			FROM items i
+		// 			WHERE i.checklist_id = $1`, checklistID)
 
-			if err != nil {
-				http.Error(w, fmt.Sprintf("Failed to fetch items for checklists inside cards, %s", err), http.StatusInternalServerError)
-				return
+		// 	if err != nil {
+		// 		http.Error(w, fmt.Sprintf("Failed to fetch items for checklists inside cards, %s", err), http.StatusInternalServerError)
+		// 		return
 
-			}
+		// 	}
 
-			defer itemRows.Close()
+		// 	defer itemRows.Close()
 
-			var items []*model.Item
+		// 	var items []*model.Item
 
-			for itemRows.Next() {
-				var (
-					itemID		                int
-					itemName			 		string
-					itemStartDate, itemDueDate 	time.Time
-					itemDone 					bool
-					itemAssignedTo        		[]*model.Member
-				)
+		// 	for itemRows.Next() {
+		// 		var (
+		// 			itemID		                int
+		// 			itemName			 		string
+		// 			itemStartDate, itemDueDate 	time.Time
+		// 			itemDone 					bool
+		// 			itemAssignedTo        		[]*model.Member
+		// 		)
 
-				err := itemRows.Scan(&itemID, &itemName,&itemStartDate, &itemDueDate, &itemDone)
+		// 		err := itemRows.Scan(&itemID, &itemName,&itemStartDate, &itemDueDate, &itemDone)
 
-				if err != nil {
-					http.Error(w, fmt.Sprintf("Error scanning itemRows, %s", err), http.StatusInternalServerError)
-					return
-				}
+		// 		if err != nil {
+		// 			http.Error(w, fmt.Sprintf("Error scanning itemRows, %s", err), http.StatusInternalServerError)
+		// 			return
+		// 		}
 
-				item := &model.Item{
-					ID:         itemID,
-					Name:       itemName,
-					StartDate:  itemStartDate,
-					DueDate:    itemDueDate,
-					Done: 		itemDone,	
-					AssignedTo: itemAssignedTo,
-				}
+		// 		item := &model.Item{
+		// 			ID:         itemID,
+		// 			Name:       itemName,
+		// 			StartDate:  itemStartDate,
+		// 			DueDate:    itemDueDate,
+		// 			Done: 		itemDone,	
+		// 			AssignedTo: itemAssignedTo,
+		// 		}
 
-				items = append(items, item)
+		// 		items = append(items, item)
 
-			}
+		// 	}
 
-			checklist.Items = items
+		// 	checklist.Items = items
 
-			checklists = append(checklists, checklist)
+		// 	checklists = append(checklists, checklist)
 
-		}
+		// }
 
-		card.Checklists = checklists
+		// card.Checklists = checklists
 
-		// Start looking for members inside every card
-		memberRows, err := db.Query(`SELECT m.id AS member_id, m.name AS member_name, m.email AS member_email
-							FROM members m
-						WHERE m.card_id = $1`, cardID)
+		// // Start looking for members inside every card
+		// memberRows, err := db.Query(`SELECT m.id AS member_id, m.name AS member_name, m.email AS member_email
+		// 					FROM members m
+		// 				WHERE m.card_id = $1`, cardID)
 
-		if err != nil {
-			http.Error(w, fmt.Sprintf("Failed to fetch members for card, %s", err), http.StatusInternalServerError)
-			return
+		// if err != nil {
+		// 	http.Error(w, fmt.Sprintf("Failed to fetch members for card, %s", err), http.StatusInternalServerError)
+		// 	return
 
-		}
+		// }
 
-		defer memberRows.Close()
+		// defer memberRows.Close()
 
-		var members []*model.User
+		// var members []*model.User
 
-		for memberRows.Next() {
+		// for memberRows.Next() {
 
-			var (
-				memberID   int
-				memberName string
-				memberEmail string
-			)
+		// 	var (
+		// 		memberID   int
+		// 		memberName string
+		// 		memberEmail string
+		// 	)
 
-			err := memberRows.Scan(&memberID, &memberName, &memberEmail)
+		// 	err := memberRows.Scan(&memberID, &memberName, &memberEmail)
 
-			if err != nil {
-				http.Error(w, fmt.Sprintf("Error scanning memberRows, %s", err), http.StatusInternalServerError)
-				return
-			}
+		// 	if err != nil {
+		// 		http.Error(w, fmt.Sprintf("Error scanning memberRows, %s", err), http.StatusInternalServerError)
+		// 		return
+		// 	}
 
-			member := &model.User{
-				ID:   memberID,
-				Name: memberName,
-				Email: memberEmail,
-			}
+		// 	member := &model.User{
+		// 		ID:   memberID,
+		// 		Name: memberName,
+		// 		Email: memberEmail,
+		// 	}
 
-			members = append(members, member)
+		// 	members = append(members, member)
 
-		}
+		// }
 
-		card.Members = members
+		// card.Members = members
 
 
 
-		cards = append(cards, card)
+		// cards = append(cards, card)
 
-		}
+		// }
 
-		user.Cards = cards
+		// user.Cards = cards
 
 
 

@@ -63,7 +63,7 @@ const App = () => {
       }, []);
 
 
-      
+    console.error('user: ', user);  
       
 
       const handleLogout = () => {
@@ -118,7 +118,7 @@ const App = () => {
                   <h3 style={{fontFamily: 'shabnam'}}>پروفایل من</h3>
                 </Link>
                 <Link to="/workspace" className="nav-link workspace-link">
-                  <h3>Workspace</h3>
+                  <h3 style={{fontFamily:'shabnam'}}>محیط کاری</h3>
                 </Link>
               </div>
               <Link to="#" className="logout-link" onClick={handleLogout}>
@@ -167,9 +167,13 @@ const App = () => {
                 <Route path='/signup'>
                   <HandleSignupLogin />
                 </Route>
+                {user && (
+                  <>
                 <Route path='/profile'>
-                  <Profile />
+                  <Profile userId={user.user_id} />
                 </Route>
+                  </>
+                )}
 
                 <Redirect from="/" to="/workspace" />
 

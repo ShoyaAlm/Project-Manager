@@ -608,9 +608,9 @@ const ShowCards = ({ list, isNewCardAddedOrRemoved, setIsNewCardAddedOrRemoved }
                           ) : (
                             <>
                               <Card card={selectedCard} list={list} userIsMember={false}></Card>
-                              <button onClick={() => {
+                              <button  className="center-button-container" onClick={() => {
                                 window.location.href = `/board/${boardId}/lists`
-                              }}>بستن صفحه</button>
+                              }} style={{fontFamily:'shabnam'}}>بستن صفحه</button>
                             </>
                           )
                         ) : (<div className="authentication-prompt">

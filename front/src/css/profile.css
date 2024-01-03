@@ -1,60 +1,92 @@
 .profile-container {
-    max-width: 400px;
-    margin: 0 auto;
-    padding: 20px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    background-color: #fff;
-    width: 400;
-    height: auto;
-  }
+  max-width: 600px;
+  margin: 50px auto;
+  padding: 20px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  direction: rtl;
+}
+
+.profile-heading {
+  font-size: 36px;
+  margin-bottom: 20px;
+}
+
+.profile-info {
+  margin-top: 20px;
+}
+
+.profile-info > div {
+  margin-bottom: 20px;
+}
+
+.profile-info strong {
+  font-weight: bold;
+  margin-left: 10px;
+}
+
+
+.user-info-input {
+  width: 100%;
+  padding: 12px;
+  margin-top: 5px;
+  margin-bottom: 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 18px;
+}
+
+.edit-buttons {
+  display: flex;
+  justify-content: center; /* Align buttons to the right */
+}
+
+.edit-buttons button {
   
+  font-family: 'shabnam';
+  padding: 12px 24px;
+  margin-left: 10px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 15px;
+  background-color: purple;
+  color: white;
+  transition: background-color 0.3s;
+}
+
+.edit-buttons button:hover {
+  background-color: #9867c5;
+}
+
+.edit-buttons button:active {
+  transform: translateY(2px); /* Add a slight upward shift on button press */
+}
+
+span {
+  font-size: 18px;
+  display: inline-block;
+  margin-top: 5px;
+}
+
+/* Adjustments for responsiveness */
+@media screen and (max-width: 600px) {
+  .profile-container {
+    margin: 20px;
+  }
+
   .profile-heading {
-    text-align: center;
-    font-size: 24px;
-    margin: 0;
-    color: #333;
-  }
-  
-  .profile-info {
-    margin-top: 20px;
-    text-align: right;
-  }
-  
-  .profile-info p {
-    margin: 10px 0;
-    color: #333;
-  }
-  
-  .profile-loading {
-    text-align: center;
-    font-size: 18px;
-    margin-top: 50px;
-    color: #888;
-  }
-  
-  .profile-info p strong {
-    color: #555;
-  }
-  
-
-
-  .user-cards{
-    margin-top: 30px;
+    font-size: 28px;
   }
 
-  .user-cards-title-h2{
-    text-align: center;
+  input[type="text"],
+  textarea {
+    font-size: 16px;
   }
 
-  .user-card{
-    text-align: right;
+  .edit-buttons button {
+    font-size: 16px;
   }
-
-.user-card-details h3,
-.user-card-details p {
-  display: inline;
-  margin: 0;
-  padding: 0;
 }

@@ -88,6 +88,7 @@ body {
   background-color: #9867C5;
   transform: translateY(-2px);
 }
+
 .input:focus + .label {
   top: -7px;
   left: 3px;

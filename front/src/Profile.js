@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import './css/profile.css';
 
-const Profile = () => {
+
+const Profile = ({ userId }) => {
   const [user, setUser] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedName, setEditedName] = useState('');
+  const [editedEmail, setEditedEmail] = useState('');
+  const [editedBio, setEditedBio] = useState('');
 
   useEffect(() => {
-    // Fetch the user's data from the backend
-    fetch('http://localhost:8080/api/users/1') // Replace '1' with the actual user ID
+    fetch(`http://localhost:8080/api/users/${userId}`)
       .then((response) => {
         if (response.ok) {
           return response.json();
@@ -15,71 +19,90 @@ const Profile = () => {
         }
       })
       .then((data) => {
-        console.log('setting the user data : ', data);
         setUser(data);
+        setEditedName(data.name);
+        setEditedEmail(data.email);
+        setEditedBio(data.bio || '');
       })
       .catch((error) => {
         console.error(error);
       });
-  }, []);
+  }, [userId]);
 
-  if (user === null) {
-    return <div>Loading...</div>;
-  }
+  const handleEditClick = () => {
+    setIsEditing(true);
+  };
+
+  const handleSaveClick = () => {
+    // Perform save logic (e.g., update data on the backend)
+    // After saving, set isEditing to false
+    setIsEditing(false);
+  };
+
+  const handleCancelClick = () => {
+    // Reset edited values to original values
+    setEditedName(user.name);
+    setEditedEmail(user.email);
+    setEditedBio(user.bio || '');
+    setIsEditing(false);
+  };
 
   return (
     <div className="profile-container">
       <h1 className="profile-heading">حساب کاربری</h1>
       <div className="profile-info">
-        <p> <strong>نام کاربری :</strong> {user.name}</p>
-        <p> {user.email} <strong>: آدرس ایمیل</strong> </p>
-        <p> <strong>بیوی کاربر : </strong> {user.bio || 'ارائه نشده'}</p>
-        <br />
-        <div className='user-cards'>
-          <h2 className='user-cards-title-h2'>کارت های کاربر</h2>
-          
-        {user.cards.map((card) => {
-
-        return (
-          <div key={card.id} className='user-card'>
-            <div className='user-card-details'>
-              <h3> نام کارت : </h3>
-              <p>{card.name}</p>
-            </div>
-            <div className='user-card-details'>
-              <h3>توضیحات : </h3>
-              <p>{card.description}</p>
-            </div>
-            <div className='user-card-details'>
-              <h3>تاریخ : </h3>
-              <p>{card.dates.join(', ')}</p>
-            </div>
-            <div className='user-card-checklists'>
-              <h3>چکلیست های کارت</h3>
-              <div className='user-card-checklist'>
-                {card.checklists && card.checklists.length > 0 ? (
-                  card.checklists.map((checklist) => (
-                    <h4 key={checklist.id}>{checklist.name}</h4>
-                  ))
-                ) : (
-                  <p>بدون چکلیست</p>
-                )}
-              </div>
-            </div>
-            <hr />
-          </div>
-        );
-
-        })}
-
-
-
+        <div>
+          <strong>نام کاربری :</strong>
+          {isEditing ? (
+            <input
+              type="text"
+              value={editedName}
+              onChange={(e) => setEditedName(e.target.value)}
+              className='user-info-input'
+            />
+          ) : (
+            <span>{editedName}</span>
+          )}
         </div>
-
-
+        <div>
+          <strong>آدرس ایمیل :</strong>
+          {isEditing ? (
+            <input
+              type="text"
+              value={editedEmail}
+              onChange={(e) => setEditedEmail(e.target.value)}
+              className='user-info-input'
+            />
+          ) : (
+            <span>{editedEmail}</span>
+          )}
+        </div>
+        <div>
+          <strong>بیوی کاربر :</strong>
+          {isEditing ? (
+            <textarea
+              value={editedBio}
+              onChange={(e) => setEditedBio(e.target.value)}
+            />
+          ) : (
+            <span>{editedBio}</span>
+          )}
+        </div>
+        {isEditing ? (
+          <div className="edit-buttons">
+            <button onClick={handleCancelClick}>لغو</button>
+            <button onClick={handleSaveClick}>ثبت</button>
+          </div>
+        ) : (
+          <div className="edit-buttons">
+            <button onClick={handleEditClick}>ویرایش</button>
+          </div>
+        )}
       </div>
     </div>
   );
 };
+
+
 
 export default Profile;

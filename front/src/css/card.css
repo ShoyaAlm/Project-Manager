@@ -454,9 +454,42 @@
 
 
 
+.changeCardDateButton {
+  background-color: #4caf50;
+  color: white;
+  padding: 10px 20px;
+  font-size: 16px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.changeCardDateButton:hover {
+  background-color: #45a049; /* Darker green on hover */
+}
 
 
 
+
+button.submit-new-date-item{
+  justify-content: center;
+  margin-right: auto;
+  background-color: #007BFF; /* Blue color */
+  color: white;
+  padding: 10px 20px;
+  font-size: 16px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  font: 'vazirmatn';
+}
+
+button.submit-new-date-item:hover {
+  background-color: #0056b3;
+
+}
 
 
 .remove-item-container {

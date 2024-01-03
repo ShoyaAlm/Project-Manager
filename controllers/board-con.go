@@ -192,29 +192,148 @@ func contains(slice []int, element int) bool {
     return false
 }
 
+// func DeleteBoard(w http.ResponseWriter, r *http.Request) {
+// 	vars := mux.Vars(r)
+// 	boardID, err := strconv.Atoi(vars["board_id"])
+// 	if err != nil {
+// 		http.Error(w, "Invalid board ID", http.StatusBadRequest)
+// 		return
+// 	}
+
+// 	// Delete all lists associated with the specified board
+// 	_, err = db.Exec("DELETE FROM lists WHERE board_id = $1", boardID)
+// 	if err != nil {
+// 		http.Error(w, fmt.Sprintf("Failed to delete lists for the board, %s", err), http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	// Delete the board itself
+// 	_, err = db.Exec("DELETE FROM boards WHERE id = $1", boardID)
+// 	if err != nil {
+// 		http.Error(w, fmt.Sprintf("Failed to delete the board, %s", err), http.StatusInternalServerError)
+// 		return
+// 	}
+
+// 	w.WriteHeader(http.StatusOK)
+// }
+
+
 func DeleteBoard(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	boardID, err := strconv.Atoi(vars["board_id"])
-	if err != nil {
-		http.Error(w, "Invalid board ID", http.StatusBadRequest)
-		return
-	}
+    vars := mux.Vars(r)
+    boardID, err := strconv.Atoi(vars["board_id"])
+    if err != nil {
+        http.Error(w, "Invalid board ID", http.StatusBadRequest)
+        return
+    }
 
-	// Delete all lists associated with the specified board
-	_, err = db.Exec("DELETE FROM lists WHERE board_id = $1", boardID)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to delete lists for the board, %s", err), http.StatusInternalServerError)
-		return
-	}
+    var listIDs []int
+    rows, err := db.Query("SELECT id FROM lists WHERE board_id = $1", boardID)
+    if err != nil {
+        http.Error(w, fmt.Sprintf("Failed to fetch list IDs, %s", err), http.StatusInternalServerError)
+        return
+    }
+    defer rows.Close()
 
-	// Delete the board itself
-	_, err = db.Exec("DELETE FROM boards WHERE id = $1", boardID)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to delete the board, %s", err), http.StatusInternalServerError)
-		return
-	}
+    for rows.Next() {
+        var listID int
+        if err := rows.Scan(&listID); err != nil {
+            http.Error(w, fmt.Sprintf("Failed to scan list ID, %s", err), http.StatusInternalServerError)
+            return
+        }
+        listIDs = append(listIDs, listID)
+    }
 
-	w.WriteHeader(http.StatusOK)
+    // loop for deleting the board's data
+    for _, listID := range listIDs {
+        var cardIDs []int
+        cardRows, err := db.Query("SELECT id FROM cards WHERE list_id = $1", listID)
+        if err != nil {
+            http.Error(w, fmt.Sprintf("Failed to fetch card IDs, %s", err), http.StatusInternalServerError)
+            return
+        }
+        defer cardRows.Close()
+
+        for cardRows.Next() {
+            var cardID int
+            if err := cardRows.Scan(&cardID); err != nil {
+                http.Error(w, fmt.Sprintf("Failed to scan card ID, %s", err), http.StatusInternalServerError)
+                return
+            }
+            cardIDs = append(cardIDs, cardID)
+        }
+
+        // loop for deleting the card's data
+        for _, cardID := range cardIDs {
+            _, err := db.Exec("DELETE FROM members WHERE card_id = $1", cardID)
+            if err != nil {
+                http.Error(w, fmt.Sprintf("Failed to delete members of card, %s", err), http.StatusInternalServerError)
+                return
+            }
+
+            _, err = db.Exec("DELETE FROM activities WHERE card_id = $1", cardID)
+            if err != nil {
+                http.Error(w, fmt.Sprintf("Failed to delete activities of card, %s", err), http.StatusInternalServerError)
+                return
+            }
+
+            // deleting items & checklists
+            var checklistIDs []int
+            checklistRows, err := db.Query("SELECT id FROM checklists WHERE card_id = $1", cardID)
+            if err != nil {
+                http.Error(w, fmt.Sprintf("Failed to fetch checklist IDs, %s", err), http.StatusInternalServerError)
+                return
+            }
+            defer checklistRows.Close()
+
+            for checklistRows.Next() {
+                var checklistID int
+                if err := checklistRows.Scan(&checklistID); err != nil {
+                    http.Error(w, fmt.Sprintf("Failed to scan checklist ID, %s", err), http.StatusInternalServerError)
+                    return
+                }
+                checklistIDs = append(checklistIDs, checklistID)
+            }
+
+            for _, checklistID := range checklistIDs {
+                _, err := db.Exec("DELETE FROM items WHERE checklist_id = $1", checklistID)
+                if err != nil {
+                    http.Error(w, fmt.Sprintf("Failed to delete items of checklist, %s", err), http.StatusInternalServerError)
+                    return
+                }
+            }
+
+            // delete checklists
+            _, err = db.Exec("DELETE FROM checklists WHERE card_id = $1", cardID)
+            if err != nil {
+                http.Error(w, fmt.Sprintf("Failed to delete checklists of card, %s", err), http.StatusInternalServerError)
+                return
+            }
+        }
+
+        // delete the cards
+        _, err = db.Exec("DELETE FROM cards WHERE list_id = $1", listID)
+        if err != nil {
+            http.Error(w, fmt.Sprintf("Failed to delete card, %s", err), http.StatusInternalServerError)
+            return
+        }
+
+        // delete the list
+        _, err = db.Exec("DELETE FROM lists WHERE id = $1", listID)
+        if err != nil {
+            http.Error(w, fmt.Sprintf("Failed to delete list, %s", err), http.StatusInternalServerError)
+            return
+        }
+    }
+
+    // Delete the board
+    _, err = db.Exec("DELETE FROM boards WHERE id = $1", boardID)
+    if err != nil {
+        http.Error(w, fmt.Sprintf("Failed to delete board, %s", err), http.StatusInternalServerError)
+        return
+    }
+
+    w.WriteHeader(http.StatusAccepted)
+
 }
 
 

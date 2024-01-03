@@ -976,12 +976,24 @@ export const Card = ({card, list, userIsMember}) => {
       };
 
 
-      const formatDate = (dateString) => {
+      const formatCardDate = (dateString) => {
         const options = { year: 'numeric', month: 'long', day: 'numeric' };
         const formattedDate = new Date(dateString).toLocaleDateString('fa-IR', options);
         return formattedDate;
       };
 
+
+      const formatItemDate = (dateString) => {
+        console.log('dateString for item date: ', dateString);
+        const options = { year: 'numeric', month: 'long', day: 'numeric' };
+        const dateObject = new Date(dateString);
+        
+        const year = dateObject.toLocaleDateString('fa-IR', { year: 'numeric' });
+        const month = dateObject.toLocaleDateString('fa-IR', { month: 'long' });
+        const day = dateObject.toLocaleDateString('fa-IR', { day: 'numeric' });
+      
+        return `${day} ${month} ${year}`;
+      };
 
     const handleCheckboxChange = async (checklist, checklistId, item, currentDoneValue) => {
         // Update the 'done' attribute on the front-end
@@ -1070,7 +1082,6 @@ export const Card = ({card, list, userIsMember}) => {
                   </div>
                 ) : (
                   <div className="no-label">
-                    <p>: انتخاب برچسب</p>
                     <p className="choose-label">انتخاب برچسب</p>
                   </div>
                 )}
@@ -1772,12 +1783,12 @@ export const Card = ({card, list, userIsMember}) => {
                         />
                         {isEditingDates && (
             <div className="dropdown-content">
-                            {/* <a href="#" className="start-date" style={{fontFamily:'vazirmatn', fontSize:'12px'}}>  شروع : {formatDate(item.startDate)}</a>
-                            <a href="#" className="due-date" style={{fontFamily:'vazirmatn', fontSize:'12px'}}>  پایان : {formatDate(item.dueDate)}</a> */}
+                            {/* <a href="#" className="start-date" style={{fontFamily:'vazirmatn', fontSize:'12px'}}>  شروع : {formatCardDate(item.startDate)}</a>
+                            <a href="#" className="due-date" style={{fontFamily:'vazirmatn', fontSize:'12px'}}>  پایان : {formatCardDate(item.dueDate)}</a> */}
 
             <span>
-                {item.startDate && `شروع: ${formatDate(item.startDate)}`}
-                {item.dueDate && ` | پایان: ${formatDate(item.dueDate)}`}
+                {item.startDate && `شروع: ${formatItemDate(item.startDate)}`}
+                {item.dueDate && ` | پایان: ${formatItemDate(item.dueDate)}`}
             </span>
               <p className="date-picker-text">انتخاب تاریخ شروع</p>
               <DatePicker
@@ -1797,13 +1808,13 @@ export const Card = ({card, list, userIsMember}) => {
                 className="date-picker-input"
               />
 
-              <button onClick={() => saveEditedDates(checklist.id, item.id)}>ثبت</button>
+              <button onClick={() => saveEditedDates(checklist.id, item.id)} className='submit-new-date-item'>ثبت</button>
             </div>
           )}
           {/* {!isEditingDates && (
             <span>
-              {item.startDate && `شروع: ${formatDate(item.startDate)}`}
-              {item.dueDate && ` | پایان: ${formatDate(item.dueDate)}`}
+              {item.startDate && `شروع: ${formatCardDate(item.startDate)}`}
+              {item.dueDate && ` | پایان: ${formatCardDate(item.dueDate)}`}
             </span>
           )} */}
                         </div>
@@ -2031,8 +2042,8 @@ export const Card = ({card, list, userIsMember}) => {
                         <div className='dropdown'>
                             <button className='dropbtn' style={{fontFamily:'shabnam'}}>تاریخ</button>
                             <div className='dropdown-content'>
-                            <a href="#" className="start-date" style={{fontFamily:'vazirmatn', fontSize:'15px'}}>  شروع : {formatDate(newCard.dates[0])}</a>
-                            <a href="#" className="due-date" style={{fontFamily:'vazirmatn', fontSize:'15px'}}>  پایان : {formatDate(newCard.dates[1])}</a>
+                            <a href="#" className="start-date" style={{fontFamily:'vazirmatn', fontSize:'15px'}}>  شروع : {formatCardDate(newCard.dates[0])}</a>
+                            <a href="#" className="due-date" style={{fontFamily:'vazirmatn', fontSize:'15px'}}>  پایان : {formatCardDate(newCard.dates[1])}</a>
 
                                 {isUserMember && (
 
@@ -2059,7 +2070,7 @@ export const Card = ({card, list, userIsMember}) => {
                                         />
 
                                         {/* Button to save the edited dates to the backend */}
-                                        <button onClick={changeDatesOfCard}>ثبت</button>
+                                        <button onClick={changeDatesOfCard} className='changeCardDateButton'>ثبت</button>
 
                                     </>
 

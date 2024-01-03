@@ -20,6 +20,7 @@ h1 {
 }
 
 .boards-container {
+  text-align: center;
   display: flex;
   flex-direction: column;
 }
@@ -39,6 +40,7 @@ h1 {
 }
 
 .board {
+  text-align: center;
   border: 1px solid rgb(5, 5, 5);
   padding: 30px; /* Increase board size */
   margin: 15px; /* Increase margin for spacing */

@@ -130,7 +130,10 @@ const Workspace = () => {
     setIsCreatingBoard(true);
   };
 
-  const handleDeleteBoard = async (boardId) => {
+  const handleDeleteBoard = async (event, boardId) => {
+
+    event.stopPropagation();
+
     try {
       const response = await fetch(`http://localhost:8080/api/boards/${boardId}`, {
         method: 'DELETE',
@@ -164,7 +167,7 @@ const Workspace = () => {
           {boards.map((board, index) => (
             <div key={index} className="board" onClick={() => handleBoardClick(board.id)}>
               <p>{board.name}</p>
-              <button onClick={() => handleDeleteBoard(board.id)} style={{fontFamily:'vazirmatn', fontSize:'10px'}}>حذف بورد</button>
+              <button onClick={(event) => handleDeleteBoard(event, board.id)} style={{fontFamily:'vazirmatn', fontSize:'10px'}}>حذف بورد</button>
             </div>
           ))}
         </div>

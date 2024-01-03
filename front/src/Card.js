@@ -1,4 +1,4 @@
-import {useEffect, useState} from 'react'
+import {useEffect, useState, useRef} from 'react'
 import {Link, useParams} from 'react-router-dom'
 // import { useReducer } from 'react';
 import './css/card.css'
@@ -1104,11 +1104,13 @@ export const Card = ({card, list, userIsMember}) => {
 
 
 
-    const [activityInput, setActivityInput] = useState('');
+    // const [activityInput, setActivityInput] = useState('');
 
     const CardActivity = ({ list, card, user }) => {
+        const [activityInput, setActivityInput] = useState('');
         const [cardActivities, setCardActivities] = useState([]);
-        // console.log(user);
+        const inputRef = useRef(null);
+
         const message = ` ${user.name} : ${activityInput}`
         const submitActivity = async () => {
             try {
@@ -1124,12 +1126,15 @@ export const Card = ({card, list, userIsMember}) => {
                 throw new Error("Failed to create the activity");
               }
           
-              // Fetch card activities after successful submission
-              const updatedActivities = await response.json();
-              setCardActivities(updatedActivities);
-          
               // Clear the input field after successful submission
-              setActivityInput('');
+                setActivityInput('');
+
+                // Fetch card activities after successful submission
+                const updatedActivitiesResponse = await fetch(`http://localhost:8080/api/lists/${list.id}/cards/${card.id}/activity`);
+                const updatedActivities = await updatedActivitiesResponse.json();
+                
+                setCardActivities(updatedActivities);
+                
             } catch (error) {
               console.error('Error submitting activity:', error);
             }
@@ -1138,48 +1143,52 @@ export const Card = ({card, list, userIsMember}) => {
 
 
       
-        useEffect(() => {
-          // Fetch card activities when the component mounts
-          fetch(`http://localhost:8080/api/lists/${list.id}/cards/${card.id}/activity`)
-            .then(response => response.json())
-            .then(data => {
-              setCardActivities(data);
-            })
-            .catch(error => {
-              console.error('Error fetching activities:', error);
-            });
-        }, []); // Use card.id as the dependency instead of cardActivities
-      
-        return (
+          useEffect(() => {
+            // Fetch card activities when the component mounts
+            fetch(`http://localhost:8080/api/lists/${list.id}/cards/${card.id}/activity`)
+              .then(response => response.json())
+              .then(data => {
+                setCardActivities(data);
+              })
+              .catch(error => {
+                console.error('Error fetching activities:', error);
+              });
+          }, [list.id, card.id]);
+          
+          useEffect(() => {
+            // Focus the input element when the component mounts or when cardActivities change
+            if (inputRef.current) {
+              inputRef.current.focus();
+            }
+          }, [cardActivities]);
+
+          return (
             <>
               <div className="activity-input-container">
-                
-              {isUserMember && (
-
-                    <>
+                {isUserMember && (
+                  <>
                     <input
-                    type="text"
-                    placeholder="Comment"
-                    value={activityInput}
-                    onChange={(e) => setActivityInput(e.target.value)}
-                    style={{ direction: 'rtl' }}
-                    className="activity-input"
+                      ref={inputRef}
+                      type="text"
+                      placeholder="Comment"
+                      value={activityInput}
+                      onChange={(e) => setActivityInput(e.target.value)}
+                      style={{ direction: 'rtl' }}
+                      className="activity-input"
                     />
-                    <button onClick={submitActivity} className="submit-button" style={{fontFamily:'vazirmatn', fontSize:'10px'}}>
-                    نظر بدهید
+                    <button onClick={submitActivity} className="submit-button" style={{ fontFamily: 'vazirmatn', fontSize: '10px' }}>
+                      نظر بدهید
                     </button>
-                    </>
-
+                  </>
                 )}
               </div>
               {cardActivities && cardActivities.length > 0 && (
                 <div className="existing-activities">
-                  {/* <h4>Existing Activities:</h4> */}
                   <ul className="activity-list">
-                  {cardActivities.map((activity, index) => (
-                    <li key={index} className="activity-message" style={{fontFamily:'vazirmatn', fontSize:'15px'}}>
+                    {cardActivities.map((activity, index) => (
+                      <li key={index} className="activity-message" style={{ fontFamily: 'vazirmatn', fontSize: '15px' }}>
                         {activity.message}
-                    </li>
+                      </li>
                     ))}
                   </ul>
                 </div>

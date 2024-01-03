@@ -136,10 +136,10 @@ const List = () => {
 
          return (
             <div className="add-list-buttons">
-              <button type="submit" onClick={() => addNewList()}>ذخیره</button>
+              <button type="submit" onClick={() => addNewList()} style={{fontFamily:'shabnam', fontSize:'12px'}}>ذخیره</button>
                 <button type="submit" onClick={() => {
                     setIsAddingList(false)
-                }}>لغو</button>
+                }} style={{fontFamily:'shabnam', fontSize:'12px'}}>لغو</button>
             </div>
         )
 
@@ -201,12 +201,18 @@ const List = () => {
           const newCard = await response.json();
       
           const updatedLists = lsts.map((list) => {
+            console.error('list: ', list);
+          
+            // Check if list.cards is null or undefined, then initialize it as an empty array
+            const updatedList = {
+              ...list,
+              cards: list.cards ? [...list.cards, ...newCard.cards] : [newCard],
+            };
+          
             if (list.id === id) {
-              return {
-                ...list,
-                cards: [...list.cards, ...newCard.cards],
-              };
+              return updatedList;
             }
+          
             return list;
           });
           
@@ -233,10 +239,10 @@ const List = () => {
 
         return (
             <div className="add-card-buttons">
-              <button type="submit" onClick={() => addNewCard()}>ذخیره</button>
+              <button type="submit" onClick={() => addNewCard()} style={{fontFamily:'shabnam', fontSize:'12px'}}>ذخیره</button>
                 <button type="submit" onClick={() => {
                     setIsAddingCard(false)
-                }}>لغو</button>
+                }} style={{fontFamily:'shabnam', fontSize:'12px'}}>لغو</button>
             </div>
         )
 

@@ -209,11 +209,12 @@ export const Card = ({card, list, userIsMember}) => {
             if (!response.ok){
                 throw new Error("Failed to delete the checklist")
             }
+            setIsNewChecklistAddedOrRemoved(true)
+            setCardChecklists(cardChecklists.filter((cl) => cl.id !== checklist.id))
+
 
             createActivity(`${user.name} ${checklist.name} را از کارت حذف کرد`)
 
-            setIsNewChecklistAddedOrRemoved(true)
-            setCardChecklists(cardChecklists.filter((checklist) => checklist.id !== checklist.id))
 
         } catch (error) {
         console.log("Error deleting the checklist");
@@ -263,13 +264,12 @@ export const Card = ({card, list, userIsMember}) => {
                 setIsNewItemAddedOrRemoved(false)
             }
 
-        },[isNewItemAddedOrRemoved])  
+        },[isNewItemAddedOrRemoved, checklist.id, newList.id, newCard.id])  
 
 
 
         const handleSaveItem = async (newItemName) => {
-            try{
-                
+            try {
                 const response = await fetch(`http://localhost:8080/api/lists/${newList.id}/cards/${newCard.id}/checklists/${checklist.id}/items`, {
                     method: 'POST',
                     headers: {
@@ -277,27 +277,44 @@ export const Card = ({card, list, userIsMember}) => {
                     },
                     body: JSON.stringify({ name: newItemName }),
                 });
-                if (!response.ok){
-                    throw new Error("Failed to create the item")
+                if (!response.ok) {
+                    throw new Error("Failed to create the item");
                 }
-
-                setIsNewItemAddedOrRemoved(true)
-
+        
                 const newItem = await response.json();
-
-                createActivity(`${user.name} ${newItemName} را به ${checklist.name} اضافه کرد`)
-
-                setChecklistItems([...checklistItems, newItem])
-                checklist.items = checklistItems
-                
+        
+                // Avoid direct mutation, create a new array with the updated item
+                const updatedItems = [...checklist.items, newItem];
+        
+                // Update the state with the new items
+                setChecklistItems(updatedItems);
+        
+                // Assuming checklist is part of a larger state (not shown in your code)
+                // Find the index of the current checklist in the array
+                const checklistIndex = cardChecklists.findIndex((c) => c.id === checklist.id);
+        
+                if (checklistIndex !== -1) {
+                    // Create a new array with the updated checklist
+                    const updatedChecklists = [
+                        ...cardChecklists.slice(0, checklistIndex),
+                        { ...cardChecklists[checklistIndex], items: updatedItems },
+                        ...cardChecklists.slice(checklistIndex + 1),
+                    ];
+        
+                    // Update the state with the new checklists
+                    setCardChecklists(updatedChecklists);
+        
+                    // Call createActivity after the state has been updated
+                    createActivity(`${user.name} ${newItemName} را به ${checklist.name} اضافه کرد`);
+                }
+        
+                setIsNewItemAddedOrRemoved(true);
                 setIsAddingItem(false);
                 setNewItemName('');
-
-
+        
             } catch (error) {
-            console.log("Error creating the item");
-                }
-
+                console.log("Error creating the item", error);
+            }
         }
 
         const addNewItem = () => {
@@ -326,6 +343,8 @@ export const Card = ({card, list, userIsMember}) => {
 
 
     const removeItem = async (checklist, item) => {
+        // const [checklistItems, setChecklistItems] = useState(checklist.items)
+
         try{
             const response = await fetch(`http://localhost:8080/api/lists/${newList.id}/cards/${newCard.id}/checklists/${checklist.id}/items/${item.id}`, {
                 method: 'DELETE',
@@ -335,6 +354,27 @@ export const Card = ({card, list, userIsMember}) => {
             });
             if (!response.ok){
                 throw new Error("Failed to delete the item")
+            }
+
+
+            // Remove the item from the local state
+            const updatedItems = checklist.items.filter((checklistItem) => checklistItem.id !== item.id);
+            // setChecklistItems(updatedItems);
+
+            // Assuming checklist is part of a larger state (not shown in your code)
+            // Find the index of the current checklist in the array
+            const checklistIndex = cardChecklists.findIndex((c) => c.id === checklist.id);
+
+            if (checklistIndex !== -1) {
+                // Create a new array with the updated checklist
+                const updatedChecklists = [
+                    ...cardChecklists.slice(0, checklistIndex),
+                    { ...cardChecklists[checklistIndex], items: updatedItems },
+                    ...cardChecklists.slice(checklistIndex + 1),
+                ];
+
+                // Update the state with the new checklists
+                setCardChecklists(updatedChecklists);
             }
 
             createActivity(`${user.name} ${item.name} را از ${checklist.name} حذف کرد`)
@@ -361,19 +401,11 @@ export const Card = ({card, list, userIsMember}) => {
     const AddMember = ({ card, list }) => {
         const {boardId} = useParams()
 
-        console.log('boardId: ', boardId);
-
         const boardIdAsInt = parseInt(boardId, 10);
-
-        console.log('boardIdAsInt: ', boardIdAsInt);
 
         const [newMemberName, setNewMemberName] = useState('')
         const [matchingUsers, setMatchingUsers] = useState([]);
         const [selectedUser, setSelectedUser] = useState(null);
-
-        
-        console.log('newMemberName : ', newMemberName);
-        console.log("selected user : ", selectedUser);
 
         useEffect(() => {
             
@@ -416,6 +448,36 @@ export const Card = ({card, list, userIsMember}) => {
             }
         }, [newMemberName]);
         
+        useEffect(() => {
+            // Fetch card members when component mounts or when isNewMemberAddedOrRemoved changes
+            const fetchCardMembers = async () => {
+                try {
+                    const response = await fetch(`http://localhost:8080/api/lists/${list.id}/cards/${card.id}/members`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                    });
+    
+                    if (!response.ok) {
+                        throw new Error('Error getting card members');
+                    }
+    
+                    const cardMembersData = await response.json();
+                    console.error('cardMembersData: ', cardMembersData);
+                    setCardMembers(cardMembersData);
+                } catch (error) {
+                    console.log('Error fetching card members', error);
+                }
+            };
+            
+            if(isNewMemberAddedOrRemoved){
+                fetchCardMembers();
+                setIsNewMemberAddedOrRemoved(false)
+            }
+        }, [list.id, card.id, isNewMemberAddedOrRemoved]);
+
+        
         const handleNewMember = async (newMemberName) => {
 
 
@@ -432,16 +494,30 @@ export const Card = ({card, list, userIsMember}) => {
                     throw new Error("Failed to create new member")
                 }
 
-                createActivity(`${user.name} ${newMemberName} را به کارت اضافه کرد`)
-                
-                const newMember = await response.json()
+
+
+                const responseData = await response.json();
+                console.log('new member response data: ', responseData);
+
+                // Check if the new member details are nested within a 'members' property
+                const newMember = responseData.members ? responseData.members[0] : responseData;
+
                 console.log('new member: ', newMember);
 
-                setNewMemberName('')
-                // setIsAddingMember(false)
+                // Update the cardMembers state with the new member using the callback form
+                setCardMembers((prevMembers) => [...prevMembers, newMember]);
 
+                setIsNewMemberAddedOrRemoved(true);
+
+                setNewMemberName('');
+        
+                // Update the isNewMemberAddedOrRemoved state to trigger a re-render
+                // setIsAddingMember(false)
+                
                 // setCardMembers([...cardMembers, newMember])
                 // setIsNewMemberAddedOrRemoved(true)
+
+                // createActivity(`${user.name} ${newMemberName} را به کارت اضافه کرد`)
 
             } catch (error) {
                 console.log('Error creating the member');

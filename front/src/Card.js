@@ -48,13 +48,6 @@ export const Card = ({card, list, userIsMember}) => {
     
     const {name, description, members, checklists} = newCard
     const [cardName, setCardName] = useState(name)
-    const [cardDescription, setCardDescription] = useState(description)
-    
-    // Define state for managing description editing
-    const [isEditingDescription, setIsEditingDescription] = useState(false);
-    
-    // Define state to store the temporary edited description
-    const [editedDescription, setEditedDescription] = useState(cardDescription);
     
     
 
@@ -232,8 +225,7 @@ export const Card = ({card, list, userIsMember}) => {
         
         const [checklistItems, setChecklistItems] = useState(checklist.items)
         const [newItemName, setNewItemName] = useState('');
-        // setChecklistItems(checklist.items)
-
+        
         useEffect(() => {
             
             const fetchChecklistItems = async () => {
@@ -249,6 +241,7 @@ export const Card = ({card, list, userIsMember}) => {
                     }
             
                     const allChecklistItems = await response.json();
+
                     setChecklistItems(allChecklistItems)
                     
                 } catch (error) {
@@ -282,9 +275,12 @@ export const Card = ({card, list, userIsMember}) => {
                 }
         
                 const newItem = await response.json();
-        
-                // Avoid direct mutation, create a new array with the updated item
-                const updatedItems = [...checklist.items, newItem];
+                console.error('newItem: ', newItem);
+
+                const newItemDetails = newItem.items ? newItem.items[0] : newItem;
+
+
+                const updatedItems = [...checklist.items, newItemDetails];
         
                 // Update the state with the new items
                 setChecklistItems(updatedItems);
@@ -692,6 +688,14 @@ export const Card = ({card, list, userIsMember}) => {
 
 
 
+    const [cardDescription, setCardDescription] = useState(description)
+    
+    // Define state for managing description editing
+    const [isEditingDescription, setIsEditingDescription] = useState(false);
+    
+    // Define state to store the temporary edited description
+    const [editedDescription, setEditedDescription] = useState(cardDescription);
+    
 
     const changeDescription = async (editedDescription) => {
 
@@ -712,10 +716,13 @@ export const Card = ({card, list, userIsMember}) => {
                 throw new Error("Failed to change description")
             }
 
+            setCardDescription(editedDescription);
+            const updatedCard = await response.json();
+            console.error('Updated card:', updatedCard);
+
+
             createActivity(`${user.name} بخش توضیحات را تغییر داد`)
 
-            const updatedCard = await response.json();
-            console.log('Updated card:', updatedCard);
 
         } catch (error) {
             console.log('Error changing the description');
@@ -1071,17 +1078,17 @@ export const Card = ({card, list, userIsMember}) => {
         return `${day} ${month} ${year}`;
       };
 
-    const handleCheckboxChange = async (checklist, checklistId, item, currentDoneValue) => {
+      const handleCheckboxChange = async (checklist, checklistId, item, currentDoneValue) => {
         // Update the 'done' attribute on the front-end
-    const updatedItems = checklist.items.map(currentItem =>
-        currentItem.id === item.id ? { ...currentItem, done: !currentDoneValue } : currentItem
-    );
-
-    // Update the state or dispatch an action to update the items in your state management system
-    setChecklist(prevChecklist => ({
-        ...prevChecklist,
-        items: updatedItems,
-    }));
+        const updatedItems = checklist.items.map(currentItem =>
+            currentItem.id === item.id ? { ...currentItem, done: !currentDoneValue } : currentItem
+        );
+    
+        // Update the state or dispatch an action to update the items in your state management system
+        setChecklist(prevChecklist => ({
+            ...prevChecklist,
+            items: updatedItems,
+        }));
     
         try {
             // Send a PATCH request to the backend
@@ -1098,18 +1105,34 @@ export const Card = ({card, list, userIsMember}) => {
             if (!response.ok) {
                 // Handle error
                 console.error('Failed to update item on the backend');
+                return;
             }
-
-            if(!currentDoneValue == true){
-                createActivity(`${item.name} مربوط به ${checklist.name} انجام شد`)
+    
+            // Check if the response has a valid JSON content
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                const checkbox = await response.json();
+                console.error('checkbox: ', checkbox);
+            }
+    
+            if (!currentDoneValue) {
+                createActivity(`${item.name} مربوط به ${checklist.name} انجام شد`);
             } else {
-                createActivity(`${item.name} مربوط به ${checklist.name} به حالت ناتمام بازگشت`)
+                createActivity(`${item.name} مربوط به ${checklist.name} به حالت ناتمام بازگشت`);
             }
-
+            // Update the cardChecklists state with the new checklist
+        setCardChecklists(prevCardChecklists => {
+            const updatedChecklists = prevCardChecklists.map(prevChecklist =>
+                prevChecklist.id === checklistId ? { ...prevChecklist, items: updatedItems } : prevChecklist
+            );
+            return updatedChecklists;
+        });
+    
         } catch (error) {
             console.error('Error during PATCH request:', error);
         }
     };
+    
     
 
 

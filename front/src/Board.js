@@ -490,6 +490,13 @@ const ShowCards = ({ list, isNewCardAddedOrRemoved, setIsNewCardAddedOrRemoved }
       history.push('/'); // Redirect to the main page when closing modal
     };
 
+    const formatCardDate = (dateString) => {
+      const options = { month: 'long', day: 'numeric' };
+      const formattedDate = new Date(dateString).toLocaleDateString('fa-IR', options);
+      return formattedDate;
+    };
+
+    
     useEffect(() => {
       if (isNewCardAddedOrRemoved) {
         setCardList(list.cards);
@@ -579,6 +586,17 @@ const ShowCards = ({ list, isNewCardAddedOrRemoved, setIsNewCardAddedOrRemoved }
                           {...provided.dragHandleProps}
                           className="card-item"
                         >
+                          {card.label && (
+                          <div
+                            style={{
+                              height: '2px',
+                              width: '100px',
+                              backgroundColor: card.label,
+                              marginLeft: '10px',
+                              marginLeft:'40px'
+                            }}
+                          ></div>
+                        )}
                           {/* ... your card content ... */}
                           <div key={card.id} className="card-item">
                 <div
@@ -590,9 +608,22 @@ const ShowCards = ({ list, isNewCardAddedOrRemoved, setIsNewCardAddedOrRemoved }
                     <div className="icons-container" style={{display:'inline-flex' , direction: 'rtl'}}>
                         
                         <h6><img src={require('./icons/members.png')} alt="members" style={{width:'15px', height:'24x'}} />{card.members && card.members.length}</h6>
-                        <img src={require('./icons/desc.png')} alt="desc" style={{width:'15px', height:'24x', marginRight:'20px', marginLeft:'20px'}} />
-                        <h6><img src={require('./icons/tasks.png')} alt="tasks" style={{width:'15px', height:'24x'}} />1/2</h6>                
+                        <img src={require('./icons/desc.png')} alt="desc" style={{width:'15px', marginRight:'20px', marginLeft:'20px'}} />
+                        {card.checklists && card.checklists.length > 0 && (
+                          <h6>
+                            <img src={require('./icons/tasks.png')} alt="tasks" style={{width:'15px', height:'24x'}} />
+                            {card.checklists.length}
+                          </h6>
+                        )}
 
+                        {card.dates && card.dates.length > 0 && (
+                            <div style={{fontSize:'13px', marginRight:'10px', marginTop:'3px'}}>
+                              <h6>
+                                {formatCardDate(card.dates[0])} - {formatCardDate(card.dates[1])} 
+                              </h6>
+                            </div>
+                          )}
+                        
                     </div>
                     <br />
                     <Modal isOpen={modalIsOpen} onRequestClose={closeModal} className="modal">

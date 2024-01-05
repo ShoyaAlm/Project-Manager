@@ -172,7 +172,7 @@ func GetAItem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Fetch list details
-	itemRow := db.QueryRow("SELECT id, name, start_date due_date, done FROM items WHERE id = $1 AND checklist_id = $2", itemID, checklistID)
+	itemRow := db.QueryRow("SELECT id, name, start_date, due_date, done FROM items WHERE id = $1 AND checklist_id = $2", itemID, checklistID)
 
 	var (
 		itemName					string

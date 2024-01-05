@@ -70,11 +70,11 @@ const Table = () => {
                     {card.label && (
                       <div
                         style={{
-                          width: '20px',
                           height: '20px',
-                          backgroundColor: card.label.toLowerCase(),
-                          display: 'inline-block',
-                          marginRight: '5px',
+                              width: '70px',
+                              backgroundColor: card.label,
+                              marginLeft:'auto',
+                              marginRight:'auto'
                         }}
                       ></div>
                     )}

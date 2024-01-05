@@ -751,7 +751,7 @@ export const Card = ({card, list, userIsMember}) => {
         try {
 
             const requestBody = {
-                startdate: editedDatesArray
+                dates: editedDatesArray
             }
             
             const backendEndpoint = await fetch(`http://localhost:8080/api/lists/${newList.id}/cards/${newCard.id}`, {
@@ -765,9 +765,14 @@ export const Card = ({card, list, userIsMember}) => {
                 throw new Error("Failed to change dates")
             }
 
-            const updatedDates = await backendEndpoint.json();
-            console.log('Updated dates:', updatedDates);
+            const responseData = await backendEndpoint.text()
+            const updatedDates = responseData ? JSON.parse(responseData) : null;
 
+            newCard.dates[0] = editedDatesArray[0]
+            newCard.dates[1] = editedDatesArray[1]
+
+            // console.error('response data:', responseData);
+            console.error('Updated dates:', updatedDates);
 
         } catch (error) {
             // Handle any errors that occur during the API call
@@ -787,14 +792,9 @@ export const Card = ({card, list, userIsMember}) => {
     // #####################
     // #####################
     const [isEditingDates, setIsEditingDates] = useState(false);
-    const [editedItemDates, setEditedItemDates] = useState({
-        start: null,
-        end: null,
-      });
-    
+    const [editedItemDates, setEditedItemDates] = useState({ start: null, end: null });
+    const [currentItemDates, setCurrentItemDates] = useState({ start: null, end: null });
 
-    // const [startDate, setStartDate] = useState(new Date());
-    // const [endDate, setEndDate] = useState(new Date);
     const changeDatesOfItem = async (checklistId, itemId, startDate, endDate) => {
         try {
         const requestBody = {
@@ -822,6 +822,40 @@ export const Card = ({card, list, userIsMember}) => {
         }
   };
 
+    const getItemDates = async (checklistId, itemId) => {
+        try {
+            // Perform a GET request to fetch data based on your specific URL
+            const fetchResponse = await fetch(`http://localhost:8080/api/lists/${newList.id}/cards/${newCard.id}/checklists/${checklistId}/items/${itemId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+    
+            if (!fetchResponse.ok) {
+                throw new Error('Failed to fetch data');
+            }
+    
+            // Assuming the fetched data is in JSON format, extract relevant information
+            const fetchedData = await fetchResponse.json();
+            console.error('fetchedData: ', fetchedData);
+
+            setCurrentItemDates({
+                start: fetchedData.startdate ? new Date(fetchedData.startdate) : null,
+                end: fetchedData.duedate ? new Date(fetchedData.duedate) : null,
+              });
+          
+              console.error('currentItemDates: ', currentItemDates);
+            
+            // Reset the editing state after saving
+            setIsEditingDates(false);
+        } catch (error) {
+            // Handle any errors that occur during the API call
+            console.error('Error fetching data:', error);
+        }
+
+        
+    };
   const handleItemDateChange = (date, type) => {
     setEditedItemDates((prevDates) => ({ ...prevDates, [type]: date }));
   };
@@ -1143,9 +1177,10 @@ export const Card = ({card, list, userIsMember}) => {
     };
 
 
+    const [cardLabel, setCardLabel] = useState(newCard.label);
 
     const [isLabelOpen, setIsLabelOpen] = useState(false);
-    const LabelDropdown = ({ newCard, isLabelOpen, newList, newCardId }) => {
+    const LabelDropdown = ({ isLabelOpen, newList, setCardLabel }) => {
         const labels = ['green', 'yellow', 'orange', 'red', 'purple', 'blue'];
       
         const url = `http://localhost:8080/api/lists/${newList.id}/cards/${newCard.id}`;
@@ -1161,6 +1196,7 @@ export const Card = ({card, list, userIsMember}) => {
       
             if (response.ok) {
               console.log('adding label has ok response');
+              setCardLabel(label);
             } else {
               console.error('Failed to update label');
             }
@@ -1173,10 +1209,10 @@ export const Card = ({card, list, userIsMember}) => {
           <div>
             {isLabelOpen && (
               <div className="label-dropdown">
-                {newCard.label ? (
+                {cardLabel ? (
                   <div className="current-label">
                     <p>: برچسب فعلی</p>
-                    <div className={`label-color ${newCard.label}`}></div>
+                    <div className={`label-color ${cardLabel}`}></div>
                     <p className="choose-another">انتخاب برچسب دیگر</p>
                   </div>
                 ) : (
@@ -1880,55 +1916,49 @@ export const Card = ({card, list, userIsMember}) => {
 
 
                         {/* Clock and date container */}
-                <div className="clock-date-container">
-                    <div className="month-day" style={{ fontSize: '12px', marginLeft: '18px' }}>
-                        <div className='dropdown'>
-                        <img
-                            src={require('./icons/clock-date.png')}
-                            alt=""
-                            style={{ width: '14px', height: '14px', cursor: 'pointer' }}
-                            onClick={() => setIsEditingDates(!isEditingDates)}
-                        />
-                        {isEditingDates && (
-            <div className="dropdown-content">
-                            {/* <a href="#" className="start-date" style={{fontFamily:'vazirmatn', fontSize:'12px'}}>  شروع : {formatCardDate(item.startDate)}</a>
-                            <a href="#" className="due-date" style={{fontFamily:'vazirmatn', fontSize:'12px'}}>  پایان : {formatCardDate(item.dueDate)}</a> */}
+                        <div className="clock-date-container">
+  <div className="month-day" style={{ fontSize: '12px', marginLeft: '18px' }}>
+    <div className='dropdown'>
+      <img
+        src={require('./icons/clock-date.png')}
+        alt=""
+        style={{ width: '14px', height: '14px', cursor: 'pointer' }}
+        onClick={async () => {
+          await getItemDates(checklist.id, item.id);
+          setIsEditingDates(!isEditingDates);
+        }}
+      />
+      {isEditingDates && (
+        <div className="dropdown-content">
+          <span>
+            {item.startDate && `شروع: ${formatItemDate(currentItemDates.start)}`}
+            {item.dueDate && ` | پایان: ${formatItemDate(currentItemDates.end)}`}
+          </span>
+          <p className="date-picker-text">انتخاب تاریخ شروع</p>
+          <DatePicker
+            selected={editedItemDates.start}
+            onChange={(date) => handleItemDateChange(date, 'start')}
+            dateFormat="yyyy-MM-dd"
+            showYearDropdown
+            className="date-picker-input"
+          />
 
-            <span>
-                {item.startDate && `شروع: ${formatItemDate(item.startDate)}`}
-                {item.dueDate && ` | پایان: ${formatItemDate(item.dueDate)}`}
-            </span>
-              <p className="date-picker-text">انتخاب تاریخ شروع</p>
-              <DatePicker
-                selected={editedItemDates.start}
-                onChange={(date) => handleItemDateChange(date, 'start')}
-                dateFormat="yyyy-MM-dd"
-                showYearDropdown
-                className="date-picker-input"
-              />
+          <p className="date-picker-text">انتخاب تاریخ پایان</p>
+          <DatePicker
+            selected={editedItemDates.end}
+            onChange={(date) => handleItemDateChange(date, 'end')}
+            dateFormat="yyyy-MM-dd"
+            showYearDropdown
+            className="date-picker-input"
+          />
 
-              <p className="date-picker-text">انتخاب تاریخ پایان</p>
-              <DatePicker
-                selected={editedItemDates.end}
-                onChange={(date) => handleItemDateChange(date, 'end')}
-                dateFormat="yyyy-MM-dd"
-                showYearDropdown
-                className="date-picker-input"
-              />
+          <button onClick={() => saveEditedDates(checklist.id, item.id)} className='submit-new-date-item'>ثبت</button>
+        </div>
+      )}
+    </div>
+  </div>
+</div>
 
-              <button onClick={() => saveEditedDates(checklist.id, item.id)} className='submit-new-date-item'>ثبت</button>
-            </div>
-          )}
-          {/* {!isEditingDates && (
-            <span>
-              {item.startDate && `شروع: ${formatCardDate(item.startDate)}`}
-              {item.dueDate && ` | پایان: ${formatCardDate(item.dueDate)}`}
-            </span>
-          )} */}
-                        </div>
-                    </div>
-
-                </div>
 
 
 
@@ -2138,7 +2168,7 @@ export const Card = ({card, list, userIsMember}) => {
                          >برچسب
                          </button>
                             <div className='dropdown-content'>
-                                {isLabelOpen && <LabelDropdown newCard={newCard} isLabelOpen={isLabelOpen} newList={newList} newCardId={newCard.id} />}
+                                {isLabelOpen && <LabelDropdown isLabelOpen={isLabelOpen} newList={newList} setCardLabel={setCardLabel}/>}
                             </div>
                         </div>
 

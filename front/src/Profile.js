@@ -8,6 +8,7 @@ const Profile = ({ userId }) => {
   const [editedName, setEditedName] = useState('');
   const [editedEmail, setEditedEmail] = useState('');
   const [editedBio, setEditedBio] = useState('');
+  const [edtiedPassword, setEdtiedPassword] = useState('')
 
   useEffect(() => {
     fetch(`http://localhost:8080/api/users/${userId}`)
@@ -19,9 +20,11 @@ const Profile = ({ userId }) => {
         }
       })
       .then((data) => {
+        console.error('data: ', data);
         setUser(data);
         setEditedName(data.name);
         setEditedEmail(data.email);
+        // setEdtiedPassword(data.password)
         setEditedBio(data.bio || '');
       })
       .catch((error) => {
@@ -33,14 +36,42 @@ const Profile = ({ userId }) => {
     setIsEditing(true);
   };
 
-  const handleSaveClick = () => {
-    // Perform save logic (e.g., update data on the backend)
-    // After saving, set isEditing to false
-    setIsEditing(false);
+  const handleSaveClick = async () => {
+
+  // const hashedPassword = await bcrypt.hash(edtiedPassword, bcrypt.genSaltSync(bcrypt.DefaultCost));
+
+  const updatedUser = {
+    ...user,
+    name: editedName,
+    email: editedEmail,
+    password: edtiedPassword,
+    bio: editedBio,
+  };
+
+  fetch(`http://localhost:8080/api/users/${userId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(updatedUser),
+  })
+    .then((response) => {
+      if (response.ok) {
+        return response.json();
+      } else {
+        throw new Error('Failed to update user data');
+      }
+    })
+    .then((data) => {
+      setUser(data);
+      setIsEditing(false);
+    })
+    .catch((error) => {
+      console.error(error);
+    });
   };
 
   const handleCancelClick = () => {
-    // Reset edited values to original values
     setEditedName(user.name);
     setEditedEmail(user.email);
     setEditedBio(user.bio || '');
@@ -70,6 +101,7 @@ const Profile = ({ userId }) => {
             <input
               type="text"
               value={editedEmail}
+              dir='ltr'
               onChange={(e) => setEditedEmail(e.target.value)}
               className='user-info-input'
             />
@@ -78,11 +110,29 @@ const Profile = ({ userId }) => {
           )}
         </div>
         <div>
+          {isEditing ? (
+            <>
+            <strong>پسورد جدید :</strong>
+            <input
+              type="text"
+              value={edtiedPassword}
+              dir='ltr'
+              onChange={(e) => setEdtiedPassword(e.target.value)}
+              className='user-info-input'
+            />
+            </>
+          ) : (
+            <></>
+          )}
+        </div>
+        <div>
           <strong>بیوی کاربر :</strong>
           {isEditing ? (
-            <textarea
+            <input
+              type="text"
               value={editedBio}
               onChange={(e) => setEditedBio(e.target.value)}
+              className='user-info-input'
             />
           ) : (
             <span>{editedBio}</span>

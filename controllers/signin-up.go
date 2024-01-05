@@ -103,6 +103,41 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 }
 
 
+// func HashAllPasses(w http.ResponseWriter, r *http.Request){
+
+// 	// Retrieve users with unhashed passwords
+// 	rows, err := db.Query("SELECT id, password FROM users WHERE password = '2220'")
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	defer rows.Close()
+
+// 	for rows.Next() {
+// 		var userID int
+// 		var password string
+// 		if err := rows.Scan(&userID, &password); err != nil {
+// 			log.Fatal(err)
+// 		}
+
+// 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+// 		if err != nil {
+// 			log.Fatal(err)
+// 		}
+
+// 		// Update the user's password in the database
+// 		_, err = db.Exec("UPDATE users SET password = $1 WHERE id = $2", string(hashedPassword), userID)
+// 		if err != nil {
+// 			log.Fatal(err)
+// 		}
+
+// 		fmt.Printf("Updated password for user with ID %d\n", userID)
+// 	}
+
+// 	if err := rows.Err(); err != nil {
+// 		log.Fatal(err)
+// 	}
+// }
+
 
 
 func Login(w http.ResponseWriter, r *http.Request) {
@@ -139,24 +174,24 @@ func Login(w http.ResponseWriter, r *http.Request) {
     }
 
 	// Check if the password matches
-    if requestData.Password != user.Password {
-        http.Error(w, "Incorrect password", http.StatusUnauthorized)
-        return
-    }
+    // if requestData.Password != user.Password {
+    //     http.Error(w, "Incorrect password", http.StatusUnauthorized)
+    //     return
+    // }
 
 	// Check if the password matches using bcrypt.CompareHashAndPassword
-	// err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(requestData.Password))
-	// if err != nil {
-	// 	if err == bcrypt.ErrMismatchedHashAndPassword {
-	// 		// Passwords do not match
-	// 		http.Error(w, "Incorrect password", http.StatusUnauthorized)
-	// 		return
-	// 	} else {
-	// 		log.Printf("Error comparing hashed passwords: %v", err)
-	// 		http.Error(w, "Failed to compare passwords", http.StatusInternalServerError)
-	// 		return
-	// 	}
-	// }
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(requestData.Password))
+	if err != nil {
+		if err == bcrypt.ErrMismatchedHashAndPassword {
+			// Passwords do not match
+			http.Error(w, "Incorrect password", http.StatusUnauthorized)
+			return
+		} else {
+			log.Printf("Error comparing hashed passwords: %v", err)
+			http.Error(w, "Failed to compare passwords", http.StatusInternalServerError)
+			return
+		}
+	}
 
 
     // Create a new token

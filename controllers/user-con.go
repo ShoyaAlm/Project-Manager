@@ -15,6 +15,8 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"golang.org/x/crypto/bcrypt"
+
 	// "github.com/lib/pq"
 	_ "github.com/lib/pq" // Import the PostgreSQL driver
 )
@@ -35,19 +37,19 @@ func GetAllUsers(w http.ResponseWriter, r *http.Request){
 
 	for userRows.Next() {
 		var (
-			userID                int
+			UserID                int
 			userName, userEmail, userPassword string
 			userBio sql.NullString
 		)
 
-		err := userRows.Scan(&userID, &userName, &userEmail, &userPassword, &userBio)
+		err := userRows.Scan(&UserID, &userName, &userEmail, &userPassword, &userBio)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Error scanning rows, %s", err), http.StatusInternalServerError)
 			return
 		}
 
 		user := &model.User{
-			ID:         userID,
+			ID:         UserID,
 			Name:       userName,
 			Email:		userEmail,
 			Password: 	userPassword,
@@ -66,7 +68,7 @@ func GetAllUsers(w http.ResponseWriter, r *http.Request){
 
 		cardsRows, err := db.Query(`SELECT c.id AS card_id, c.name AS card_name, c.description AS card_description
 									FROM cards c
-									WHERE c.owner_id = $1`, userID)
+									WHERE c.owner_id = $1`, UserID)
 
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Failed to fetch the cards inside user, %s", err), http.StatusInternalServerError)
@@ -127,21 +129,21 @@ func GetUser(w http.ResponseWriter, r *http.Request){
 	
 	vars := mux.Vars(r)
 
-	userID, err := strconv.Atoi(vars["userID"])
+	UserID, err := strconv.Atoi(vars["userID"])
 	if err != nil {
 		http.Error(w, "Invalid user ID", http.StatusBadRequest)
 		return
 	}
 
 	// Fetch list details
-	userRow := db.QueryRow("SELECT id, name, email, bio FROM users WHERE id = $1", userID)
+	userRow := db.QueryRow("SELECT id, name, password, email, bio FROM users WHERE id = $1", UserID)
 
 	var (
-		userName, userEmail string
+		userName, userPassword, userEmail string
 		userBio sql.NullString
 	)
 
-	err = userRow.Scan(&userID, &userName, &userEmail, &userBio)
+	err = userRow.Scan(&UserID, &userName, &userPassword, &userEmail, &userBio)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			http.Error(w, "user not found", http.StatusNotFound)
@@ -157,204 +159,12 @@ func GetUser(w http.ResponseWriter, r *http.Request){
 	}
 
 	user := &model.User{
-		ID:   userID,
+		ID:   UserID,
 		Name: userName,
+		Password: userPassword,
 		Email: userEmail,
 		Bio: userBioValue,
 	}
-
-	// if userBio.Valid { // Check if the bio column is not NULL
-	// 	user.Bio = userBio.String
-	// } else {
-	// 	user.Bio = "" // Set to an empty string or handle it as needed
-	// }
-
-
-
-	// cardsRows, err := db.Query(`SELECT c.id AS card_id, c.name AS card_name, 
-	// 							c.description AS card_description, c.dates AS card_dates
-	// 							FROM cards c
-	// 							WHERE c.owner_id = $1`, userID)
-
-	// 	if err != nil {
-	// 		http.Error(w, fmt.Sprintf("Failed to fetch the cards inside user, %s", err), http.StatusInternalServerError)
-	// 				return						
-	// 	}
-								
-	// 	defer cardsRows.Close()
-										
-		
-		// var cards []*model.Card
-
-		// for cardsRows.Next() {
-		// 	var (
-		// 		cardID int
-		// 		cardName, cardDescription string
-		// 		cardDates                 pq.StringArray
-		// 	)
-
-		// 	err := cardsRows.Scan(&cardID, &cardName, &cardDescription, &cardDates)
-		// 	if err != nil {
-		// 		http.Error(w, fmt.Sprintf("Error scanning cardsRows, %s", err), http.StatusInternalServerError)
-		// 		return
-		// 	}
-
-		// 	var dates []time.Time
-
-		// 	for _, dateString := range cardDates {
-		// 		date, err := time.Parse("2006-01-02", dateString)
-		// 		if err != nil {
-		// 			// Handle the error, e.g., log it or return an error response
-		// 		}
-		// 		dates = append(dates, date)
-		// 	}
-		
-
-		// 	card := &model.Card{
-		// 		ID: cardID,
-		// 		Name: cardName,
-		// 		Description: cardDescription,
-		// 		Dates:       dates,
-		// 		Members:     []*model.User{},
-		// 		Checklists:  []*model.Checklist{},
-		// 	}
-
-			
-		// checklistRows, err := db.Query(`SELECT cl.id AS checklist_id, cl.name AS checklist_name
-		// 						FROM checklists cl
-		// 					   WHERE cl.card_id = $1`, cardID)
-
-		// if err != nil {
-		// 	http.Error(w, fmt.Sprintf("Failed to fetch checklists for card, %s", err), http.StatusInternalServerError)
-		// 	return
-
-		// }
-
-		// defer checklistRows.Close()
-
-		// var checklists []*model.Checklist
-
-		// for checklistRows.Next() {
-
-		// 	var (
-		// 		checklistID   int
-		// 		checklistName string
-		// 	)
-		// 	err := checklistRows.Scan(&checklistID, &checklistName)
-
-		// 	if err != nil {
-		// 		http.Error(w, fmt.Sprintf("Error scanning checklistRows, %s", err), http.StatusInternalServerError)
-		// 		return
-		// 	}
-
-		// 	checklist := &model.Checklist{
-		// 		ID:    checklistID,
-		// 		Name:  checklistName,
-		// 		Items: []*model.Item{},
-		// 	}
-
-		// 	// Start looking for items inside every checklist of every card
-		// 	itemRows, err := db.Query(`SELECT i.id AS item_id, i.name AS item_name, i.due_date AS item_due_date, i.assigned_to AS item_assigned_to
-		// 			FROM items i
-		// 			WHERE i.checklist_id = $1`, checklistID)
-
-		// 	if err != nil {
-		// 		http.Error(w, fmt.Sprintf("Failed to fetch items for checklists inside cards, %s", err), http.StatusInternalServerError)
-		// 		return
-
-		// 	}
-
-		// 	defer itemRows.Close()
-
-		// 	var items []*model.Item
-
-		// 	for itemRows.Next() {
-		// 		var (
-		// 			itemID		                int
-		// 			itemName			 		string
-		// 			itemStartDate, itemDueDate 	time.Time
-		// 			itemDone 					bool
-		// 			itemAssignedTo        		[]*model.Member
-		// 		)
-
-		// 		err := itemRows.Scan(&itemID, &itemName,&itemStartDate, &itemDueDate, &itemDone)
-
-		// 		if err != nil {
-		// 			http.Error(w, fmt.Sprintf("Error scanning itemRows, %s", err), http.StatusInternalServerError)
-		// 			return
-		// 		}
-
-		// 		item := &model.Item{
-		// 			ID:         itemID,
-		// 			Name:       itemName,
-		// 			StartDate:  itemStartDate,
-		// 			DueDate:    itemDueDate,
-		// 			Done: 		itemDone,	
-		// 			AssignedTo: itemAssignedTo,
-		// 		}
-
-		// 		items = append(items, item)
-
-		// 	}
-
-		// 	checklist.Items = items
-
-		// 	checklists = append(checklists, checklist)
-
-		// }
-
-		// card.Checklists = checklists
-
-		// // Start looking for members inside every card
-		// memberRows, err := db.Query(`SELECT m.id AS member_id, m.name AS member_name, m.email AS member_email
-		// 					FROM members m
-		// 				WHERE m.card_id = $1`, cardID)
-
-		// if err != nil {
-		// 	http.Error(w, fmt.Sprintf("Failed to fetch members for card, %s", err), http.StatusInternalServerError)
-		// 	return
-
-		// }
-
-		// defer memberRows.Close()
-
-		// var members []*model.User
-
-		// for memberRows.Next() {
-
-		// 	var (
-		// 		memberID   int
-		// 		memberName string
-		// 		memberEmail string
-		// 	)
-
-		// 	err := memberRows.Scan(&memberID, &memberName, &memberEmail)
-
-		// 	if err != nil {
-		// 		http.Error(w, fmt.Sprintf("Error scanning memberRows, %s", err), http.StatusInternalServerError)
-		// 		return
-		// 	}
-
-		// 	member := &model.User{
-		// 		ID:   memberID,
-		// 		Name: memberName,
-		// 		Email: memberEmail,
-		// 	}
-
-		// 	members = append(members, member)
-
-		// }
-
-		// card.Members = members
-
-
-
-		// cards = append(cards, card)
-
-		// }
-
-		// user.Cards = cards
-
 
 
 	jsonData, err := json.Marshal(user)
@@ -394,19 +204,19 @@ func GetUserByName(w http.ResponseWriter, r *http.Request) {
 
     for rows.Next() {
         var (
-            userID      int
+            UserID      int
             userName    string
             userEmail   string
             // userBio     string
         )
 
-        if err := rows.Scan(&userID, &userName, &userEmail); err != nil {
+        if err := rows.Scan(&UserID, &userName, &userEmail); err != nil {
             http.Error(w, fmt.Sprintf("Failed to scan user data, %s", err), http.StatusInternalServerError)
             return
         }
 
         user := &model.User{
-            ID:    userID,
+            ID:    UserID,
             Name:  userName,
             Email: userEmail,
             // Bio:   userBio,
@@ -491,13 +301,13 @@ func CreateUser(w http.ResponseWriter, r *http.Request){
 func DeleteUser(w http.ResponseWriter, r *http.Request){
 
 	vars := mux.Vars(r)
-	userID, err := strconv.Atoi(vars["userID"])
+	UserID, err := strconv.Atoi(vars["UserID"])
 	if err != nil {
 		http.Error(w, "Invalid user ID", http.StatusBadRequest)
 		return
 	}
 
-	_, err = db.Exec("DELETE FROM users WHERE id = $1", userID)
+	_, err = db.Exec("DELETE FROM users WHERE id = $1", UserID)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to delete the user, %s", err), http.StatusInternalServerError)
 		return
@@ -507,6 +317,71 @@ func DeleteUser(w http.ResponseWriter, r *http.Request){
 
 
 }
+
+
+
+func UpdateUserInfo(w http.ResponseWriter, r *http.Request) {
+
+	vars := mux.Vars(r)
+	UserID, err := strconv.Atoi(vars["userID"])
+	if err != nil {
+		http.Error(w, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	
+	// Read the request body
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
+		return
+	}
+
+	// Decode the JSON payload from the request body
+	var requestData struct {
+		Name     string	        `json:"name"`
+		Email    string         `json:"email"`
+		Password string 		`json:"password"`
+		Bio 	 string 		`json:"bio"`
+	}
+
+	err = json.Unmarshal(body, &requestData)
+	if err != nil {
+		http.Error(w, "Failed to parse JSON data", http.StatusBadRequest)
+		return
+	}
+
+
+	// Hash the new password before updating the user
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(requestData.Password), bcrypt.DefaultCost)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to hash password: %s", err), http.StatusInternalServerError)
+		return
+	}
+
+	// Update the user's information in the database
+	// Note: This assumes you have a PostgreSQL database connection in the "db" variable
+	_, err = db.Exec("UPDATE users SET name=$1, email=$2, password=$3, bio=$4 WHERE id=$5",
+		requestData.Name, requestData.Email, string(hashedPassword), requestData.Bio, UserID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to update user data: %s", err), http.StatusInternalServerError)
+		return
+	}
+
+	// Respond with the updated user data
+	updatedUser := &model.User{
+		ID:       UserID,
+		Name:     requestData.Name,
+		Email:    requestData.Email,
+		Bio:      requestData.Bio,
+		Password: "", // Do not send the hashed password to the client
+	}
+
+	// Encode the response as JSON
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(updatedUser)
+}
+
 
 
 // func JwtHandler(w http.ResponseWriter, r *http.Request) {

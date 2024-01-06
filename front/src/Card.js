@@ -791,7 +791,7 @@ export const Card = ({card, list, userIsMember}) => {
     // #####################
     // #####################
     // #####################
-    const [isEditingDates, setIsEditingDates] = useState(false);
+    const [isEditingItemDates, setIsEditingItemDates] = useState(false);
     const [editedItemDates, setEditedItemDates] = useState({ start: null, end: null });
     const [currentItemDates, setCurrentItemDates] = useState({ start: null, end: null });
 
@@ -799,7 +799,7 @@ export const Card = ({card, list, userIsMember}) => {
         try {
         const requestBody = {
             startdate: startDate,
-            enddate: endDate
+            duedate: endDate
         };
 
         const backendEndpoint = await fetch(`http://localhost:8080/api/checklists/${checklistId}/items/${itemId} `, {
@@ -815,7 +815,7 @@ export const Card = ({card, list, userIsMember}) => {
         }
 
         const updatedDates = await backendEndpoint.json();
-        console.log('Updated dates:', updatedDates);
+        console.error('Updated dates:', updatedDates);
         } catch (error) {
         // Handle any errors that occur during the API call
         console.error('Error saving dates:', error);
@@ -840,15 +840,15 @@ export const Card = ({card, list, userIsMember}) => {
             const fetchedData = await fetchResponse.json();
             console.error('fetchedData: ', fetchedData);
 
-            setCurrentItemDates({
+            setCurrentItemDates((prevDates) => ({
+                ...prevDates,
                 start: fetchedData.startdate ? new Date(fetchedData.startdate) : null,
                 end: fetchedData.duedate ? new Date(fetchedData.duedate) : null,
-              });
+            }));
           
-              console.error('currentItemDates: ', currentItemDates);
             
             // Reset the editing state after saving
-            setIsEditingDates(false);
+            setIsEditingItemDates(false);
         } catch (error) {
             // Handle any errors that occur during the API call
             console.error('Error fetching data:', error);
@@ -856,20 +856,45 @@ export const Card = ({card, list, userIsMember}) => {
 
         
     };
+
   const handleItemDateChange = (date, type) => {
     setEditedItemDates((prevDates) => ({ ...prevDates, [type]: date }));
   };
 
-  const saveEditedDates = (checklistId, itemId) => {
-    // Assuming you have access to the item's ID and want to update the dates for that item
-    const startDate = editedItemDates.start;
-    const endDate = editedItemDates.end;
+  const saveEditedDates = async (checklist, item) => {
+    try {
+        // Use the latest currentItemDates by awaiting getItemDates
+        await getItemDates(checklist.id, item.id);
 
-    // Call the function to change dates
-    changeDatesOfItem(checklistId, itemId, startDate, endDate);
+        const startDate = editedItemDates.start;
+        const endDate = editedItemDates.end;
 
-    // Reset the editing state after saving
-    setIsEditingDates(false);
+
+        // Create a copy of checklist.items
+        const updatedItems = [...checklist.items];
+
+        // Find the index of the item to be updated
+        const itemIndex = updatedItems.findIndex((i) => i.id === item.id);
+
+        // Update the item within the copy
+        if (itemIndex !== -1) {
+            updatedItems[itemIndex] = {
+                ...item,
+                startdate: startDate, // Assuming your item object has a startdate property
+                duedate: endDate,    // Assuming your item object has a duedate property
+            };
+        }
+
+        // Update checklist.items with the modified array
+        checklist.items = updatedItems;
+
+
+
+        changeDatesOfItem(checklist.id, item.id, startDate, endDate);
+        setIsEditingItemDates(false);
+    } catch (error) {
+        console.error('Error saving dates:', error);
+    }
   };     
 
   
@@ -1101,7 +1126,6 @@ export const Card = ({card, list, userIsMember}) => {
 
 
       const formatItemDate = (dateString) => {
-        console.log('dateString for item date: ', dateString);
         const options = { year: 'numeric', month: 'long', day: 'numeric' };
         const dateObject = new Date(dateString);
         
@@ -1917,47 +1941,48 @@ export const Card = ({card, list, userIsMember}) => {
 
                         {/* Clock and date container */}
                         <div className="clock-date-container">
-  <div className="month-day" style={{ fontSize: '12px', marginLeft: '18px' }}>
-    <div className='dropdown'>
-      <img
-        src={require('./icons/clock-date.png')}
-        alt=""
-        style={{ width: '14px', height: '14px', cursor: 'pointer' }}
-        onClick={async () => {
-          await getItemDates(checklist.id, item.id);
-          setIsEditingDates(!isEditingDates);
-        }}
-      />
-      {isEditingDates && (
-        <div className="dropdown-content">
-          <span>
-            {item.startDate && `شروع: ${formatItemDate(currentItemDates.start)}`}
-            {item.dueDate && ` | پایان: ${formatItemDate(currentItemDates.end)}`}
-          </span>
-          <p className="date-picker-text">انتخاب تاریخ شروع</p>
-          <DatePicker
-            selected={editedItemDates.start}
-            onChange={(date) => handleItemDateChange(date, 'start')}
-            dateFormat="yyyy-MM-dd"
-            showYearDropdown
-            className="date-picker-input"
-          />
+                            <div className="month-day" style={{ fontSize: '12px', marginLeft: '18px' }}>
+                                <div className='dropdown'>
+                                <img
+                                    src={require('./icons/clock-date.png')}
+                                    alt=""
+                                    style={{ width: '14px', height: '14px', cursor: 'pointer' }}
+                                    onClick={async () => {
+                                    await getItemDates(checklist.id, item.id);
+                                    setIsEditingItemDates(!isEditingItemDates);
+                                    }}
+                                />
+                                {isEditingItemDates && (
+                                    <div className="dropdown-content">
+                                    <span style={{fontSize: '12px', textAlign:'center', marginRight:'30px'}}>
+                                        {currentItemDates.start && `شروع: ${formatItemDate(new Date(currentItemDates.start))}`}
+                                        <br />
+                                        {currentItemDates.end && ` پایان: ${formatItemDate(new Date(currentItemDates.end))}`}
+                                    </span>
+                                    <p className="date-picker-text">انتخاب تاریخ شروع</p>
+                                    <DatePicker
+                                        selected={editedItemDates.start}
+                                        onChange={(date) => handleItemDateChange(date, 'start')}
+                                        dateFormat="yyyy-MM-dd"
+                                        showYearDropdown
+                                        className="date-picker-input"
+                                    />
 
-          <p className="date-picker-text">انتخاب تاریخ پایان</p>
-          <DatePicker
-            selected={editedItemDates.end}
-            onChange={(date) => handleItemDateChange(date, 'end')}
-            dateFormat="yyyy-MM-dd"
-            showYearDropdown
-            className="date-picker-input"
-          />
+                                    <p className="date-picker-text">انتخاب تاریخ پایان</p>
+                                    <DatePicker
+                                        selected={editedItemDates.end}
+                                        onChange={(date) => handleItemDateChange(date, 'end')}
+                                        dateFormat="yyyy-MM-dd"
+                                        showYearDropdown
+                                        className="date-picker-input"
+                                    />
 
-          <button onClick={() => saveEditedDates(checklist.id, item.id)} className='submit-new-date-item'>ثبت</button>
-        </div>
-      )}
-    </div>
-  </div>
-</div>
+                                    <button onClick={() => saveEditedDates(checklist, item)} className='submit-new-date-item'>ثبت</button>
+                                    </div>
+                                )}
+                                </div>
+                            </div>
+                        </div>
 
 
 

@@ -270,17 +270,24 @@ export const Card = ({card, list, userIsMember}) => {
                     },
                     body: JSON.stringify({ name: newItemName }),
                 });
+        
                 if (!response.ok) {
                     throw new Error("Failed to create the item");
                 }
         
                 const newItem = await response.json();
                 console.error('newItem: ', newItem);
-
+        
                 const newItemDetails = newItem.items ? newItem.items[0] : newItem;
-
-
-                const updatedItems = [...checklist.items, newItemDetails];
+        
+                let updatedItems;
+        
+                // Check if the checklist already has items
+                if (checklist.items) {
+                    updatedItems = [...checklist.items, newItemDetails];
+                } else {
+                    updatedItems = [newItemDetails];
+                }
         
                 // Update the state with the new items
                 setChecklistItems(updatedItems);
@@ -312,6 +319,7 @@ export const Card = ({card, list, userIsMember}) => {
                 console.log("Error creating the item", error);
             }
         }
+        
 
         const addNewItem = () => {
             if (newItemName.trim() !== '') {
@@ -1007,30 +1015,32 @@ export const Card = ({card, list, userIsMember}) => {
               <div className="assignment-modal" style={{ marginLeft: '10px', marginRight: 'auto', position:'relative'}}>
 
                 <div className="button-and-search-container">
-                <button
-                    onClick={() => {
-                    // Add any additional conditions or actions before closing the modal
-                    setAssignItemModalOpen(false);
-                    setSearchResults([]);
-                    }}
-                    className="custom-button"
-                >
-                    ذخیره
-                </button>
-                <TextField
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="نام کاربر..."
-                    className="custom-textfield"
-                    InputProps={{
-                    startAdornment: (
-                        <InputAdornment position="start">
-                        <SearchIcon />
-                        </InputAdornment>
-                    ),
-                    }}
-                />
+                    <button
+                        onClick={() => {
+                            // Add any additional conditions or actions before closing the modal
+                            setAssignItemModalOpen(false);
+                            setSearchResults([]);
+                        }}
+                        className="custom-button"
+                        style={{ fontSize: '12px', padding: '3px 6px', fontFamily: 'vazirmatn', width:'40px', height:'30px' }} // Adjust the font size and padding as needed
+                    >
+                        ذخیره
+                    </button>
+                    <TextField
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="نام کاربر..."
+                        className="custom-textfield"
+                        style={{ fontSize: '14px', width: '130px' }} // Adjust the font size and width as needed
+                        InputProps={{
+                            startAdornment: (
+                                <InputAdornment position="start">
+                                    <SearchIcon />
+                                </InputAdornment>
+                            ),
+                        }}
+                    />
                 </div>
 
 
@@ -1440,6 +1450,11 @@ export const Card = ({card, list, userIsMember}) => {
           console.log('cardID: ', cardID);
           console.log('draggedChecklist: ', draggedChecklist);
           return;
+        }
+
+        // Check if destination is null (item dropped back into its original position)
+        if (!destination) {
+            return; // No need to update state or make API call
         }
       
         const updatedItems = [...draggedChecklist.items];
@@ -1872,33 +1887,32 @@ export const Card = ({card, list, userIsMember}) => {
 
 
                     <div className="description-input" style={{ marginRight: '30px' }}>
-      <img src={require('./icons/desc.png')} alt="" style={{ width: '20px', height: '20px', marginRight: '-35px', marginTop: '30px', marginBottom: '-10%' }} />
-      <h2 className='section-title' style={{ textAlign: 'right' }}>توضیحات</h2>
+                        <img src={require('./icons/desc.png')} alt="" style={{ width: '20px', height: '20px', marginRight: '-35px', marginTop: '30px', marginBottom: '-10%' }} />
+                        <h2 className='section-title' style={{ textAlign: 'right' }}>توضیحات</h2>
 
-      {/* Display description inside an input field for both non-members and members */}
-      <input
-        type="text"
-        className={isEditingDescription ? 'card-description-active' : 'card-description'}
-        value={editedDescription}
-        onFocus={handleDescriptionEdit}
-        readOnly={!userIsMember} // Make the input read-only for non-members
-        onChange={(e) => setEditedDescription(e.target.value)}
-        style={{ direction: 'rtl' }}
-      />
+                        <input
+                            type="text"
+                            className={isEditingDescription ? 'card-description-active' : 'card-description'}
+                            value={editedDescription}
+                            onFocus={handleDescriptionEdit}
+                            readOnly={!userIsMember} // Make the input read-only for non-members
+                            onChange={(e) => setEditedDescription(e.target.value)}
+                            style={{ direction: 'rtl' }}
+                        />
 
-      {isEditingDescription && userIsMember && (
-        <CardDescription
-          card={newCard}
-          setCardDescription={setCardDescription}
-          setIsEditingDescription={setIsEditingDescription}
-          editedDescription={editedDescription}
-          setEditedDescription={setEditedDescription}
-          user={user}
-          newList={newList}
-          newCard={newCard}
-        />
-      )}
-    </div>
+                        {isEditingDescription && userIsMember && (
+                            <CardDescription
+                            card={newCard}
+                            setCardDescription={setCardDescription}
+                            setIsEditingDescription={setIsEditingDescription}
+                            editedDescription={editedDescription}
+                            setEditedDescription={setEditedDescription}
+                            user={user}
+                            newList={newList}
+                            newCard={newCard}
+                            />
+                        )}
+                    </div>
 
 
 

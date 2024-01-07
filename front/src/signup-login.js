@@ -12,16 +12,16 @@ export const HandleSignupLogin = () => {
     const [users, setUsers] = useState([]);
 
     const handleSubmit = (e) => {
-        console.log('e : ', e);
         e.preventDefault();
+    
         if (name && email && password) {
-
             const signupData = {
-                name : name,
-                email : email,
-                password : password
-            }
-
+                name: name,
+                email: email,
+                password: password
+            };
+    
+            // Perform the signup
             fetch('http://localhost:8080/api/signup', {
                 method: 'POST',
                 headers: {
@@ -29,29 +29,58 @@ export const HandleSignupLogin = () => {
                 },
                 body: JSON.stringify(signupData),
             })
-
             .then((response) => {
-                if (response.ok){
-                    response.json().then((data) => {
-                        console.log('Signup Successful: ', data);
-                    })
+                if (response.ok) {
+                    return response.json();
                 } else {
-                    console.log('Signup Failed : ', response.statusText);
+                    throw new Error('Signup failed');
                 }
             })
-            .catch((error) => {
-                console.log('Error : ', error);
+            .then((data) => {
+                console.log('Signup Successful:', data);
+    
+                // After successful signup, perform login
+                const loginData = {
+                    email: email,
+                    password: password,
+                };
+    
+                return fetch('http://localhost:8080/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(loginData),
+                });
             })
-
-
-
-            // const person = { id: new Date().getTime().toString(), name, email, password };
-            // setUsers(person);
-            console.log('users: ', users);
+            .then((loginResponse) => {
+                if (loginResponse.ok) {
+                    return loginResponse.json();
+                } else {
+                    throw new Error('Login failed');
+                }
+            })
+            .then((loginData) => {
+                console.log('Login successful:', loginData);
+    
+                const token = loginData.token;
+    
+                // Set the token in cookies or localStorage as needed
+                // For example, using Cookies library
+                Cookies.set('jwtToken', token);
+    
+                // Redirect to the working page
+                window.location.href = '/workspace';
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
         } else {
             console.log('Enter values for all inputs!');
         }
     };
+    
+    
 
 
     const handleLogin = (e) => {

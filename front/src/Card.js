@@ -696,38 +696,57 @@ export const Card = ({card, list, userIsMember}) => {
     // Define state to store the temporary edited description
     const [editedDescription, setEditedDescription] = useState(cardDescription);
     
+    
 
-    const changeDescription = async (editedDescription) => {
-
-        try {
-
+    const CardDescription = ({ card, setCardDescription, setIsEditingDescription,
+         editedDescription, setEditedDescription,
+         user, newList, newCard }) => {
+        const changeDescription = async (editedDescription) => {
+          try {
             const requestBody = {
-                description: editedDescription // Include the updated description
+              description: editedDescription // Include the updated description
             };
-
+      
             const response = await fetch(`http://localhost:8080/api/lists/${newList.id}/cards/${newCard.id}`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(requestBody)
+              method: 'PATCH',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(requestBody)
             });
-            if(!response.ok){
-                throw new Error("Failed to change description")
+      
+            if (!response.ok) {
+              throw new Error("Failed to change description");
             }
-
+      
             setCardDescription(editedDescription);
             const updatedCard = await response.json();
             console.error('Updated card:', updatedCard);
-
-
-            createActivity(`${user.name} بخش توضیحات را تغییر داد`)
-
-
-        } catch (error) {
+      
+            createActivity(`${user.name} بخش توضیحات را تغییر داد`);
+          } catch (error) {
             console.log('Error changing the description');
-        }
-    }
+          }
+        };
+      
+        return (
+          <div className="description-buttons">
+            <button type="submit" onClick={() => {
+              changeDescription(editedDescription);
+              setIsEditingDescription(false);
+            }}>ذخیره</button>
+            <button type="submit" onClick={() => {
+              setEditedDescription(card.description);
+              setIsEditingDescription(false);
+            }}>لغو</button>
+          </div>
+        );
+      };
+
+      const handleDescriptionEdit = () => {
+        setIsEditingDescription(true);
+      };
+
 
     const [editedDates, setEditedDates] = useState({
         start: new Date(newCard.dates[0]), // Convert to Date object
@@ -888,6 +907,8 @@ export const Card = ({card, list, userIsMember}) => {
         // Update checklist.items with the modified array
         checklist.items = updatedItems;
 
+        // Call the function to change dates
+        changeDatesOfItem(checklist.id, item.id, startDate, endDate);
 
 
         changeDatesOfItem(checklist.id, item.id, startDate, endDate);
@@ -1268,7 +1289,7 @@ export const Card = ({card, list, userIsMember}) => {
     const CardActivity = ({ list, card, user }) => {
         const [activityInput, setActivityInput] = useState('');
         const [cardActivities, setCardActivities] = useState([]);
-        const inputRef = useRef(null);
+        // const inputRef = useRef(null);
 
         const message = ` ${user.name} : ${activityInput}`
         const submitActivity = async () => {
@@ -1314,12 +1335,12 @@ export const Card = ({card, list, userIsMember}) => {
               });
           }, [list.id, card.id]);
           
-          useEffect(() => {
-            // Focus the input element when the component mounts or when cardActivities change
-            if (inputRef.current) {
-              inputRef.current.focus();
-            }
-          }, [cardActivities]);
+        //   useEffect(() => {
+        //     // Focus the input element when the component mounts or when cardActivities change
+        //     if (inputRef.current) {
+        //       inputRef.current.focus();
+        //     }
+        //   }, [cardActivities]);
 
           return (
             <>
@@ -1327,7 +1348,7 @@ export const Card = ({card, list, userIsMember}) => {
                 {isUserMember && (
                   <>
                     <input
-                      ref={inputRef}
+                    //   ref={inputRef}
                       type="text"
                       placeholder="Comment"
                       value={activityInput}
@@ -1851,33 +1872,33 @@ export const Card = ({card, list, userIsMember}) => {
 
 
                     <div className="description-input" style={{ marginRight: '30px' }}>
-                        <img src={require('./icons/desc.png')} alt="" style={{ width: '20px', height: '20px', marginRight: '-35px', marginTop: '30px', marginBottom: '-10%' }} />
-                        <h2 className='section-title' style={{ textAlign: 'right' }}>توضیحات</h2>
+      <img src={require('./icons/desc.png')} alt="" style={{ width: '20px', height: '20px', marginRight: '-35px', marginTop: '30px', marginBottom: '-10%' }} />
+      <h2 className='section-title' style={{ textAlign: 'right' }}>توضیحات</h2>
 
-                        {/* Display description inside an input field for both non-members and members */}
-                        <input
-                        type="text"
-                        className={isEditingDescription ? 'card-description-active' : 'card-description'}
-                        value={editedDescription}
-                        onFocus={() => setIsEditingDescription(true)}
-                        readOnly={!userIsMember} // Make the input read-only for non-members
-                        onChange={(e) => setEditedDescription(e.target.value)}
-                        style={{ direction: 'rtl' }}
-                        />
+      {/* Display description inside an input field for both non-members and members */}
+      <input
+        type="text"
+        className={isEditingDescription ? 'card-description-active' : 'card-description'}
+        value={editedDescription}
+        onFocus={handleDescriptionEdit}
+        readOnly={!userIsMember} // Make the input read-only for non-members
+        onChange={(e) => setEditedDescription(e.target.value)}
+        style={{ direction: 'rtl' }}
+      />
 
-                        {isEditingDescription && userIsMember && (
-                        <div className="description-buttons">
-                            <button type="submit" onClick={() => {
-                            changeDescription(editedDescription);
-                            setIsEditingDescription(false);
-                            }}>ذخیره</button>
-                            <button type="submit" onClick={() => {
-                            setEditedDescription(card.description);
-                            setIsEditingDescription(false);
-                            }}>لغو</button>
-                        </div>
-                        )}
-                    </div>
+      {isEditingDescription && userIsMember && (
+        <CardDescription
+          card={newCard}
+          setCardDescription={setCardDescription}
+          setIsEditingDescription={setIsEditingDescription}
+          editedDescription={editedDescription}
+          setEditedDescription={setEditedDescription}
+          user={user}
+          newList={newList}
+          newCard={newCard}
+        />
+      )}
+    </div>
 
 
 

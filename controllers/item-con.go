@@ -472,6 +472,13 @@ func DeleteItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+
+	_, err = db.Exec("DELETE FROM item_members WHERE item_id = $1", itemID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to delete the members of the item, %s", err), http.StatusInternalServerError)
+		return
+	}
+
 	_, err = db.Exec("DELETE FROM items WHERE id = $1", itemID)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to delete the item, %s", err), http.StatusInternalServerError)

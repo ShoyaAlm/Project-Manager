@@ -117,7 +117,6 @@ func GetAllLists(w http.ResponseWriter, r *http.Request) {
 			if cardPosition.Valid {
 				position = int(cardPosition.Int64)
 			} else {
-				// Handle the NULL case, e.g., set a default value
 				position = 0 // or any other default value
 			}
 
@@ -364,7 +363,7 @@ func GetAList(w http.ResponseWriter, r *http.Request) {
 		for _, dateString := range cardDates {
 			date, err := time.Parse("2006-01-02", dateString)
 			if err != nil {
-				// Handle the error, e.g., log it or return an error response
+				// Handle the error
 			}
 			dates = append(dates, date)
 		}
@@ -537,7 +536,7 @@ func getStringOrNil(nullString sql.NullString) string {
     if nullString.Valid {
         return nullString.String
     }
-    return "" // or whatever default value you want for NULL
+    return ""
 }
 
 func findChecklist(checklists []*model.Checklist, id int) (*model.Checklist, bool) {
@@ -583,7 +582,6 @@ func CreateList(w http.ResponseWriter, r *http.Request) {
 
 	var newListID int
 
-	// Fetch the maximum position value from the lists table
 	var maxPosition int
 	err = db.QueryRow("SELECT COALESCE(MAX(position), 0) FROM lists").Scan(&maxPosition)
 	if err != nil {
@@ -591,7 +589,6 @@ func CreateList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Increment the position value for the new list
 	newPosition := maxPosition + 1
 
 	err = db.QueryRow("INSERT INTO lists (name, board_id, position) VALUES ($1, $2, $3) RETURNING id", requestData.Name, boardID, newPosition).Scan(&newListID)
@@ -600,7 +597,6 @@ func CreateList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Fetch the associated list without including the Position attribute
 	newList := &model.List{ID: newListID, Name: requestData.Name}
 
 	jsonData, err := json.Marshal(newList)
@@ -615,172 +611,6 @@ func CreateList(w http.ResponseWriter, r *http.Request) {
 }
 
 
-// func CreateList(w http.ResponseWriter, r *http.Request) {
-
-// 	body, err := ioutil.ReadAll(r.Body)
-// 	if err != nil {
-// 		http.Error(w, fmt.Sprintf("Failed to read request body, %s", err), http.StatusInternalServerError)
-// 		return
-// 	}
-
-// 	var requestData struct {
-// 		Name  		string	           `json:"name"`
-// 		UserID 		int			   	   `json:"user_id"`
-// 		Username 	string			   `json:"username"`
-// 		UserEmail 	string			   `json:"user_email"`
-// 		Cards 		[]*model.Card 	   `json:"cards"`
-// 		OwnerID 	int 			   `json:"owner_id"`
-// 		Owner 		*model.User 	   `json:"owner"`
-// 	}
-
-// 	err = json.Unmarshal(body, &requestData)
-// 	if err != nil {
-// 		http.Error(w, fmt.Sprintf("Failed to parse JSON data, %s", err), http.StatusBadRequest)
-// 		return
-// 	}
-
-
-// 	var newListID, newCardID, newChecklistID, newItemID, newMemberID int
-// 	// err = db.QueryRow("INSERT INTO lists (name) VALUES ($1) RETURNING id", requestData.Name).Scan(&newListID)
-
-// 	if err != nil {
-// 		http.Error(w, fmt.Sprintf("Failed to create list, %s", err), http.StatusInternalServerError)
-// 		return
-// 	}
-
-// 	currentDate := time.Now()
-// 	oneWeekLater := currentDate.AddDate(0, 0, 7)
-
-// 	// Create a new card with non-null fields
-// 	emptyItem := &model.Item{
-// 		ID:         newItemID,
-// 		Name:       requestData.Name,
-// 		StartDate: 	currentDate,
-// 		DueDate:    oneWeekLater,
-// 		Done: 		false,
-// 		AssignedTo: []*model.Member{},
-// 	}
-
-// 	emptyChecklist := &model.Checklist{
-// 		ID:    newChecklistID,
-// 		Name:  "چکلیست جدید",
-// 		Items: []*model.Item{emptyItem},
-// 	}
-
-// 	emptyMember := &model.User{
-// 		ID:   newMemberID,
-// 		Name: requestData.Username,
-// 		Email: requestData.UserEmail,
-// 	}
-
-
-
-// 	// Get the current time
-// 	// currentDate := time.Now()
-
-// 	// Calculate one month later
-// 	oneMonthLater := currentDate.AddDate(0, 1, 0)
-
-// 	dates := []time.Time{currentDate, oneMonthLater}
-
-
-// 	emptyCard := &model.Card{
-// 		ID:          newCardID,
-// 		Name:        "کارت جدید",
-// 		Description: "توضیحات",
-// 		Dates:       dates,
-// 		Checklists:  []*model.Checklist{emptyChecklist},
-// 		Members:     []*model.User{emptyMember},
-// 		OwnerID: 	requestData.OwnerID,
-// 		// Owner:       &model.User{},
-// 	}
-
-
-// 	owner := &model.User{
-// 		ID: requestData.OwnerID,
-// 		Name: requestData.Username,
-// 		Email: requestData.UserEmail,
-// 	}
-
-// 	// Query the database to fetch owner details based on UserID
-// 	ownerRow := db.QueryRow("SELECT id, name, email FROM users WHERE id = $1", requestData.OwnerID)
-// 	err = ownerRow.Scan(&owner.ID, &owner.Name, &owner.Email)
-// 	if err != nil {
-// 		log.Printf("Error fetching owner details: %v", err)
-// 		http.Error(w, "Failed to fetch owner details", http.StatusInternalServerError)
-// 		return
-// 	}
-
-
-// 	emptyCard.Owner = owner
-
-// 	log.Printf("emptyCard owner: %v", owner)
-
-// 	newList := &model.List{
-// 		ID:    newListID,
-// 		Name:  requestData.Name,
-// 		Cards: []*model.Card{emptyCard}, // Initialize an empty cards attribute
-// 	}
-
-// 	err = db.QueryRow("INSERT INTO lists (name) VALUES ($1) RETURNING id", newList.Name).Scan(&newListID)
-// 	if err != nil {
-// 		http.Error(w, fmt.Sprintf("Failed to insert card, %s", err), http.StatusInternalServerError)
-// 		return
-// 	}
-
-// 	err = db.QueryRow("INSERT INTO cards (name, description, dates, list_id) VALUES ($1, $2, $3, $4) RETURNING id",
-// 		emptyCard.Name, emptyCard.Description, pq.Array(dates), newListID).Scan(&newCardID)
-// 	if err != nil {
-// 		http.Error(w, fmt.Sprintf("Failed to insert card, %s", err), http.StatusInternalServerError)
-// 		return
-// 	}
-
-// 	err = db.QueryRow("INSERT INTO checklists (name, card_id) VALUES ($1, $2) RETURNING id",
-// 		emptyChecklist.Name, newCardID).Scan(&newChecklistID)
-// 	if err != nil {
-// 		http.Error(w, fmt.Sprintf("Failed to insert checklists, %s", err), http.StatusInternalServerError)
-// 		return
-// 	}
-	
-// 	err = db.QueryRow("INSERT INTO items (name, start_date, due_date, done, checklist_id) VALUES ($1, $2, $3, $4, $5) RETURNING id",
-// 	emptyItem.Name, emptyItem.StartDate, emptyItem.DueDate, emptyItem.Done, newChecklistID).Scan(&newItemID)
-// 	if err != nil {
-// 		log.Printf("Failed to insert items: %v", err)
-// 		http.Error(w, fmt.Sprintf("Failed to insert items, %s", err), http.StatusInternalServerError)
-// 		return
-// 	}
-
-// 	err = db.QueryRow("INSERT INTO members (card_id, name, email) VALUES ($1, $2, $3) RETURNING id",
-// 	newCardID, emptyMember.Name, emptyMember.Email).Scan(&newMemberID)
-// 	if err != nil {
-// 		log.Printf("Failed to insert members: %v", err)
-// 		http.Error(w, fmt.Sprintf("Failed to insert members, %s", err), http.StatusInternalServerError)
-// 		return
-// 	}
-
-// 	// Fetch the associated list
-// 	listRow := db.QueryRow("SELECT id, name FROM lists WHERE id = $1", newListID)
-// 	list := []*model.List{}
-// 	err = listRow.Scan(&newList.ID, &newList.Name)
-// 	if err != nil {
-// 		http.Error(w, fmt.Sprintf("Failed to fetch list data, %s", err), http.StatusInternalServerError)
-// 		return
-// 	}
-
-// 	// Append the new card to the list's cards slice
-// 	list = append(list, newList)
-
-// 	jsonData, err := json.Marshal(list)
-// 	if err != nil {
-// 		http.Error(w, "Failed to marshal response data", http.StatusInternalServerError)
-// 		return
-// 	}
-
-// 	w.Header().Set("Content-Type", "application/json")
-// 	w.WriteHeader(http.StatusCreated)
-// 	w.Write(jsonData)
-
-// }
 
 func DeleteAList(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -807,14 +637,8 @@ func DeleteAList(w http.ResponseWriter, r *http.Request) {
 		cardIDs = append(cardIDs, cardID)
 	}
 
-	// loop for deleting the list's data
 	for _, cardID := range cardIDs {
 
-		_, err := db.Exec("DELETE FROM members WHERE card_id = $1", cardID)
-		if err != nil {
-			http.Error(w, fmt.Sprintf("Failed to delete members of list, %s", err), http.StatusInternalServerError)
-			return
-		}
 
 		_, err = db.Exec("DELETE FROM activities WHERE card_id = $1", cardID)
 		if err != nil {
@@ -842,14 +666,42 @@ func DeleteAList(w http.ResponseWriter, r *http.Request) {
 		}
 
 		for _, checklistID := range checklistIDs {
-			_, err := db.Exec("DELETE FROM items WHERE checklist_id = $1", checklistID)
+
+			// Fetch the list of item IDs associated with the checklist
+			itemRows, err := db.Query("SELECT id FROM items WHERE checklist_id = $1", checklistID)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Failed to fetch items of checklist, %s", err), http.StatusInternalServerError)
+				return
+			}
+	
+			defer itemRows.Close()
+	
+			for itemRows.Next() {
+				var itemID int
+				if err := itemRows.Scan(&itemID); err != nil {
+					http.Error(w, fmt.Sprintf("Error scanning item ID, %s", err), http.StatusInternalServerError)
+					return
+				}
+	
+				_, err := db.Exec("DELETE FROM item_members WHERE item_id = $1", itemID)
+				if err != nil {
+					http.Error(w, fmt.Sprintf("Failed to delete item_members for item %d, %s", itemID, err), http.StatusInternalServerError)
+					return
+				}
+			}
+	
+			_, err = db.Exec("DELETE FROM items WHERE checklist_id = $1", checklistID)
 			if err != nil {
 				http.Error(w, fmt.Sprintf("Failed to delete items of checklist, %s", err), http.StatusInternalServerError)
 				return
 			}
 		}
 
-		//delete checklists
+		_, err = db.Exec("DELETE FROM members WHERE card_id = $1", cardID)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Failed to delete members of list, %s", err), http.StatusInternalServerError)
+			return
+		}
 		_, err = db.Exec("DELETE FROM checklists WHERE card_id = $1", cardID)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Failed to delete checklists of a list, %s", err), http.StatusInternalServerError)
@@ -936,10 +788,8 @@ func UpdateListOrder(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    // Update the card order for the list
     if len(requestData.ListOrder) > 0 {
-        // Use a loop or a function to update the card order in your database
-        // Example (use a transaction to ensure consistency):
+
         tx, err := db.Begin()
         if err != nil {
             http.Error(w, "Failed to begin transaction", http.StatusInternalServerError)
@@ -988,10 +838,8 @@ func UpdateCardOrder(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    // Update the card order for the list
     if len(requestData.CardOrder) > 0 {
-        // Use a loop or a function to update the card order in your database
-        // Example (use a transaction to ensure consistency):
+
         tx, err := db.Begin()
         if err != nil {
             http.Error(w, "Failed to begin transaction", http.StatusInternalServerError)
@@ -1042,9 +890,7 @@ func MoveCardToList(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    // Move the card from the source list to the destination list
     if requestData.SourceListID != requestData.DestinationListID {
-        // Use a transaction to ensure atomicity
         tx, err := db.Begin()
         if err != nil {
             http.Error(w, "Failed to begin transaction", http.StatusInternalServerError)
@@ -1052,7 +898,6 @@ func MoveCardToList(w http.ResponseWriter, r *http.Request) {
         }
         defer tx.Rollback()
 
-        // Update the card's list_id and position
         _, err = tx.Exec("UPDATE cards SET list_id = $1, position = $2 WHERE id = $3",
             requestData.DestinationListID, requestData.Position, requestData.CardID)
         if err != nil {

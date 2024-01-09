@@ -456,21 +456,13 @@ func DeleteCard(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = db.Exec("DELETE FROM members WHERE card_id = $1", cardID)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to delete members of card, %s", err), http.StatusInternalServerError)
-		return
-	}
-
+	
 
 	_, err = db.Exec("DELETE FROM activities WHERE card_id = $1", cardID)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to activities of card, %s", err), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Failed to delete activities of card, %s", err), http.StatusInternalServerError)
 		return
 	}
-
-	
-
 
 	// Fetch the IDs of checklists associated with the card
 	var checklistIDs []int
@@ -492,21 +484,53 @@ func DeleteCard(w http.ResponseWriter, r *http.Request) {
 
 	// Delete the items associated with the checklists
 	for _, checklistID := range checklistIDs {
-		_, err := db.Exec("DELETE FROM items WHERE checklist_id = $1", checklistID)
+
+		// Fetch the list of item IDs associated with the checklist
+		itemRows, err := db.Query("SELECT id FROM items WHERE checklist_id = $1", checklistID)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Failed to fetch items of checklist, %s", err), http.StatusInternalServerError)
+			return
+		}
+
+		// Move defer outside the loop
+		defer itemRows.Close()
+
+		// Iterate through each item and delete associated item_members
+		for itemRows.Next() {
+			var itemID int
+			if err := itemRows.Scan(&itemID); err != nil {
+				http.Error(w, fmt.Sprintf("Error scanning item ID, %s", err), http.StatusInternalServerError)
+				return
+			}
+
+			// Delete item_members associated with the current item
+			_, err := db.Exec("DELETE FROM item_members WHERE item_id = $1", itemID)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Failed to delete item_members for item %d, %s", itemID, err), http.StatusInternalServerError)
+				return
+			}
+		}
+
+		_, err = db.Exec("DELETE FROM items WHERE checklist_id = $1", checklistID)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Failed to delete items of checklist, %s", err), http.StatusInternalServerError)
 			return
 		}
 	}
 
+	_, err = db.Exec("DELETE FROM members WHERE card_id = $1", cardID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to delete members of card, %s", err), http.StatusInternalServerError)
+		return
+	}
+	
 	_, err = db.Exec("DELETE FROM checklists WHERE card_id = $1", cardID)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to delete checklists of card, %s", err), http.StatusInternalServerError)
 		return
 	}
 
-
-	// Delete the list and related data
+	// Delete the card itself
 	_, err = db.Exec("DELETE FROM cards WHERE id = $1", cardID)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to delete card, %s", err), http.StatusInternalServerError)

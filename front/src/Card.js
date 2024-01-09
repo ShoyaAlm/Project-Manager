@@ -413,7 +413,6 @@ export const Card = ({card, list, userIsMember}) => {
 
         useEffect(() => {
             
-            // Fetch matching users based on the entered name
             const fetchMatchingUsers = async () => {
                 try {
                     const response = await fetch(`http://localhost:8080/api/users?name=${encodeURIComponent(newMemberName)}`, {
@@ -430,14 +429,11 @@ export const Card = ({card, list, userIsMember}) => {
                     const users = await response.json();
                     setMatchingUsers(() => {
                         const similarUsers = users.filter(user => {
-                            // You can use any string matching algorithm here.
-                            // For example, here we're using a simple case-insensitive substring match.
                             const lowerCaseName = user.name.toLowerCase();
                             const lowerCaseNewMemberName = newMemberName.toLowerCase();
                             return lowerCaseName.includes(lowerCaseNewMemberName);
                         });
                     
-                        // Update state with the filtered users (up to 4)
                         return similarUsers.slice(0, 4);
                     });
                 } catch (error) {

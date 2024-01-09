@@ -376,7 +376,6 @@ func UpdateChecklist(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteChecklist(w http.ResponseWriter, r *http.Request) {
-
 	vars := mux.Vars(r)
 	checklistID, err := strconv.Atoi(vars["checklistID"])
 	if err != nil {
@@ -384,12 +383,38 @@ func DeleteChecklist(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Fetch the list of item IDs associated with the checklist
+	rows, err := db.Query("SELECT id FROM items WHERE checklist_id = $1", checklistID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to fetch items of checklist, %s", err), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	// Iterate through each item and delete associated item_members
+	for rows.Next() {
+		var itemID int
+		if err := rows.Scan(&itemID); err != nil {
+			http.Error(w, fmt.Sprintf("Error scanning item ID, %s", err), http.StatusInternalServerError)
+			return
+		}
+
+		// Delete item_members associated with the current item
+		_, err := db.Exec("DELETE FROM item_members WHERE item_id = $1", itemID)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Failed to delete item_members for item %d, %s", itemID, err), http.StatusInternalServerError)
+			return
+		}
+	}
+
+	// Delete items associated with the checklist
 	_, err = db.Exec("DELETE FROM items WHERE checklist_id = $1", checklistID)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to delete items of checklist, %s", err), http.StatusInternalServerError)
 		return
 	}
 
+	// Delete the checklist itself
 	_, err = db.Exec("DELETE FROM checklists WHERE id = $1", checklistID)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Failed to delete targeted checklist, %s", err), http.StatusInternalServerError)
@@ -397,8 +422,8 @@ func DeleteChecklist(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusAccepted)
-
 }
+
 
 
 

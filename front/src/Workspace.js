@@ -34,16 +34,13 @@ const Workspace = () => {
               const decoded = jwt_decode(jwt);
               const user1 = decoded;
               console.log(user1);
-              // console.log(user1);
               return user1;
           }
       } catch (error) {
           console.log(error);
       }
   }
-    // Implement your logic to get the user ID
-    // This could be from the decoded JWT, from a cookie, or another method
-    // For simplicity, assuming there's a global function `findUser` that returns the user object
+
     const user = findUser();
     return user.user_id ? user.user_id : null;
   };
@@ -68,15 +65,12 @@ const Workspace = () => {
           if (allBoardsResponse.ok) {
             const allBoardsData = await allBoardsResponse.json();
             
-            // Filter out user's boards using the userData directly
             if (userData && userData.length > 0) {
-              // User has boards, filter out user's boards using the userData directly
               const otherUserBoards = allBoardsData.filter(
                 (board) => !userData.some((userBoard) => userBoard.id === board.id)
               );
               setOtherBoards(otherUserBoards);
             } else {
-              // User has no boards, set otherBoards to allBoardsData
               setOtherBoards(allBoardsData);
             }
           } else {
@@ -96,7 +90,6 @@ const Workspace = () => {
   
   const handleCreateBoard = async () => {
     if (newBoardName.trim() !== '') {
-      // Make a POST request to create a new board
       try {
         const response = await fetch('http://localhost:8080/api/boards', {
           method: 'POST',
@@ -106,12 +99,10 @@ const Workspace = () => {
           body: JSON.stringify({
             name: newBoardName,
             user_id: getUserId(),
-            // You may need to include other user-related information in the request body
           }),
         });
 
         if (response.ok) {
-          // Update the state with the newly created board
           const newBoard = await response.json();
           setBoards([...boards, newBoard]);
           setNewBoardName('');

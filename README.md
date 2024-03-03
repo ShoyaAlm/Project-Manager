@@ -127,13 +127,15 @@ The section that is dedicated for making checklists looks like this :
 
 
 
-We can also add items to our checklists  
-
-<img src="https://github.com/ShoyaAlm/Project-Manager/assets/64843555/aa6562d1-661c-4c84-9fb9-ebb74b25ef64" alt="![add-item]" width="300">
 
 
 
 - **Items**
+
+  We can also add items to our checklists  
+
+  <img src="https://github.com/ShoyaAlm/Project-Manager/assets/64843555/aa6562d1-661c-4c84-9fb9-ebb74b25ef64" alt="![add-item]" width="300">
+
 
   Once we add a new item, we can change some parts of it. For instance, we can:
   

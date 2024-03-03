@@ -8,7 +8,10 @@ This is a Persian Project Management Web Application, and it is a clone from the
 
 When you first run the program, you must either login or sign up if you haven't already. Click on the green button located at the top of the front-page of the web app.
 
-[![Login Image](login-img)](signin-img)
+<img src="https://github.com/ShoyaAlm/Project-Manager/assets/64843555/e6962f7a-4cc1-40df-9e3e-00f694e0d47e" alt="Login Image" width="200"> <img src="https://github.com/ShoyaAlm/Project-Manager/assets/64843555/4993df24-a2b2-4656-a2f3-0763e424c7c9" alt="Signup Image" width="200">
+
+
+
 
 ---
 

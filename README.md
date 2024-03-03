@@ -3,12 +3,14 @@ This is a Persian Project Management Web Application, and it is a clone from the
 
 When you first run the program, you must either login, or sign up if you haven't already, by clicking on the green button from up top of the front-page of the web app.
 
-[login-img] [signup-img]
+![login](https://github.com/ShoyaAlm/Project-Manager/assets/64843555/db1230f7-01cf-4b1d-b7c5-fe938fa147aa)
+![signup](https://github.com/ShoyaAlm/Project-Manager/assets/64843555/d9a87350-f465-4dfd-a6e9-8e47e3c937c0)
 
 
 Once you signup/login, then you have a page called 'Workspace', which illustrates all the boards that you have created listed above, or the boards that were created by any user other than you, which are listed just below the ones you have made.
 
-[workspace-img]
+
+![Uploading Workspace.png…]()
 
 you can also delete your boards from here by clicking on the red button.
 

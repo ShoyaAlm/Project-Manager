@@ -1,50 +1,74 @@
 # Project-Manager
-This is a Persian Project Management Web Application, and it is a clone from the Trello Web App
 
-When you first run the program, you must either login, or sign up if you haven't already, by clicking on the green button from up top of the front-page of the web app.
+This is a Persian Project Management Web Application, and it is a clone from the Trello Web App.
 
-![login](https://github.com/ShoyaAlm/Project-Manager/assets/64843555/db1230f7-01cf-4b1d-b7c5-fe938fa147aa)
-![signup](https://github.com/ShoyaAlm/Project-Manager/assets/64843555/d9a87350-f465-4dfd-a6e9-8e47e3c937c0)
+---
 
+**Getting Started:**
 
-Once you signup/login, then you have a page called 'Workspace', which illustrates all the boards that you have created listed above, or the boards that were created by any user other than you, which are listed just below the ones you have made.
+When you first run the program, you must either login or sign up if you haven't already. Click on the green button located at the top of the front-page of the web app.
 
+[![Login Image](login-img)](signin-img)
 
-![Uploading Workspace.png…]()
+---
 
-you can also delete your boards from here by clicking on the red button.
+**Workspace:**
 
+Once you sign in/login, you'll land on the 'Workspace' page. Here, all the boards you've created are listed above, while boards created by other users are listed below.
 
-this is an example of a 'Board', which includes 'Lists' and those lists include 'Cards' inside of them.
+![Workspace](workspace-img)
 
+You can delete your boards by clicking on the red button.
 
-[board-img]
-we can also see that each card inside a list has a color attached to them, and that's basically their label.
-also every card has a starting date and a due date, which members of a card can modify anytime they want.
+---
 
+**Boards, Lists, and Cards:**
 
+Each 'Board' contains 'Lists', which in turn include 'Cards'. Cards are distinguished by different colors representing their labels. Additionally, each card has a starting date and a due date, editable by card members.
 
-there's a drag-&-drop feature that I have added to this web app.
+![Board Example](board-img)
 
-[DrgDropVid]
+---
 
+**Features:**
 
-By writing the name of the new list that I want to create over here, we can add a new list to our board.
+- **Drag & Drop:** Utilize the drag-and-drop feature seamlessly.
 
-[AddNewListVid]
+- **Adding Lists:** Add new lists to your board by typing the name in the designated area.
 
+- **Adding Cards:** Populate lists with cards effortlessly.
 
-We can also add cards to that newly created list.
+![Drag & Drop](DrgDropVid)
 
-[AddNewCardVid] 
+![Add New List](AddNewListVid)
 
+![Add New Card](AddNewCardVid)
 
+---
 
-When we click on a card we are led to this section
+**Card Details:**
 
-[card-img]
+When clicking on a card, you'll access its detailed view. Here, you can:
 
+- Delete the card.
+- Manage card members.
+- Modify the description.
+- Add checklists.
+- Choose a label.
+- Change the dates.
 
+![Card Details](card-img)
 
+---
 
+**Activity Section:**
 
+The 'Activity' section logs all card-related activities, such as adding members, modifying checklists, adding labels, etc. You can also add comments for better collaboration.
+
+![Activity Section](activityExample-img)
+
+![Adding Comment](activityComment-img)
+
+--- 
+
+By organizing your tasks and collaborating efficiently, Project-Manager simplifies project management for your team.

@@ -3,10 +3,10 @@ This is a Persian Project Management Web Application, and it is a clone from the
 
 When you first run the program, you must either login, or sign up if you haven't already, by clicking on the green button from up top of the front-page of the web app.
 
-[login-img] [signin-img]
+[login-img] [signup-img]
 
 
-Once you signin/login, then you have a page called 'Workspace', which illustrates all the boards that you have created listed above, or the boards that were created by any user other than you, which are listed just below the ones you have made.
+Once you signup/login, then you have a page called 'Workspace', which illustrates all the boards that you have created listed above, or the boards that were created by any user other than you, which are listed just below the ones you have made.
 
 [workspace-img]
 

@@ -19,17 +19,18 @@ When you first run the program, you must either login or sign up if you haven't 
 
 Once you sign in/login, you'll land on the 'Workspace' page. Here, all the boards you've created are listed above, while boards created by other users are listed below.
 
-![Workspace](workspace-img)
+<img src="https://github.com/ShoyaAlm/Project-Manager/assets/64843555/ac6d1224-32b7-4eac-b7b5-71a1e7c413f2" alt="![Workspace]" width="200">
 
-You can delete your boards by clicking on the red button.
+
+You can delete your boards by clicking on the red 'Remove' button.
 
 ---
 
 **Boards, Lists, and Cards:**
 
-Each 'Board' contains 'Lists', which in turn include 'Cards'. Cards are distinguished by different colors representing their labels. Additionally, each card has a starting date and a due date, editable by card members.
+Each 'Board' contains 'Lists', which in turn include 'Cards'. Cards are distinguished by different colors representing their labels. Additionally, each card has a starting date and a due date, editable by card members. Here's an example of a board :
 
-![Board Example](board-img)
+<img src="https://github.com/ShoyaAlm/Project-Manager/assets/64843555/9a421d99-dce8-43a4-a0ce-2e098a775233" alt="![A Board eg]" width="200">
 
 ---
 
@@ -37,15 +38,19 @@ Each 'Board' contains 'Lists', which in turn include 'Cards'. Cards are distingu
 
 - **Drag & Drop:** Utilize the drag-and-drop feature seamlessly.
 
+https://github.com/ShoyaAlm/Project-Manager/assets/64843555/51107e0f-2134-4d5e-a74f-1ccbfc2413de
+
+
+
 - **Adding Lists:** Add new lists to your board by typing the name in the designated area.
+
+<img src="https://github.com/ShoyaAlm/Project-Manager/assets/64843555/1d11ec4e-b635-414e-8aae-b1f73a139152" alt="![Add New List]" width="200">
+
 
 - **Adding Cards:** Populate lists with cards effortlessly.
 
-![Drag & Drop](DrgDropVid)
+<img src="https://github.com/ShoyaAlm/Project-Manager/assets/64843555/eb67892e-8936-4758-a5a2-5eae297e001f" alt="![add-card-to-list]" width="200">
 
-![Add New List](AddNewListVid)
-
-![Add New Card](AddNewCardVid)
 
 ---
 
@@ -60,7 +65,8 @@ When clicking on a card, you'll access its detailed view. Here, you can:
 - Choose a label.
 - Change the dates.
 
-![Card Details](card-img)
+<img src="https://github.com/ShoyaAlm/Project-Manager/assets/64843555/81122704-523d-427e-9e7c-ffbf0f7e3e75" alt="![new-card]" width="200">
+
 
 ---
 
@@ -68,9 +74,9 @@ When clicking on a card, you'll access its detailed view. Here, you can:
 
 The 'Activity' section logs all card-related activities, such as adding members, modifying checklists, adding labels, etc. You can also add comments for better collaboration.
 
-![Activity Section](activityExample-img)
+Here's an example for the Activity section from another card :
 
-![Adding Comment](activityComment-img)
+<img src="https://github.com/ShoyaAlm/Project-Manager/assets/64843555/50a58c02-0e40-4319-b0e1-d290ddd75e16" alt="![activity-example]" width="200">
 
 --- 
 
